@@ -74,3 +74,15 @@ explicitly is itself the signal that "AI Builder" is understood correctly.
 **Because:** Sources agree retries need a PDN and that retries skipping it are rejected
 outright, but the in-cycle case is not crisply settled publicly. Choosing the stricter
 side and documenting it is the instinct a payments company wants.
+
+## [2026-08-25] AutoPay volume figures — pinned 50M/808M, not "120M"
+**Chose:** 50 million new UPI AutoPay mandate registrations/month and 808 million mandate
+executions/month, both July 2025, sourced to NPCI data via Business Standard.
+**Over:** "Over 120 million AutoPay mandates created every month," which recurs across
+secondary fintech blog sources.
+**Because:** The 120M figure is never traced to a specific NPCI release, its reference
+month is unstated, and it is inconsistent about whether it counts new mandates, active
+mandates, or monthly executions. The 50M/808M pair is dated, paired with a same-source
+YoY comparison, and internally consistent. NPCI's own ecosystem-statistics page returns
+403 to automated fetches and could not be cross-checked directly this session — flagged
+in `docs/04-DATA-MODEL.md` rather than silently worked around.

@@ -1,0 +1,54 @@
+[project]
+name = "dobara"
+version = "0.1.0"
+description = "Dobara — AI revenue-recovery agent for Indian recurring payments (Razorpay AI Buildathon, Track 03)"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "scipy>=1.13",
+    "scikit-learn>=1.5",
+    "lightgbm>=4.5",
+    "pyyaml>=6.0",
+    "pydantic>=2.8",
+    "sqlalchemy>=2.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pyarrow>=17.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "hypothesis>=6.111",
+    "types-pyyaml",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sim", "features", "models", "agent", "eval", "api", "llm"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+exclude = ["^web/", "^tests/"]
+
+[[tool.mypy.overrides]]
+module = ["lightgbm.*", "sklearn.*", "scipy.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

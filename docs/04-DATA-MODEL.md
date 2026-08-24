@@ -34,11 +34,32 @@ Three devices carry that:
 | NACH SIP bounce charge | ₹250–₹750 + GST per failure | Business Today |
 | AFA threshold | ₹15,000 (₹1,00,000 insurance/MF/CC) | RBI e-mandate framework |
 
-> **BUILD TASK, DAY 1:** the press figures conflict slightly — "over 120 million mandates
-> created monthly" appears in one source, "50 million new mandates in July 2025" in
-> another. **Pin the real numbers from NPCI's own published AutoPay statistics and note
-> the discrepancy openly in the README.** Doing that in public is the cheapest possible
-> proof that every other number is handled the same way.
+> **BUILD TASK, DAY 1 — resolved 2026-08-25.** The press figures do conflict. Here is the
+> pin, and the reasoning for picking one side.
+>
+> **Pinned:** new UPI AutoPay mandate **registrations** were **~50 million in July 2025**,
+> up from ~26 million in July 2024 (NPCI data, via
+> [Business Standard, Feb 2025 / Sep 2025](https://www.business-standard.com/finance/personal-finance/upi-autopay-growth-2025-overtakes-cards-payments-npci-125022000316_1.html)).
+> Mandate **executions** (recurring debits actually run against existing mandates) were
+> **~808 million in July 2025**, up from ~392 million in July 2024 — same source. Business
+> decline across the top 50 banks on these executions averaged **~74%** that month, which
+> is far above the general UPI BD figure and is itself evidence for this project's thesis:
+> AutoPay debits fail disproportionately, because they run at bank-decided moments the
+> customer did not initiate. Revocations (**>20 million/month**, low balance) are reported
+> against this same base — Business Standard, Sep 2025.
+>
+> **Rejected:** "over 120 million AutoPay mandates created every month," which recurs
+> across secondary fintech blogs (payment-gateway marketing pages, listicle roundups). It
+> is never traced to a specific NPCI release, its month is unstated, and it is inconsistent
+> about whether it means new mandates, active mandates, or monthly *executions* — three
+> different quantities that should not share one number. The 50M/808M figures above are
+> preferred because they are dated, paired with a same-source year-on-year comparison, and
+> internally consistent (registrations < executions, as expected since one mandate executes
+> repeatedly). **`sim/params.yaml` uses 50M new mandates/month and 808M executions/month.**
+> NPCI's own live ecosystem-statistics page (`npci.org.in/what-we-do/upi/upi-ecosystem-statistics`)
+> returns 403 to automated fetches, so it could not be cross-checked directly during this
+> session — noted here rather than silently worked around; a judge with a browser can
+> verify.
 
 ---
 

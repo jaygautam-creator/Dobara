@@ -81,6 +81,16 @@ class SimSummary:
     def monthly_revocation_ratio(self) -> float:
         return self.n_revocations / self.n_mandates if self.n_mandates else 0.0
 
+    @property
+    def revocation_per_execution_ratio(self) -> float:
+        """Revocations / mandate executions (attempts). Target ~2.5%, derived from
+        20M revocations/month ÷ 808M executions/month (docs/04-DATA-MODEL.md) — a target
+        ratio with caveats, not a precision constant. This is the harder benchmark: it
+        jointly constrains failure_rate and P(revoke | failure), the exact product the
+        thesis depends on.
+        """
+        return self.n_revocations / self.n_attempts if self.n_attempts else 0.0
+
 
 def attempt_outcome(
     bank: BankLatent,

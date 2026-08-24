@@ -125,9 +125,22 @@ and **correlated outage events** injected from real dated UPI outage occurrences
 are the interesting hard case and the reason a static policy fails.
 
 **Notification effect:** every attempt forces a pre-debit notification (rule `RBI-PDN-24H`).
-Each *failure* notification increments the customer's revocation hazard. The population
-revocation rate is calibrated so aggregate revocations match the ~20M/month ratio against
-the mandate base.
+Each *failure* notification increments the customer's revocation hazard.
+
+**Revocation calibration target — a ratio with caveats, not a precision constant.**
+The population revocation hazard is calibrated so `revocations / mandate_executions ≈ 2.5%`
+(20M revocations/month ÷ 808M executions/month, both pinned above — Business Standard,
+2025). This is the harder benchmark used in `tests/test_calibration.py`, because it jointly
+constrains `failure_rate` and `P(revoke | failure)` — the exact product the thesis depends
+on — rather than borrowing a generic dunning-recovery band. Two caveats, stated openly:
+the 20M figure is attributed to *low balance* specifically and may not be all-cause
+revocation; and the two published figures are not confirmed to cover perfectly aligned
+periods. **2026-08-25 recalibration note:** the original hazard parameters produced
+`revocations/execution ≈ 1.1%`, under-producing revocations by ~2.2x against this target.
+That was the *conservative* direction — it understated the cost of aggressive retrying,
+which is the opposite of what the thesis needs to demonstrate — so it was corrected rather
+than left as a favourable bias. See `sim/params.yaml`'s `revocation` block and
+`docs/DECISIONS.md` [2026-08-25].
 
 **Revocation:** discrete-time hazard driven by failure-notification count, contact density,
 consecutive failed cycles, mandate age, and latent propensity.

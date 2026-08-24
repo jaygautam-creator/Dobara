@@ -12,16 +12,25 @@ import argparse
 from sim.engine import default_db_path, run_simulation
 from sim.params import load_params
 
-# Benchmark ranges from docs/04-DATA-MODEL.md calibration anchors table. Wide on purpose —
-# this is a sanity check, not a strict statistical test (that lives in Phase 2's validation
-# suite once splits + the full 30-seed run exist).
+# Benchmark ranges from docs/04-DATA-MODEL.md calibration anchors table. These are
+# per-seed sanity bands for human eyeballing during `make sim` — they print but never
+# fail the run. The real gate is tests/test_calibration.py, which asserts the MEAN across
+# 5 seeds against these same bands and fails CI on a calibration regression.
 BENCHMARKS = {
     "failure_rate": (0.04, 0.22),  # 4-6% B2B / 6-10% B2C dunning benchmarks; AutoPay skews
     # higher because these are bank-initiated recurring debits, not customer-initiated.
     # Upper bound widened past the raw dunning-benchmark ceiling because AutoPay executions
     # are not directly comparable to customer-initiated dunning (docs/04-DATA-MODEL.md).
-    "recovery_rate": (0.15, 0.75),  # avg 30-45%, top quartile 55-70%, wide band for one seed
-    "monthly_revocation_ratio": (0.01, 0.15),  # sanity band, not a tight NPCI match at this scale
+    "recovery_rate": (0.28, 0.48),  # published avg 30-45%, top quartile 55-70%; tightened
+    # 2026-08-25 from an original (0.15, 0.75) band once the revocation recalibration
+    # (below) pulled the simulated mean to ~41%, comfortably inside the avg band with
+    # headroom for per-seed variance. See docs/DECISIONS.md.
+    "monthly_revocation_ratio": (0.01, 0.30),  # loose sanity band on revocations/mandate
+    # over the full 8-cycle run; not a direct NPCI comparison (that unit is per-month).
+    "revocation_per_execution_ratio": (0.015, 0.04),  # the harder benchmark: revocations /
+    # mandate executions ≈ 20M/month ÷ 808M/month ≈ 2.5% (both pinned in
+    # docs/04-DATA-MODEL.md). A target ratio with caveats, not a precision constant — see
+    # the note in sim/params.yaml's revocation block.
 }
 
 

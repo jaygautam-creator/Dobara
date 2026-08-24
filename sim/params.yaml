@@ -133,16 +133,24 @@ retry_policy:
     note: "probability a same-cycle retry repeats the prior attempt's failure cause (persistent low balance / bank issue), rather than being an independent draw. Calibrated so the population dunning recovery rate lands in the published 30-45% (avg) / 55-70% (top quartile) band rather than the ~90% an i.i.d. per-attempt model produces."
 
 revocation:
+  # Target ratio: revocations / mandate executions ≈ 20M/month ÷ 808M/month ≈ 2.5%
+  # (both figures pinned in docs/04-DATA-MODEL.md, Business Standard, 2025). Treated as a
+  # TARGET RATIO WITH CAVEATS, not a precision constant: the 20M figure is attributed to
+  # low balance specifically and may not be all-cause revocation, and the two published
+  # figures are not confirmed to cover perfectly aligned periods. See
+  # docs/04-DATA-MODEL.md and docs/DECISIONS.md [2026-08-25] for the recalibration that
+  # hit this target — the original values under-produced revocations by ~2.2x, which was
+  # the conservative direction (it understated the cost of aggressive retrying).
   base_hazard_per_cycle:
-    value: 0.006
+    value: 0.0175
     assumption: true
-    sensitivity_range: [0.002, 0.015]
-    note: "background revocation hazard with zero failure notifications, calibrated so population aggregate lands near the >20M/month figure at realistic mandate-base scale"
+    sensitivity_range: [0.008, 0.03]
+    note: "background revocation hazard with zero failure notifications; recalibrated 2026-08-25 to hit the revocations/execution target ratio above (previously 0.006, which under-produced revocations ~2.2x)"
   hazard_per_failure_notification:
-    value: 0.031
+    value: 0.098
     assumption: true
-    sensitivity_range: [0.015, 0.060]
-    note: "calibrated so simulated population revocation rate approaches the >20M/month : ~mandate-base ratio implied by 50M new / 808M executions monthly (Business Standard, Jul 2025)"
+    sensitivity_range: [0.05, 0.15]
+    note: "recalibrated 2026-08-25 to hit the revocations/execution target ratio above (previously 0.031, which under-produced revocations ~2.2x)"
   hazard_per_contact_density:
     value: 0.012
     assumption: true

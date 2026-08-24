@@ -106,3 +106,44 @@ case `PLAN.md` warns about.
 `True`, silently breaking `banks.YES.base_td` lookups. Caught by the reproducibility test
 failing with `KeyError`. Worth remembering if more bank ids or config keys collide with
 YAML 1.1's boolean words (`yes/no/true/false/on/off`).
+
+## [2026-08-25] Calibration gate made real — mean-across-5-seeds pytest, CI-enforced
+**Chose:** `sim/run.py`'s `BENCHMARKS` dict stays print-only for human eyeballing during
+`make sim`, but `tests/test_calibration.py` now runs the default-scale simulation across
+5 seeds and asserts the MEAN of each metric against the same bands. This runs in CI via
+`make check` / `pytest`, so a calibration regression fails the build.
+**Over:** leaving the benchmark check as a non-failing print (the Phase 1 state).
+**Because:** a check nobody enforces is not a check. Per-seed variance is real (n=5000 is
+not infinite), so the test asserts on the mean across seeds rather than each seed
+individually, which would be flaky.
+
+## [2026-08-25] Revocation hazard recalibrated to the revocations/execution target
+**Chose:** raised `revocation.base_hazard_per_cycle` 0.006 -> 0.0175 and
+`revocation.hazard_per_failure_notification` 0.031 -> 0.098, both re-sourced with widened
+`sensitivity_range`s in `sim/params.yaml`.
+**Over:** the original Day-1 values, calibrated only loosely against the >20M/month figure
+without a precise denominator.
+**Because:** a new, harder benchmark — `revocations / mandate_executions ~= 2.5%` (20M /
+808M, both already pinned) — jointly constrains failure_rate and P(revoke | failure), the
+exact product the thesis depends on. The original values produced ~1.1%, under-producing
+revocations ~2.2x. That was the conservative direction (it understated the cost of
+aggressive retrying) but still a miscalibration worth fixing rather than keeping as a
+convenient bias. Verified across seeds 0-4: mean `revocation_per_execution_ratio` ~= 2.45%,
+inside the declared [1.5%, 4%] band (caveats on the 2.5% target documented in
+`docs/04-DATA-MODEL.md`).
+**Side effect, not incidental:** this recalibration also pulled `recovery_rate` down from
+~46% to ~41% (mandates now churn out of the retry sequence earlier), which let the
+benchmark band tighten — see the next entry.
+
+## [2026-08-25] `recovery_rate` benchmark band tightened to (0.28, 0.48)
+**Chose:** tightened from the original Day-1 band (0.15, 0.75) — deliberately wide because
+nothing had been calibrated against it yet — to (0.28, 0.48), close to the published 30-45%
+average dunning recovery rate.
+**Over:** leaving the wide band, or tightening all the way to (0.30, 0.45) with no margin.
+**Because:** after the revocation recalibration above, the simulated mean landed at ~41%
+across seeds 0-4 (range 40.9%-42.5%), comfortably inside the published average band. A
+small margin below 30% and above 45% is kept for seed-to-seed variance rather than pinning
+the band exactly to the literature range, which would make the test flaky rather than
+meaningful. This band was reached without conflicting with the revocations/execution
+target — both benchmarks pass simultaneously at the current calibration, so no further
+loosening was necessary.

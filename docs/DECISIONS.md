@@ -160,3 +160,38 @@ knows a customer's bank from the VPA/routing info; only the balance process is h
 This was a Phase 1 gap, not a Phase 2 design choice, and had to be fixed before
 `models/bank_health.py` or `features/recovery.py` could join anything. `segment` is left as
 a constant `"standard"` placeholder — no real segmentation logic exists yet.
+
+## [2026-08-25] Hazard model exposure unit — per-soft-decline-attempt, not per-calendar-day
+**Chose:** `features/hazard.py`'s person-period frame has one row per `soft_decline`
+attempt (the simulator's actual hazard-evaluation point), not one row per mandate per
+calendar day as docs/05-ML-SPEC.md's prose literally describes.
+**Over:** a full daily grid across each mandate's active life.
+**Because:** `sim/engine.py` only calls `revocation_hazard()` immediately after a
+`soft_decline` — never on a `hard_decline` (cycle ends without a hazard check), never on a
+day with no attempt. A daily grid would be mostly structurally-zero rows, and including
+`hard_decline` attempts as exposure rows would inject always-negative-label rows that
+dilute the dataset without representing a real point of risk. Documented at length in the
+module docstring so a future contributor adding calendar-day-driven hazard knows where the
+grid would need to widen.
+
+## [2026-08-25] Fixed: `Revocation.trigger_attempt_id` was always `None`
+**Chose:** capture the just-inserted `Attempt.id` (via `session.flush()`) and set it on
+the `Revocation` row when that attempt's hazard draw fires.
+**Because:** needed to label the hazard model's target exactly (row is positive iff this
+attempt IS the trigger). Without it, every hazard-model row would have been unlabelable.
+Discovered while building `features/hazard.py`, same pattern as the `Customer` row gap
+found while building `features/recovery.py` — Phase 1 wrote the schema's shape correctly
+but didn't always populate every field a later phase would need to join or label on.
+
+## [2026-08-25] Fixed: `make sim` → `make train` db-path wiring gap
+**Chose:** `sim/run.py` now writes the canonical `data/dobara.sqlite3` for a single
+default run (no `--seed`/`--seeds`/`--out` given); multi-seed sweeps keep the per-seed
+`data/dobara_seed{N}.sqlite3` naming from `sim.engine.default_db_path`.
+**Over:** leaving `models/train.py`'s `--db data/dobara.sqlite3` default pointed at a path
+`sim.run` never actually produces.
+**Because:** discovered by literally running `make sim` then `python -m models.train` back
+to back for the first time — `sim.run`'s only prior default was
+`data/dobara_seed{seed}.sqlite3`, seed 0. The two commands had been tested independently
+(via direct `run_simulation()` calls in tests) but never chained through their CLI
+entrypoints until this point, per docs/03-TECH-STACK.md's `git clone && make demo`
+reproducibility contract.

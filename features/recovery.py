@@ -17,6 +17,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 from models.bank_health import load_snapshots
+from sim.splits import split_for_cycle
 
 BANNED_FEATURE_SUBSTRINGS = (
     "balance",
@@ -122,7 +123,9 @@ def _load_raw(db_path: str) -> pd.DataFrame:
         cu.bank_id,
         cu.preferred_debit_day,
         cy.cycle_index,
-        cy.due_date
+        cy.due_date,
+        m.is_cold_start,
+        m.regime_shift_bank
     FROM attempts a
     JOIN cycles cy ON a.cycle_id = cy.id
     JOIN mandates m ON cy.mandate_id = m.id
@@ -221,6 +224,11 @@ def build_recovery_features(db_path: str) -> pd.DataFrame:
                 "has_declared_preferred_day": has_declared,
                 "days_from_declared_day": days_from_declared,
                 LABEL_COLUMN: row.outcome == "success",
+                # split-assignment metadata — NOT model features, consumed by
+                # sim/splits.py + models/recovery.py to build train/val/test/cold_start
+                "cycle_index": row.cycle_index,
+                "is_cold_start": bool(row.is_cold_start),
+                "regime_shift_bank": bool(row.regime_shift_bank),
             }
         )
 
@@ -239,4 +247,8 @@ def build_recovery_features(db_path: str) -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
     assert_no_banned_features(list(df.columns))
+    df["split"] = [
+        split_for_cycle(int(ci), bool(cs))
+        for ci, cs in zip(df["cycle_index"], df["is_cold_start"], strict=True)
+    ]
     return df

@@ -135,6 +135,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "joblib" },
     { name = "lightgbm" },
     { name = "numpy" },
     { name = "pandas" },
@@ -160,6 +161,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.111" },
+    { name = "joblib", specifier = ">=1.4" },
     { name = "lightgbm", specifier = ">=4.5" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11" },
     { name = "numpy", specifier = ">=2.0" },

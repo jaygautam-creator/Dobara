@@ -372,20 +372,20 @@ def run_simulation(
                         prior_attempt_failed,
                     )
                     prior_attempt_failed = draw.outcome in ("soft_decline", "hard_decline")
-                    session.add(
-                        Attempt(
-                            cycle_id=cycle.id,
-                            attempt_index=attempt_index,
-                            scheduled_at=scheduled_at,
-                            executed_at=scheduled_at,
-                            outcome=draw.outcome,
-                            error_source=draw.error_source,
-                            error_step=draw.error_step,
-                            error_reason=draw.error_reason,
-                            gateway_ref=f"rzp_test_sim_{uuid.uuid4().hex[:14]}",
-                            had_valid_pdn=has_valid_pdn,
-                        )
+                    attempt_row = Attempt(
+                        cycle_id=cycle.id,
+                        attempt_index=attempt_index,
+                        scheduled_at=scheduled_at,
+                        executed_at=scheduled_at,
+                        outcome=draw.outcome,
+                        error_source=draw.error_source,
+                        error_step=draw.error_step,
+                        error_reason=draw.error_reason,
+                        gateway_ref=f"rzp_test_sim_{uuid.uuid4().hex[:14]}",
+                        had_valid_pdn=has_valid_pdn,
                     )
+                    session.add(attempt_row)
+                    session.flush()  # need attempt_row.id if this attempt triggers a revocation
                     summary.n_attempts += 1
 
                     if draw.outcome == "success":
@@ -422,7 +422,13 @@ def run_simulation(
                     )
                     if rng.random() < hazard:
                         revoked = True
-                        session.add(Revocation(mandate_id=mandate.id, revoked_at=scheduled_at))
+                        session.add(
+                            Revocation(
+                                mandate_id=mandate.id,
+                                revoked_at=scheduled_at,
+                                trigger_attempt_id=attempt_row.id,
+                            )
+                        )
                         summary.n_revocations += 1
                         mandate.status = "revoked"
                         break

@@ -217,6 +217,20 @@ regime_shift:
     sensitivity_range: [1.3, 2.5]
     note: "multiplies the bank's base_bd from cycle 6 onward, test-only"
 
+ltv:
+  # Not a simulator parameter (nothing in sim/engine.py reads this) — an assumption used
+  # by models/ltv.py to convert (amount x expected remaining cycles) into a rupee LTV.
+  # Declared here anyway, with the same source-or-assumption discipline, because
+  # docs/05-ML-SPEC.md requires its range to feed the Phase 4 sensitivity analysis.
+  margin_factor:
+    value: 0.7
+    assumption: true
+    sensitivity_range: [0.4, 0.9]
+    note: "merchant's margin on the recurring amount after payment/processing costs; not observed anywhere in the simulator, a pure assumption"
+  horizon_cycles:
+    value: 8
+    source: "docs/04-DATA-MODEL.md: 8 monthly cycles is the simulator's full horizon"
+
 rng:
   seed_default:
     value: 42

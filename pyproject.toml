@@ -15,6 +15,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pyarrow>=17.0",
+    "joblib>=1.4",
 ]
 
 [project.optional-dependencies]
@@ -47,7 +48,7 @@ warn_unused_ignores = true
 exclude = ["^web/", "^tests/"]
 
 [[tool.mypy.overrides]]
-module = ["lightgbm.*", "sklearn.*", "scipy.*", "pandas.*"]
+module = ["lightgbm.*", "sklearn.*", "scipy.*", "pandas.*", "joblib.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -12,6 +12,11 @@ import argparse
 from sim.engine import default_db_path, run_simulation
 from sim.params import load_params
 
+# The canonical single-run artifact `make train`/`make eval` read by convention when no
+# explicit --seed sweep or --out is requested. Multi-seed sweeps (--seeds N>1) keep the
+# per-seed suffixed naming from sim.engine.default_db_path.
+CANONICAL_DB_PATH = "data/dobara.sqlite3"
+
 # Benchmark ranges from docs/04-DATA-MODEL.md calibration anchors table. These are
 # per-seed sanity bands for human eyeballing during `make sim` — they print but never
 # fail the run. The real gate is tests/test_calibration.py, which asserts the MEAN across
@@ -45,10 +50,21 @@ def main() -> None:
     args = parser.parse_args()
 
     params = load_params()
-    seeds = [args.seed] if args.seed is not None else list(range(args.seeds))
+    single_default_run = args.seed is None and args.seeds == 1
+    if single_default_run:
+        seeds = [params.get("rng.seed_default")]
+    elif args.seed is not None:
+        seeds = [args.seed]
+    else:
+        seeds = list(range(args.seeds))
 
     for seed in seeds:
-        db_path = args.out or default_db_path(seed)
+        if args.out:
+            db_path = args.out
+        elif single_default_run:
+            db_path = CANONICAL_DB_PATH
+        else:
+            db_path = default_db_path(seed)
         summary = run_simulation(
             params,
             seed=seed,

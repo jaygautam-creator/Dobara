@@ -7,9 +7,10 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-25 (Day 1-3 session)
-**Phase:** Phase 0 + Phase 1 (simulator) complete. Phase 2 in progress: feature builder +
-bank health done; recovery model, revocation hazard model, and LTV estimator remain.
+**Last updated:** 2026-08-25 (Day 1-4 session)
+**Phase:** Phase 0 + Phase 1 (simulator) + Phase 2 (models) complete. Ready to begin
+Phase 3 (agent). One Phase 2 item deliberately deferred to Phase 3: per-prediction feature
+attribution (belongs in the audit trail, which doesn't exist yet).
 
 **Done:**
 - Track, loss class, thesis and objective function decided and written up
@@ -57,15 +58,50 @@ bank health done; recovery model, revocation hazard model, and LTV estimator rem
   Leakage test (`tests/test_features_leakage.py`) mutates a later attempt's outcome and
   asserts every earlier row's features are unchanged. 30 tests total, all green.
 
+- Hardened the leakage test per user review: `_compare_cols()` now asserts the full
+  declared feature list + label is present before comparing (a renamed column could
+  otherwise silently narrow the check and still pass — same failure mode as a print-only
+  benchmark). Added a second leakage case that INSERTs a new later attempt (rather than
+  mutating an existing one) to catch a feature reading the mere *existence* of a future
+  row — a bug class the mutation-only test can't see. Caught a real bug while writing it:
+  a raw-SQL datetime literal read back in a different textual format than SQLAlchemy
+  ORM-written rows, and pandas silently turned the mismatched rows into `NaT`.
+- README reframed the banned-feature guard honestly: a stated commitment backed by import
+  isolation + review, not a proof — it's name-based and catches naming, not semantics.
+- Fixed `Revocation.trigger_attempt_id` (was always `None` — needed to label exactly which
+  attempt triggered a revocation for the hazard model).
+- Fixed the `make sim` → `make train` wiring gap: `sim/run.py` was writing
+  `data/dobara_seed0.sqlite3` by default while `models/train.py` read
+  `data/dobara.sqlite3` — the two had never been run back-to-back before. A single default
+  run (no `--seed`/`--seeds`/`--out`) now writes the canonical `data/dobara.sqlite3`;
+  multi-seed sweeps keep the per-seed naming.
+- **Recovery model** (`models/recovery.py`): LightGBM + logistic baseline, isotonic
+  calibration, Brier-led metric blocks with bootstrap CIs (`models/metrics.py`, shared with
+  the hazard model), slice metrics by bank/method/attempt-index/regime-shift-bank. Real
+  test-set result: LightGBM and logistic are essentially tied (Brier 0.1219 vs 0.1220) —
+  reported honestly via `beats_baseline`, not oversold. Regime-shift-bank slice is visibly
+  worse-calibrated (Brier 0.179 vs 0.113), which is the ABSTAIN signal Phase 3 needs.
+- **Revocation hazard model** (`features/hazard.py` + `models/hazard.py`): discrete-time
+  hazard, exposure unit is one row per `soft_decline` attempt (not per calendar day —
+  documented why in the module docstring: `sim/engine.py` only evaluates hazard there).
+  Headline number confirms the thesis empirically: hazard rises 0.113 → 0.130 → 0.207 as
+  same-cycle failure count goes 0 → 1 → 2. Survival-curve conversion included.
+- **LTV estimator** (`models/ltv.py`): transparent Kaplan-Meier-style life table by
+  `(merchant_category, mandate_age_cycles)` from real simulated data, not model
+  predictions. `margin_factor` assumption (0.7, range [0.4, 0.9]) added to
+  `sim/params.yaml`'s new `ltv:` block for the Phase 4 sensitivity analysis.
+- `models/train.py` CLI wires all three together; `make sim && python -m models.train`
+  runs end-to-end. 40 tests total, all green via `make check`.
+
 **In progress:** nothing.
 
-**Next action:** finish Phase 2 per `docs/05-ML-SPEC.md`: the recovery model (LightGBM +
-logistic baseline, isotonic calibration on the validation split, Brier score + reliability
-diagram led before AUC, slice metrics by bank/method/attempt-index/cold-start/regime-shift-
-bank), the revocation hazard model (person-period frame, LightGBM, survival conversion,
-headline marginal-hazard-per-failure-notification number), and the LTV estimator. Use the
-temporal/cold-start splits already built in `sim/splits.py`; the test set (cycles 6-8) is
-touched exactly once — record the count in `artifacts/summary.json` once that exists.
+**Next action:** Day 5 — Phase 3 (agent), spec `docs/06-AGENT-SPEC.md`. Build the closed
+`Action` enum, the pure `decide()` function (no I/O, no clock, no LLM — a test must assert
+this the way `tests/test_no_llm_in_money_path.py` already does for `models/`), the
+declarative compliance rule engine with a `hypothesis` property test ("no generated action
+ever violates a HARD rule"), the seven named stopping reasons, and the audit trail
+(append-only; this is also where the Phase 2 "per-prediction feature attribution" item
+belongs — LightGBM's built-in feature importance / SHAP values retained per decision).
 
 **Blockers:** none.
 
@@ -114,17 +150,17 @@ GitHub repo is created and pushed.
 
 - [x] Feature builder with strict as-of boundary (`features/recovery.py`: `build_recovery_features()`, one row per historical `Attempt`, all 25 spec-named columns, as-of join against bank-health snapshots)
 - [x] Banned-feature test (nothing encoding individual balance/income) — `tests/test_features_banned.py`, `assert_no_banned_features()` checked both statically on the declared column list and on the built DataFrame
-- [ ] Recovery model: LightGBM + **logistic baseline reported alongside**
-- [ ] Isotonic calibration on validation split
-- [ ] Brier score + reliability diagram — **led before AUC**
-- [ ] Slice metrics: bank, method, attempt index, cold-start, regime-shift bank separately
-- [ ] Revocation hazard: person-period frame, LightGBM, survival conversion
-- [ ] Hazard calibration + reliability diagram
-- [ ] Headline interpretable output: marginal hazard per additional failure notification
+- [x] Recovery model: LightGBM + **logistic baseline reported alongside** (`models/recovery.py`; test-set result: LightGBM Brier 0.1219 vs logistic 0.1220 — essentially tied, reported honestly as `beats_baseline` rather than oversold)
+- [x] Isotonic calibration on validation split (cycle 5, both models)
+- [x] Brier score + reliability diagram — **led before AUC** (`models/metrics.py::metric_block`, Brier is the first key; AUC 0.735 lightgbm / 0.733 logistic)
+- [x] Slice metrics: bank, method, attempt index, cold-start, regime-shift bank separately (`_slice_metrics` in `models/recovery.py`; regime-shift bank slice Brier 0.179 vs 0.113 non-regime — visibly worse-calibrated, exactly the ABSTAIN signal the design depends on)
+- [x] Revocation hazard: person-period frame, LightGBM, survival conversion (`features/hazard.py` + `models/hazard.py`; exposure unit is per-`soft_decline`-attempt, not per-calendar-day — see the module docstring for why a daily grid would be wrong for this simulator's actual hazard mechanism)
+- [x] Hazard calibration + reliability diagram (isotonic on validation, same `metric_block` treatment)
+- [x] Headline interpretable output: marginal hazard per additional failure notification (`marginal_hazard_by_failure_count()`; real run: 0→1 failures +1.7pp, 1→2 failures +7.7pp — hazard visibly accelerates, the thesis's core empirical claim)
 - [x] Bank health: EWMA with adaptive decay + change-point flag (`models/bank_health.py`; writes a `BankHealthSnapshot` per attempt, consumed as-of by `features/recovery.py`)
-- [ ] LTV estimator (transparent, assumption range declared)
-- [ ] Model versioning hash recorded in audit lines
-- [ ] Per-prediction feature attribution retained
+- [x] LTV estimator (transparent, assumption range declared) — `models/ltv.py`: Kaplan-Meier-style life table by `(merchant_category, mandate_age_cycles)` built directly from simulated Mandate/Cycle/Revocation data (not the hazard model's predictions); `margin_factor` assumption (0.7, range [0.4, 0.9]) added to `sim/params.yaml`'s new `ltv:` block for the Phase 4 sensitivity analysis
+- [x] Model versioning hash recorded (`model_version` in both `recovery_model_report.json` and `hazard_model_report.json`; not yet wired into an audit line since `agent/audit.py` doesn't exist until Phase 3)
+- [ ] Per-prediction feature attribution retained — deferred to Phase 3 (`agent/decide.py` is where predictions become audited decisions)
 
 ## Phase 3 — Agent (Day 5) · spec: `docs/06-AGENT-SPEC.md`
 
@@ -206,3 +242,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-25** — Day 1. Fixed real Razorpay test keys accidentally left in `.env.example` (moved to gitignored `.env.local`). Scaffolded repo (`pyproject.toml`, `Makefile`, CI) and pushed to `github.com/jaygautam-creator/Dobara`. Pinned NPCI AutoPay figures (50M/808M, July 2025) with sourcing reasoning. Built the full simulator (`sim/`): schema, sourced params + validator, isolated latent state, bank/outage/dow calibration, `rejected_no_pdn`, revocation hazard, date-change offer, splits, reproducibility. 17 tests green; `make sim` validated against benchmark sanity bands.
 - **2026-08-25** — Day 1, gap-closing pass before Phase 2. Made the calibration check real: `tests/test_calibration.py` runs 5 seeds and fails CI on a regressed mean; the print-only version stays in `make sim`. Added the harder `revocation_per_execution_ratio ≈ 2.5%` benchmark (derived from the two already-pinned 20M/808M figures) and recalibrated the revocation hazard to hit it — was under-producing revocations ~2.2x, the conservative direction, corrected anyway. That recalibration pulled `recovery_rate` to ~41%, so tightened its band from (0.15, 0.75) to (0.28, 0.48). 21 tests green. Next: Phase 2 — `features/` + recovery/hazard models per `docs/05-ML-SPEC.md`.
 - **2026-08-25** — Day 1-3, Phase 2 start. Fixed a Phase 1 gap: `Customer` rows (`bank_id` — observable, not latent) were never persisted, discovered while building the feature builder. Built `models/bank_health.py` (EWMA + adaptive decay + change-point flag) and `features/recovery.py` (strict as-of feature builder, 25 columns per `docs/05-ML-SPEC.md`, banned-feature guard, leakage test). 30 tests green. Next: recovery model, revocation hazard model, LTV estimator.
+- **2026-08-25** — Day 4, Phase 2 complete. Hardened the leakage test (completeness guard on compared columns; a second case that inserts rather than mutates, catching a different bug class — caught a real raw-SQL-datetime/pandas-parsing bug while writing it). Reframed the banned-feature guard honestly in the README (commitment + review, not proof). Fixed `Revocation.trigger_attempt_id` (was always `None`) and the `sim.run`→`models.train` default-db-path wiring gap. Built the recovery model, the revocation hazard model (with a documented per-soft-decline-attempt exposure unit and a headline marginal-hazard number that empirically confirms the thesis: 0.113→0.130→0.207 as same-cycle failures go 0→1→2), and the LTV life-table estimator. `models/train.py` CLI wires all three; `make sim && python -m models.train` runs end-to-end. 40 tests green. Next: Phase 3 — agent (`docs/06-AGENT-SPEC.md`).

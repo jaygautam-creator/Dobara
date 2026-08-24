@@ -86,3 +86,23 @@ mandates, or monthly executions. The 50M/808M pair is dated, paired with a same-
 YoY comparison, and internally consistent. NPCI's own ecosystem-statistics page returns
 403 to automated fetches and could not be cross-checked directly this session — flagged
 in `docs/04-DATA-MODEL.md` rather than silently worked around.
+
+## [2026-08-25] Simulator retry correlation — added, not in the original spec
+**Chose:** same-cycle retries are correlated with the prior attempt's outcome via
+`retry_policy.within_cycle_repeat_failure_correlation` (0.65, assumption, sensitivity range
+declared), rather than each retry being an independent Bernoulli draw against the bank's
+base TD/BD.
+**Over:** i.i.d. per-attempt draws (the initial implementation).
+**Because:** i.i.d. draws produced an 89.9% within-cycle recovery rate against a published
+dunning-recovery benchmark of 30-45% avg / 55-70% top quartile — a real failure mode
+(insufficient funds, a bank issue) mostly persists across a next-day retry rather than
+resolving itself. Adding the correlation brought recovery to ~46% at seed 42, consistent
+across seeds 0-2. This is exactly the kind of "numbers look too good, check the mechanism"
+case `PLAN.md` warns about.
+
+## [2026-08-25] `sim/params.yaml` — YAML 1.1 boolean-key gotcha
+**Chose:** quote the `YES` bank id as `"YES"` in `sim/params.yaml`.
+**Because:** PyYAML's default (YAML 1.1) parses the unquoted key `YES:` as the boolean
+`True`, silently breaking `banks.YES.base_td` lookups. Caught by the reproducibility test
+failing with `KeyError`. Worth remembering if more bank ids or config keys collide with
+YAML 1.1's boolean words (`yes/no/true/false/on/off`).

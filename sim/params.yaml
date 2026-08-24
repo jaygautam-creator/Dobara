@@ -1,0 +1,215 @@
+# Every leaf below is {value, source} or {value, assumption: true, sensitivity_range}.
+# sim/params.py fails loudly if a leaf has neither. See docs/04-DATA-MODEL.md.
+
+population:
+  n_banks:
+    value: 8
+    assumption: true
+    sensitivity_range: [6, 10]
+    note: "top-8 UPI remitter banks by volume cover the large majority of the market"
+  n_merchants:
+    value: 25
+    assumption: true
+    sensitivity_range: [10, 50]
+    note: "scale chosen for a runnable demo, not a calibrated fact"
+  n_customers:
+    value: 5000
+    assumption: true
+    sensitivity_range: [1000, 20000]
+    note: "30 seeds x 5000 mandates x 8 cycles is the eval-harness compute budget in docs/03-TECH-STACK.md"
+  n_cycles:
+    value: 8
+    source: "docs/04-DATA-MODEL.md split spec: train 1-4, validate 5, test 6-8"
+
+# Per-bank technical/business decline priors. Calibrated within NPCI's published system-wide
+# ranges (TD 0.7-0.8% in 2025, BD target <5% for general UPI) but AutoPay-specific overall
+# failure rate is not separately published by NPCI, so the *overall* AutoPay failure rate
+# per bank is an assumption; only the TD:BD failure-composition split (~18:82, general UPI)
+# and the >20M/month revocation figure anchor it. See docs/04-DATA-MODEL.md BUILD TASK note.
+banks:
+  SBI:
+    base_td: {value: 0.006, source: "https://www.npci.org.in/what-we-do/upi/upi-ecosystem-statistics (system TD 0.7-0.8%, 2025)"}
+    base_bd: {value: 0.11, assumption: true, sensitivity_range: [0.06, 0.20], note: "largest remitter bank; slightly above-average AutoPay BD assumed from higher low-balance-segment share"}
+  HDFC:
+    base_td: {value: 0.006, source: "NPCI ecosystem statistics, 2025 system TD"}
+    base_bd: {value: 0.08, assumption: true, sensitivity_range: [0.04, 0.16]}
+  ICICI:
+    base_td: {value: 0.006, source: "NPCI ecosystem statistics, 2025 system TD"}
+    base_bd: {value: 0.08, assumption: true, sensitivity_range: [0.04, 0.16]}
+  AXIS:
+    base_td: {value: 0.007, source: "NPCI ecosystem statistics, 2025 system TD"}
+    base_bd: {value: 0.09, assumption: true, sensitivity_range: [0.05, 0.18]}
+  KOTAK:
+    base_td: {value: 0.007, source: "NPCI ecosystem statistics, 2025 system TD"}
+    base_bd: {value: 0.09, assumption: true, sensitivity_range: [0.05, 0.18]}
+  PNB:
+    base_td: {value: 0.009, source: "NPCI ecosystem statistics, 2025 system TD upper bound"}
+    base_bd: {value: 0.13, assumption: true, sensitivity_range: [0.07, 0.22], note: "PSU bank, larger low-balance-segment share assumed"}
+  BOB:
+    base_td: {value: 0.009, source: "NPCI ecosystem statistics, 2025 system TD upper bound"}
+    base_bd: {value: 0.12, assumption: true, sensitivity_range: [0.06, 0.20]}
+  "YES":
+    base_td: {value: 0.008, source: "NPCI ecosystem statistics, 2025 system TD"}
+    base_bd: {value: 0.10, assumption: true, sensitivity_range: [0.05, 0.18]}
+
+bd_td_failure_split:
+  business_decline_share_of_failures:
+    value: 0.79
+    source: "Business Standard, Jul 2025: general UPI ~81.7% BD / ~18.26% TD of failures; AutoPay-specific top-50-bank avg ~74% BD of failures. 0.79 is the midpoint used to draw each attempt's TD-vs-BD split."
+    sensitivity_range: [0.74, 0.87]
+
+outages:
+  # Real dated 2025 UPI outages, mapped onto the simulated calendar as correlated
+  # multi-bank shocks. Exact banks were not individually named in coverage, so the
+  # affected-bank subset per event is an assumption.
+  dated_events:
+    - date: "2025-03-26"
+      duration_hours: {value: 1.5, source: "Medianama, Apr 2025: SD-WAN fault, over an hour"}
+      severity_success_multiplier: {value: 0.5, assumption: true, sensitivity_range: [0.3, 0.7]}
+    - date: "2025-04-12"
+      duration_hours: {value: 5.0, source: "Medianama / Business Standard, Apr 2025: ~5h, success rate ~50% for 2h then ~80% for 3h"}
+      severity_success_multiplier: {value: 0.6, source: "Business Standard: blended ~50%/2h + ~80%/3h over 5h ≈ 0.72 blended; 0.6 used as a conservative floor"}
+    - date: "2025-08-07"
+      duration_hours: {value: 3.0, assumption: true, sensitivity_range: [1.0, 6.0], note: "Business Today reports nationwide disruption, duration not precisely stated"}
+      severity_success_multiplier: {value: 0.55, assumption: true, sensitivity_range: [0.3, 0.7]}
+  background_minor_outage_rate_per_bank_per_month:
+    value: 0.15
+    assumption: true
+    sensitivity_range: [0.05, 0.4]
+    note: "expected count of small (<1h, single-bank) outages per bank per simulated month, beyond the dated events above"
+
+dow_profile:
+  # Multiplicative success-rate adjustment by day of week, Mon=0..Sun=6.
+  # UPI/AutoPay does not publish a day-of-week success curve; modelled as a mild weekend dip
+  # (more discretionary spend competing for balance) per general dunning-benchmark commentary.
+  weights:
+    value: [1.00, 1.00, 1.00, 1.00, 0.98, 0.94, 0.95]
+    assumption: true
+    sensitivity_range: [0.85, 1.0]
+
+balance_process:
+  # Latent only — never exposed to features/. See sim/latent.py.
+  salary_cluster_share:
+    value: 0.65
+    assumption: true
+    sensitivity_range: [0.5, 0.8]
+    note: "share of customers whose income lands in the 1st-3rd of the month"
+  salary_day_std_days:
+    value: 1.5
+    assumption: true
+    sensitivity_range: [0.5, 3.0]
+  midmonth_cluster_share:
+    value: 0.20
+    assumption: true
+    sensitivity_range: [0.1, 0.3]
+    note: "remaining non-salary-cluster customers land mid-month (e.g. gig/freelance income)"
+  spend_decay_per_day:
+    value: 0.06
+    assumption: true
+    sensitivity_range: [0.02, 0.12]
+    note: "fraction of remaining balance spent per day since income, geometric decay"
+
+retry_policy:
+  retry_requires_fresh_pdn:
+    value: true
+    source: "docs/01-REGULATORY.md: conservative reading of the 24h-PDN rule, config.retry_requires_fresh_pdn"
+  pdn_lead_hours:
+    value: 24
+    source: "RBI e-mandate framework, RBI-PDN-24H"
+  max_attempts_default_policy:
+    value: 4
+    assumption: true
+    sensitivity_range: [1, 8]
+    note: "the razorpay_default arm's documented behaviour; used to generate the Phase-1/2 training history"
+  min_gap_hours_between_attempts:
+    value: 24
+    source: "RBI-PDN-24H: cannot retry faster than a fresh 24h notification allows"
+  contact_hours: {start: 8, end: 19}
+  contact_hours_source: "RBI Fair Practices Code / Digital Lending Guidelines, CONDUCT-HOURS"
+  within_cycle_repeat_failure_correlation:
+    value: 0.65
+    assumption: true
+    sensitivity_range: [0.3, 0.85]
+    note: "probability a same-cycle retry repeats the prior attempt's failure cause (persistent low balance / bank issue), rather than being an independent draw. Calibrated so the population dunning recovery rate lands in the published 30-45% (avg) / 55-70% (top quartile) band rather than the ~90% an i.i.d. per-attempt model produces."
+
+revocation:
+  base_hazard_per_cycle:
+    value: 0.006
+    assumption: true
+    sensitivity_range: [0.002, 0.015]
+    note: "background revocation hazard with zero failure notifications, calibrated so population aggregate lands near the >20M/month figure at realistic mandate-base scale"
+  hazard_per_failure_notification:
+    value: 0.031
+    assumption: true
+    sensitivity_range: [0.015, 0.060]
+    note: "calibrated so simulated population revocation rate approaches the >20M/month : ~mandate-base ratio implied by 50M new / 808M executions monthly (Business Standard, Jul 2025)"
+  hazard_per_contact_density:
+    value: 0.012
+    assumption: true
+    sensitivity_range: [0.004, 0.025]
+    note: "additional hazard per notification beyond the first within a cycle (fatigue effect)"
+  hazard_consecutive_failed_cycles_multiplier:
+    value: 1.35
+    assumption: true
+    sensitivity_range: [1.1, 1.8]
+  mandate_age_protection_halflife_cycles:
+    value: 6
+    assumption: true
+    sensitivity_range: [3, 12]
+    note: "older mandates are modestly stickier; hazard multiplier decays toward 1.0 with mandate age"
+
+notification:
+  cost_inr:
+    sms: {value: 0.15, source: "Business Today / industry DLT SMS cost range, ~₹0.10-0.20 per transactional SMS"}
+    whatsapp: {value: 0.35, assumption: true, sensitivity_range: [0.2, 0.6], note: "WhatsApp Business utility-template conversation cost, India, approximate"}
+    push: {value: 0.0, assumption: true, note: "in-app push assumed free at our scale"}
+  fatigue_cap_per_cycle:
+    value: 3
+    source: "docs/01-REGULATORY.md DOBARA-FATIGUE, self-imposed hard cap"
+
+date_change_offer:
+  response_rate:
+    value: 0.06
+    assumption: true
+    sensitivity_range: [0.0, 0.15]
+    note: "single-digit response rate per docs/04-DATA-MODEL.md; a response_rate: 0.0 run is required in eval and must not break the policy"
+  converge_max_changes_per_n_cycles:
+    value: 1
+    source: "docs/01-REGULATORY.md DOBARA-CONVERGE"
+    n_cycles: 4
+
+afa:
+  threshold_inr:
+    value: 15000
+    source: "RBI e-mandate framework, RBI-AFA-15K"
+  threshold_inr_insurance_mf_cc:
+    value: 100000
+    source: "RBI e-mandate framework, RBI-AFA-15K"
+
+mandate:
+  amount_distribution_inr:
+    # lognormal-ish ticket sizes across OTT/SIP/insurance/utility merchant categories
+    median: {value: 499, assumption: true, sensitivity_range: [99, 2000], note: "typical OTT/subscription AutoPay ticket size"}
+    sigma: {value: 0.9, assumption: true, sensitivity_range: [0.5, 1.5]}
+
+regime_shift:
+  # Deliberately injected test-only failure-profile shift, required by docs/04-DATA-MODEL.md
+  # so the eval harness can show ABSTAIN firing on a bank whose behaviour changes in the
+  # test window only. Not a calibrated real-world fact — a test-design mechanism.
+  bank_id:
+    value: "SBI"
+    assumption: true
+    note: "arbitrary choice of which bank carries the regime shift"
+  applies_from_cycle_index:
+    value: 6
+    source: "docs/04-DATA-MODEL.md split spec: test = cycles 6-8"
+  shift_multiplier_bd:
+    value: 1.8
+    assumption: true
+    sensitivity_range: [1.3, 2.5]
+    note: "multiplies the bank's base_bd from cycle 6 onward, test-only"
+
+rng:
+  seed_default:
+    value: 42
+    source: "arbitrary, fixed for reproducibility; overridable via --seed"

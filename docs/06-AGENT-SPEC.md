@@ -16,10 +16,10 @@ def decide(ctx: DecisionContext, models: ModelBundle, config: PolicyConfig) -> D
 chosen: Action
 expected_net: Money
 confidence_interval: tuple[Money, Money]
-rejected_alternatives: list[RejectedAlternative]   # each with its own E[net] and reason
+rejected_alternatives: list[RejectedAlternative]  # each with its own E[net] and reason
 clauses_satisfied: list[ClauseRef]
 clauses_blocked: list[ClauseRef]
-rupee_math: RupeeMath                              # every term, shown
+rupee_math: RupeeMath  # every term, shown
 model_versions: dict[str, str]
 feature_attribution: dict[str, float]
 stopping_reason: StoppingReason | None
@@ -47,13 +47,15 @@ Score each, take the argmax, subject to the gate and the positivity floor.
 `agent/compliance.py`. Declarative rules, each an object:
 
 ```python
-Rule(id="RBI-PDN-24H",
-     text="Every debit attempt, including every retry, must be preceded by a "
-          "pre-debit notification at least 24 hours earlier.",
-     severity=HARD,
-     citation="RBI e-mandate framework",
-     source_url="https://...",
-     predicate=lambda action, ctx: ...)
+Rule(
+    id="RBI-PDN-24H",
+    text="Every debit attempt, including every retry, must be preceded by a "
+    "pre-debit notification at least 24 hours earlier.",
+    severity=HARD,
+    citation="RBI e-mandate framework",
+    source_url="https://...",
+    predicate=lambda action, ctx: ...,
+)
 ```
 
 **Structural enforcement, not advisory.** The gate runs *inside* candidate generation, so a

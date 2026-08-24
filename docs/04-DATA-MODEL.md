@@ -26,8 +26,10 @@ Three devices carry that:
 | UPI business decline (BD) | NPCI target <5% (circular OC-149, Jun 2022) | NPCI |
 | Bank-wise TD/BD, uptime | Published monthly, per bank | NPCI BD/TD & Uptime page |
 | AutoPay mandate revocations | **>20 million/month**, low balance | Business Standard |
-| New AutoPay mandates | ~50M registered Jul 2025 (~2× YoY) | Business Standard |
-| Mandate executions | 808M/month (Jul 2025), up from 392M | Business Standard |
+| New AutoPay mandates | ~50M new registrations, Jul 2025 (~2× the ~26M in Jul 2024) | Business Standard |
+| Mandate executions | 808M/month (Jul 2025), up from 392M Jul 2024 | Business Standard |
+| AutoPay failure composition | of *failed* AutoPay executions, top-50-bank avg ~74% are business decline (insufficient funds etc.) vs technical — comparable to the general-UPI ~81.7%/18.26% BD:TD split among failures | Business Standard, Jul 2025 |
+| Recorded UPI outages, 2025 | 2025-03-26 (SD-WAN fault, ~1h+); 2025-04-12 (excess status-check API calls, ~5h, success rate ~50% for 2h then ~80% for 3h); 2025-08-07 (bank-level glitches, nationwide) | Business Standard / Medianama / Business Today |
 | Involuntary churn share | 20–40% of total churn | Recurly / dunning benchmarks |
 | Payment failure rate | ~4–6% B2B, 6–10% B2C | Dunning benchmarks |
 | Dunning recovery rate | avg 30–45%; top quartile 55–70% | Dunning benchmarks |
@@ -41,12 +43,16 @@ Three devices carry that:
 > up from ~26 million in July 2024 (NPCI data, via
 > [Business Standard, Feb 2025 / Sep 2025](https://www.business-standard.com/finance/personal-finance/upi-autopay-growth-2025-overtakes-cards-payments-npci-125022000316_1.html)).
 > Mandate **executions** (recurring debits actually run against existing mandates) were
-> **~808 million in July 2025**, up from ~392 million in July 2024 — same source. Business
-> decline across the top 50 banks on these executions averaged **~74%** that month, which
-> is far above the general UPI BD figure and is itself evidence for this project's thesis:
-> AutoPay debits fail disproportionately, because they run at bank-decided moments the
-> customer did not initiate. Revocations (**>20 million/month**, low balance) are reported
-> against this same base — Business Standard, Sep 2025.
+> **~808 million in July 2025**, up from ~392 million in July 2024 — same source. Of the
+> AutoPay executions that *failed* that month, business decline (insufficient funds and
+> other non-technical reasons) accounted for **~74%** across the top 50 banks — comparable
+> to the general UPI split of ~81.7% BD / ~18.26% TD among all failures. Read correctly,
+> this is a share-of-failures figure, **not an overall failure rate** — the article does not
+> state AutoPay's overall success/failure percentage directly, so `sim/params.yaml` treats
+> the overall AutoPay failure rate as a calibrated assumption (sensitivity range declared),
+> anchored only by this BD:TD split and by the >20M/month revocation figure as a consistency
+> check. Revocations (**>20 million/month**, low balance) are reported against this same
+> base — Business Standard, Sep 2025.
 >
 > **Rejected:** "over 120 million AutoPay mandates created every month," which recurs
 > across secondary fintech blogs (payment-gateway marketing pages, listicle roundups). It

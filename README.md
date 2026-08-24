@@ -108,6 +108,15 @@ the agent would learn its own generator and the evaluation would be circular.
 
 The test set is touched once. The evaluation count is recorded in `artifacts/summary.json`.
 
+**A concrete example of how we handle a sourcing conflict.** Press coverage disagrees on
+AutoPay volume: one recurring figure is "over 120 million mandates created every month,"
+another is "50 million new mandates in July 2025." We pinned the latter — 50M new
+registrations / 808M executions, July 2025, NPCI data via Business Standard, dated and
+paired with a same-source year-on-year comparison — and rejected the 120M figure because
+no source traces it to a specific NPCI release or states whether it means new mandates,
+active mandates, or monthly executions. Full reasoning in
+[`docs/04-DATA-MODEL.md`](docs/04-DATA-MODEL.md#calibration-anchors-real-cited).
+
 ---
 
 ## What Dobara deliberately does not do

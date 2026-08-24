@@ -34,6 +34,7 @@ from sim.params import Params
 from sim.schema import (
     Attempt,
     Base,
+    Customer,
     Cycle,
     Mandate,
     Merchant,
@@ -253,6 +254,18 @@ def run_simulation(
             cycle_day = int(np.clip(rng.normal(c.income_day + 2, 2), 1, 28))
             is_cold_start = c.customer_id >= cold_start_cutoff
 
+            # bank_id is observable (a PSP knows a customer's bank from the VPA/routing
+            # info) — only the balance process (sim.latent) is hidden. Persisted here so
+            # features/ can read it; segment is a placeholder pending real segmentation.
+            customer_row = Customer(
+                id=c.customer_id,
+                bank_id=c.bank_id,
+                segment="standard",
+                preferred_debit_day=None,
+                opted_out=False,
+            )
+            session.add(customer_row)
+
             mandate = Mandate(
                 merchant_id=merchant.id,
                 customer_id=c.customer_id,
@@ -323,6 +336,7 @@ def run_simulation(
                     if accepted:
                         state.last_date_change_cycle = cycle_index
                         cycle_day = int(np.clip(c.income_day + 2, 1, 28))
+                        customer_row.preferred_debit_day = cycle_day  # Tier 1: declared
 
                 prior_attempt_failed = False
                 for attempt_index in range(1, max_attempts + 1):

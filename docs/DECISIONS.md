@@ -147,3 +147,16 @@ the band exactly to the literature range, which would make the test flaky rather
 meaningful. This band was reached without conflicting with the revocations/execution
 target — both benchmarks pass simultaneously at the current calibration, so no further
 loosening was necessary.
+
+## [2026-08-25] Fixed: `Customer` rows were never persisted to the schema
+**Chose:** insert a `Customer` row (`bank_id`, `segment`, `preferred_debit_day`,
+`opted_out`) per customer in `sim/engine.py`, and set `preferred_debit_day` when a
+date-change offer is accepted (Tier 1 evidence).
+**Over:** leaving `sim.latent.CustomerLatent.bank_id` as the only place `bank_id` existed.
+**Because:** discovered while building `features/` (Phase 2) — `Mandate.customer_id`
+referenced a `customers` table that was never populated, so any join from `Mandate` to a
+customer's bank would silently return zero rows. `bank_id` is **not** latent — a real PSP
+knows a customer's bank from the VPA/routing info; only the balance process is hidden.
+This was a Phase 1 gap, not a Phase 2 design choice, and had to be fixed before
+`models/bank_health.py` or `features/recovery.py` could join anything. `segment` is left as
+a constant `"standard"` placeholder — no real segmentation logic exists yet.

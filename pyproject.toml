@@ -47,7 +47,7 @@ warn_unused_ignores = true
 exclude = ["^web/", "^tests/"]
 
 [[tool.mypy.overrides]]
-module = ["lightgbm.*", "sklearn.*", "scipy.*"]
+module = ["lightgbm.*", "sklearn.*", "scipy.*", "pandas.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

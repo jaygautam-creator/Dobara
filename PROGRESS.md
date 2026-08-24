@@ -7,8 +7,9 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-25 (Day 1 session)
-**Phase:** Phase 0 + Phase 1 (simulator) complete. Ready to begin Phase 2 (models).
+**Last updated:** 2026-08-25 (Day 1-3 session)
+**Phase:** Phase 0 + Phase 1 (simulator) complete. Phase 2 in progress: feature builder +
+bank health done; recovery model, revocation hazard model, and LTV estimator remain.
 
 **Done:**
 - Track, loss class, thesis and objective function decided and written up
@@ -32,13 +33,39 @@
   lands inside the declared benchmark sanity bands (failure 20.2%, recovery 46.4%,
   revocation 9.1%/mandate/8-cycles)
 
+- Calibration made real, not just printed: `tests/test_calibration.py` runs 5 seeds and
+  asserts the MEAN of each metric against its band, CI-enforced. Added the harder
+  `revocation_per_execution_ratio ≈ 2.5%` benchmark (20M revocations ÷ 808M executions/month,
+  both already pinned) and recalibrated the revocation hazard to hit it — was
+  under-producing ~2.2x. That pulled `recovery_rate`'s mean to ~41%, so its band tightened
+  to (0.28, 0.48), close to the published 30-45% average.
+- Fixed a real Phase 1 gap found while building Phase 2: `Customer` rows (`bank_id`,
+  `segment`, `preferred_debit_day`) were never persisted to the schema — only the hidden
+  `CustomerLatent` held `bank_id`. `bank_id` is observable (a PSP knows it from the VPA),
+  not latent, so this blocked any join from a mandate to its customer's bank. Fixed in
+  `sim/engine.py`; `preferred_debit_day` is now set when a date-change offer is accepted
+  (Tier 1 evidence).
+- Bank health (Model 3): `models/bank_health.py` — EWMA with adaptive decay (decay rises
+  with recent outcome variance) + a rolling change-point flag, per (bank × method). Writes
+  a `BankHealthSnapshot` after every attempt.
+- Feature builder (Phase 2 foundation): `features/recovery.py` — `build_recovery_features()`
+  emits one row per historical `Attempt` with all 25 feature columns from `docs/05-ML-SPEC.md`
+  Model 1, computed strictly from data before that attempt's `scheduled_at` (prior
+  attempts/cycles on the same mandate; an as-of join against bank-health snapshots strictly
+  before the timestamp, never the snapshot the attempt itself produced).
+  `assert_no_banned_features()` blocks any column name containing balance/income/spend/etc.
+  Leakage test (`tests/test_features_leakage.py`) mutates a later attempt's outcome and
+  asserts every earlier row's features are unchanged. 30 tests total, all green.
+
 **In progress:** nothing.
 
-**Next action:** Day 3 — Phase 2 (models), spec `docs/05-ML-SPEC.md`. Build `features/`
-(strict as-of boundary, banned-feature test for individual balance/income), then the
-recovery model (LightGBM + logistic baseline, isotonic calibration, Brier score before AUC),
-then the revocation hazard model (person-period, LightGBM, survival conversion), then bank
-health EWMA + change-point flag.
+**Next action:** finish Phase 2 per `docs/05-ML-SPEC.md`: the recovery model (LightGBM +
+logistic baseline, isotonic calibration on the validation split, Brier score + reliability
+diagram led before AUC, slice metrics by bank/method/attempt-index/cold-start/regime-shift-
+bank), the revocation hazard model (person-period frame, LightGBM, survival conversion,
+headline marginal-hazard-per-failure-notification number), and the LTV estimator. Use the
+temporal/cold-start splits already built in `sim/splits.py`; the test set (cycles 6-8) is
+touched exactly once — record the count in `artifacts/summary.json` once that exists.
 
 **Blockers:** none.
 
@@ -80,13 +107,13 @@ GitHub repo is created and pushed.
 - [x] `make sim` reproducible from seed (hash-identical output across runs, tested; diverges across seeds, tested)
 - [x] **Validation: output matches published benchmarks, CI-enforced** — `tests/test_calibration.py` runs 5 seeds and asserts the MEAN of each metric against its band (fails the build on regression); `sim/run.py`'s BENCHMARKS stays print-only for `make sim` readability. Includes the harder benchmark `revocation_per_execution_ratio ≈ 2.5%` (20M revocations ÷ 808M executions/month, both pinned in `docs/04-DATA-MODEL.md`) — the revocation hazard was recalibrated to hit it (was under-producing ~2.2x, the conservative direction). `recovery_rate` band tightened to (0.28, 0.48), close to the published 30-45% average, once that recalibration pulled the simulated mean to ~41%. See `docs/DECISIONS.md` [2026-08-25].
 - [x] Splits: temporal (1–4 / 5 / 6–8), cold-start mandates, regime-shift bank in test only (`sim/splits.py`; regime-shift bank = SBI, injected from cycle 6)
-- [ ] Leakage test: no feature reads post-decision data — deferred to Phase 2, `features/` doesn't exist as real code yet
-- [x] Isolation test: `features/` cannot import latent tables (`tests/test_latent_isolation.py`, AST-based, passes on the current empty `features/`)
+- [x] Leakage test: no feature reads post-decision data (`tests/test_features_leakage.py` — mutate a later attempt's outcome, recompute, assert every earlier row's features are byte-identical)
+- [x] Isolation test: `features/` cannot import latent tables (`tests/test_latent_isolation.py`, AST-based, passes on real `features/recovery.py` code now)
 
 ## Phase 2 — Models (Day 3–4) · spec: `docs/05-ML-SPEC.md`
 
-- [ ] Feature builder with strict as-of boundary
-- [ ] Banned-feature test (nothing encoding individual balance/income)
+- [x] Feature builder with strict as-of boundary (`features/recovery.py`: `build_recovery_features()`, one row per historical `Attempt`, all 25 spec-named columns, as-of join against bank-health snapshots)
+- [x] Banned-feature test (nothing encoding individual balance/income) — `tests/test_features_banned.py`, `assert_no_banned_features()` checked both statically on the declared column list and on the built DataFrame
 - [ ] Recovery model: LightGBM + **logistic baseline reported alongside**
 - [ ] Isotonic calibration on validation split
 - [ ] Brier score + reliability diagram — **led before AUC**
@@ -94,7 +121,7 @@ GitHub repo is created and pushed.
 - [ ] Revocation hazard: person-period frame, LightGBM, survival conversion
 - [ ] Hazard calibration + reliability diagram
 - [ ] Headline interpretable output: marginal hazard per additional failure notification
-- [ ] Bank health: EWMA with adaptive decay + change-point flag
+- [x] Bank health: EWMA with adaptive decay + change-point flag (`models/bank_health.py`; writes a `BankHealthSnapshot` per attempt, consumed as-of by `features/recovery.py`)
 - [ ] LTV estimator (transparent, assumption range declared)
 - [ ] Model versioning hash recorded in audit lines
 - [ ] Per-prediction feature attribution retained
@@ -178,3 +205,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-24** — Day 0. Research, thesis, regulatory clearance, full specification, plan, handoff system. Next: Day 1 scaffold + simulator.
 - **2026-08-25** — Day 1. Fixed real Razorpay test keys accidentally left in `.env.example` (moved to gitignored `.env.local`). Scaffolded repo (`pyproject.toml`, `Makefile`, CI) and pushed to `github.com/jaygautam-creator/Dobara`. Pinned NPCI AutoPay figures (50M/808M, July 2025) with sourcing reasoning. Built the full simulator (`sim/`): schema, sourced params + validator, isolated latent state, bank/outage/dow calibration, `rejected_no_pdn`, revocation hazard, date-change offer, splits, reproducibility. 17 tests green; `make sim` validated against benchmark sanity bands.
 - **2026-08-25** — Day 1, gap-closing pass before Phase 2. Made the calibration check real: `tests/test_calibration.py` runs 5 seeds and fails CI on a regressed mean; the print-only version stays in `make sim`. Added the harder `revocation_per_execution_ratio ≈ 2.5%` benchmark (derived from the two already-pinned 20M/808M figures) and recalibrated the revocation hazard to hit it — was under-producing revocations ~2.2x, the conservative direction, corrected anyway. That recalibration pulled `recovery_rate` to ~41%, so tightened its band from (0.15, 0.75) to (0.28, 0.48). 21 tests green. Next: Phase 2 — `features/` + recovery/hazard models per `docs/05-ML-SPEC.md`.
+- **2026-08-25** — Day 1-3, Phase 2 start. Fixed a Phase 1 gap: `Customer` rows (`bank_id` — observable, not latent) were never persisted, discovered while building the feature builder. Built `models/bank_health.py` (EWMA + adaptive decay + change-point flag) and `features/recovery.py` (strict as-of feature builder, 25 columns per `docs/05-ML-SPEC.md`, banned-feature guard, leakage test). 30 tests green. Next: recovery model, revocation hazard model, LTV estimator.

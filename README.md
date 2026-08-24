@@ -123,7 +123,14 @@ active mandates, or monthly executions. Full reasoning in
 
 - **No individual cash-flow inference.** We never model a specific person's balance or
   income. Only declared preference, our own transaction history, and aggregate cohort
-  priors. We could have built the balance model. We chose not to.
+  priors. We could have built the balance model. We chose not to. This is a **stated
+  commitment**, held up by two different mechanisms: import isolation (`features/` has no
+  import path to the simulator's hidden balance process, `sim/latent.py`, enforced by a
+  test) and a name-based guard (`assert_no_banned_features` in `features/recovery.py`
+  rejects any feature column whose name contains `balance`/`income`/`spend`/etc.). The
+  name-based guard catches naming, not semantics — it cannot detect a differently-named
+  feature that is *functionally* a balance proxy. It is a backstop and a stated
+  commitment, not a proof; the real guarantee is the import boundary plus review.
 - **No probing debits.** A ₹1 test debit to detect whether funds exist is technically
   clever, ethically indefensible, and almost certainly breaches the mandate's amount terms.
 - **No LLM on the money path.** Probabilities and decisions are tabular, calibrated and

@@ -69,6 +69,13 @@ AFA_THRESHOLD_INR = 15000.0
 
 
 def assert_no_banned_features(columns: list[str]) -> None:
+    """Name-based guard, not a semantic one — it catches naming, not meaning. It cannot
+    detect a differently-named feature that is functionally a balance/income proxy. The
+    real guarantee is the import boundary (`features/` has no import path to
+    `sim.latent`, enforced by `tests/test_latent_isolation.py`) plus review; this function
+    is a stated commitment and a backstop, not a proof. See README "What Dobara
+    deliberately does not do".
+    """
     for c in columns:
         low = c.lower()
         for bad in BANNED_FEATURE_SUBSTRINGS:

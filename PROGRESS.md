@@ -12,15 +12,24 @@
 The harness exists and runs end-to-end (`eval/world.py`, `eval/rng.py`, `eval/arms.py`,
 `eval/runner.py`, `eval/metrics.py`, `eval/sensitivity.py`, `eval/run.py`), `agent/decide.py`
 was batch-score-optimized (~26x) with a characterization test locking in behavior-identity,
-and a real bug in the `oracle` arm was found and fixed. **But:** the one full 30-seed x
-5-arm run completed so far (`artifacts/results.parquet`/`summary.json`, both now stale)
-ran *before* the oracle fix, and a second, unresolved finding — `dobara` underperforming
-`do_nothing` on net LTV in that run — is diagnosed but deliberately not code-fixed pending
-the user's call (see `docs/DECISIONS.md` [2026-08-25] "Full 30-seed harness ran; two
-anomalies found in verification, oracle fixed"). **The current `artifacts/results.parquet`
-and `artifacts/summary.json` must NOT be treated as final or quoted anywhere (README, UI,
-video) — they predate the oracle fix and the harness needs a rerun.** Do not tick Phase 4
-checkboxes below based on these artifacts.
+a real bug in the `oracle` arm was found and fixed (it now weakly dominates every arm, as
+an oracle must), and a real `P(revoke)` conditional/unconditional-probability bug in
+`agent/decide.py`'s `E[net]` formula was found, user-approved, and fixed (see
+`docs/DECISIONS.md` [2026-08-25], the two most recent entries). **But Phase 4 is still not
+done: the `dobara`-underperforms-`do_nothing` puzzle is NOT resolved by the P(revoke) fix**
+— smoke-tested post-fix at n=4,000 (5 seeds): `dobara` now clearly beats
+`razorpay_default` (+₹137/mandate net LTV) but still trails `do_nothing` (-₹167/mandate),
+and the fix actually made `dobara` retry *slightly more*, not less, which is the wrong
+direction to close that specific gap. The full 30-seed harness has **not been rerun** —
+relaunching now would just re-spend ~2h reproducing the same open question rather than
+answering it; the next investigation should compare the hazard model's predictions at the
+*actual* feature values `eval/runner.py::_run_dobara_arm` presents against
+`sim.engine.revocation_hazard`'s true values for those same contexts (the previous
+session's calibration probe used a small, unmatched synthetic sample). **The current
+`artifacts/results.parquet`/`summary.json` predate BOTH fixes (oracle and P(revoke)) and
+must NOT be treated as final or quoted anywhere (README, UI, video).** Do not tick Phase 4
+checkboxes below based on these artifacts, and do not rerun the full harness until the
+`dobara`-vs-`do_nothing` question has an actual answer, not just a hoped-for one.
 
 **Phase 3 done (this session), on top of Phase 0-2:**
 - Closed `Action` type (`agent/actions.py`): `ScheduleDebit`/`SendPreDebitNotice`/

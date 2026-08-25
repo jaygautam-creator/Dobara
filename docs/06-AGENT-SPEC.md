@@ -106,7 +106,11 @@ Human-readable rendering, generated from the structured record:
          bank_health_ewma 0.971 (stable, n=2,140) · day_of_month 28 · attempt_index 2
          notifications_this_cycle 1 · consecutive_failed_cycles 0 · mandate_age 6
   THOUGHT P(success | 2 Sep 10:00) = 0.71 [0.66–0.76]   (isotonic-calibrated)
-          P(revoke | +1 failure notice) = 0.038 [0.029–0.049]
+          P(revoke | this attempt fails) = 0.131   (hazard model's raw output — a
+            conditional probability; NOT used directly, see below)
+          P(revoke) = (1 − 0.71) × 0.131 = 0.038 [0.029–0.049]   (weighted by P(fail),
+            since the candidate hasn't failed yet — the model's raw output on its own
+            would overstate this ~3.4×)
           LTV_remaining = ₹4,240
           E[net] = 0.71×499 − 0.038×4240 − 0.35 = ₹193.2  [₹151.8 – ₹231.6]
   ALT     retry 29 Aug 10:00 → E[net] ₹41.7   (lower P(success): pre-salary window)

@@ -16,6 +16,15 @@ To regenerate the fixture deliberately (only after a reviewed, intentional behav
 change — never to silence a failing assertion):
     uv run python -c \
         "from tests.test_agent_decide_characterization import write_fixture; write_fixture()"
+
+**Regenerated 2026-08-25** for exactly this reason: `agent/decide.py` was fixed to weight
+`P(revoke)` by `P(fail)` instead of using the hazard model's raw conditional
+`P(revoke | fail)` output directly (a real bug, not a refactor) — see
+`docs/DECISIONS.md` [2026-08-25] "Fixed: P(revoke) was the hazard model's raw
+conditional-on-failure output, not the unconditional probability the E[net] formula
+needs". Every case's `expected_net`/`confidence_band`/`rupee_math` shifted accordingly
+(lower `p_revoke` everywhere, since `1/P(fail) > 1`), and this is the expected, reviewed
+new baseline, not a regression.
 """
 
 from __future__ import annotations

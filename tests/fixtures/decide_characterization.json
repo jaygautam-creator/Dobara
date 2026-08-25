@@ -68,10 +68,10 @@
       }
     ],
     "confidence_band": [
-      171.547605,
-      193.062137
+      181.964776,
+      200.842276
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -107,130 +107,134 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": "insufficient_confidence"
   },
   "abstain_ci_straddles_zero": {
     "chosen": {
-      "reason": "expected_value_ci_straddles_zero",
-      "type": "Abstain"
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
     },
     "clauses_blocked": [],
     "clauses_satisfied": [
@@ -296,10 +300,10 @@
       }
     ],
     "confidence_band": [
-      -16.1798,
-      289.539821
+      20.175779,
+      291.294419
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -335,125 +339,125 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
-    "stopping_reason": "insufficient_confidence"
+    "stopping_reason": null
   },
   "abstain_insufficient_slice_n": {
     "chosen": {
@@ -524,10 +528,10 @@
       }
     ],
     "confidence_band": [
-      -372.83182,
-      386.418386
+      -319.64193,
+      386.906439
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -563,122 +567,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": "insufficient_confidence"
@@ -752,10 +756,10 @@
       }
     ],
     "confidence_band": [
-      171.547605,
-      193.062137
+      181.964776,
+      200.842276
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -791,122 +795,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": "insufficient_confidence"
@@ -1176,10 +1180,10 @@
       }
     ],
     "confidence_band": [
-      145.210484,
-      213.849898
+      159.290808,
+      219.527224
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -1215,122 +1219,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -1408,10 +1412,10 @@
       }
     ],
     "confidence_band": [
-      145.210484,
-      213.849898
+      159.290808,
+      219.527224
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -1447,122 +1451,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -1640,10 +1644,10 @@
       }
     ],
     "confidence_band": [
-      145.210484,
-      213.849898
+      159.290808,
+      219.527224
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -1679,122 +1683,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -1872,10 +1876,10 @@
       }
     ],
     "confidence_band": [
-      90.470944,
-      195.957911
+      124.680916,
+      209.75171
     ],
-    "expected_net": 151.200194,
+    "expected_net": 173.090014,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -1911,122 +1915,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 151.050194,
+        "expected_net": 172.940014,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 150.850194,
+        "expected_net": 172.740014,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 146.210194,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 167.566116,
+        "reason": "E[net] lower by Rs.5.52 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 146.060194,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 167.416116,
+        "reason": "E[net] lower by Rs.5.67 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 145.860194,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 167.216116,
+        "reason": "E[net] lower by Rs.5.87 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 141.220194,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 162.042218,
+        "reason": "E[net] lower by Rs.11.05 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 141.070194,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 161.892218,
+        "reason": "E[net] lower by Rs.11.20 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 140.870194,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 161.692218,
+        "reason": "E[net] lower by Rs.11.40 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 116.270194,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 134.422728,
+        "reason": "E[net] lower by Rs.38.67 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 116.120194,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 134.272728,
+        "reason": "E[net] lower by Rs.38.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 115.920194,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 134.072728,
+        "reason": "E[net] lower by Rs.39.02 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 111.280194,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 128.89883,
+        "reason": "E[net] lower by Rs.44.19 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 111.130194,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 128.74883,
+        "reason": "E[net] lower by Rs.44.34 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 110.930194,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 128.54883,
+        "reason": "E[net] lower by Rs.44.54 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 106.290194,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 123.374932,
+        "reason": "E[net] lower by Rs.49.72 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 106.140194,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 123.224932,
+        "reason": "E[net] lower by Rs.49.87 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 105.940194,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 123.024932,
+        "reason": "E[net] lower by Rs.50.07 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 101.300194,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 117.851034,
+        "reason": "E[net] lower by Rs.55.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 101.150194,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 117.701034,
+        "reason": "E[net] lower by Rs.55.39 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 100.950194,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 117.501034,
+        "reason": "E[net] lower by Rs.55.59 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.151.20 than the chosen candidate"
+        "reason": "E[net] lower by Rs.173.09 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.151.20 than the chosen candidate"
+        "reason": "E[net] lower by Rs.173.09 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 151.200194,
+      "expected_net": 173.090014,
       "ltv_remaining": 2291.408,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -2130,10 +2134,10 @@
       }
     ],
     "confidence_band": [
-      145.210484,
-      213.849898
+      159.290808,
+      219.527224
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -2169,157 +2173,157 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-08-29T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-08-30T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-08-31T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-01T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-02T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-03T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-04T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -2397,10 +2401,10 @@
       }
     ],
     "confidence_band": [
-      157.376485,
-      217.826437
+      166.982944,
+      221.699857
     ],
-    "expected_net": 189.597676,
+    "expected_net": 195.744529,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -2436,157 +2440,157 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 189.447676,
+        "expected_net": 195.594529,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 189.247676,
+        "expected_net": 195.394529,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 184.607676,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
-      },
-      {
-        "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 184.457676,
+        "expected_net": 190.604606,
         "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
       },
       {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 190.454606,
+        "reason": "E[net] lower by Rs.5.29 than the chosen candidate"
+      },
+      {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 184.257676,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 190.254606,
+        "reason": "E[net] lower by Rs.5.49 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 179.617676,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 185.464683,
+        "reason": "E[net] lower by Rs.10.28 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 179.467676,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 185.314683,
+        "reason": "E[net] lower by Rs.10.43 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 179.267676,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 185.114683,
+        "reason": "E[net] lower by Rs.10.63 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 154.667676,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 159.765066,
+        "reason": "E[net] lower by Rs.35.98 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 154.517676,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 159.615066,
+        "reason": "E[net] lower by Rs.36.13 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 154.317676,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 159.415066,
+        "reason": "E[net] lower by Rs.36.33 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 149.677676,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 154.625143,
+        "reason": "E[net] lower by Rs.41.12 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 149.527676,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 154.475143,
+        "reason": "E[net] lower by Rs.41.27 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 149.327676,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 154.275143,
+        "reason": "E[net] lower by Rs.41.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 144.687676,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 149.48522,
+        "reason": "E[net] lower by Rs.46.26 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 144.537676,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 149.33522,
+        "reason": "E[net] lower by Rs.46.41 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 144.337676,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 149.13522,
+        "reason": "E[net] lower by Rs.46.61 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 139.697676,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 144.345297,
+        "reason": "E[net] lower by Rs.51.40 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 139.547676,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 144.195297,
+        "reason": "E[net] lower by Rs.51.55 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 139.347676,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 143.995297,
+        "reason": "E[net] lower by Rs.51.75 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-08-29T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-08-30T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-08-31T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-01T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-02T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-03T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
         "description": "offer date change to day 12 at 2026-09-04T10:00:00",
         "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.189.60 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.74 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.189.60 than the chosen candidate"
+        "reason": "E[net] lower by Rs.195.74 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 189.597676,
+      "expected_net": 195.744529,
       "ltv_remaining": 643.447368,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -2690,10 +2694,10 @@
       }
     ],
     "confidence_band": [
-      7275.074343,
-      10713.922752
+      7980.501403,
+      10998.357907
     ],
-    "expected_net": 9149.075,
+    "expected_net": 9600.45425,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -2729,122 +2733,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 9148.925,
+        "expected_net": 9600.30425,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 9148.725,
+        "expected_net": 9600.10425,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 8899.075,
-        "reason": "E[net] lower by Rs.250.00 than the chosen candidate"
+        "expected_net": 9339.445,
+        "reason": "E[net] lower by Rs.261.01 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 8898.925,
-        "reason": "E[net] lower by Rs.250.15 than the chosen candidate"
+        "expected_net": 9339.295,
+        "reason": "E[net] lower by Rs.261.16 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 8898.725,
-        "reason": "E[net] lower by Rs.250.35 than the chosen candidate"
+        "expected_net": 9339.095,
+        "reason": "E[net] lower by Rs.261.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 8649.075,
-        "reason": "E[net] lower by Rs.500.00 than the chosen candidate"
+        "expected_net": 9078.43575,
+        "reason": "E[net] lower by Rs.522.02 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 8648.925,
-        "reason": "E[net] lower by Rs.500.15 than the chosen candidate"
+        "expected_net": 9078.28575,
+        "reason": "E[net] lower by Rs.522.17 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 8648.725,
-        "reason": "E[net] lower by Rs.500.35 than the chosen candidate"
+        "expected_net": 9078.08575,
+        "reason": "E[net] lower by Rs.522.37 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 7399.075,
-        "reason": "E[net] lower by Rs.1750.00 than the chosen candidate"
+        "expected_net": 7773.3895,
+        "reason": "E[net] lower by Rs.1827.06 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 7398.925,
-        "reason": "E[net] lower by Rs.1750.15 than the chosen candidate"
+        "expected_net": 7773.2395,
+        "reason": "E[net] lower by Rs.1827.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 7398.725,
-        "reason": "E[net] lower by Rs.1750.35 than the chosen candidate"
+        "expected_net": 7773.0395,
+        "reason": "E[net] lower by Rs.1827.41 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 7149.075,
-        "reason": "E[net] lower by Rs.2000.00 than the chosen candidate"
+        "expected_net": 7512.38025,
+        "reason": "E[net] lower by Rs.2088.07 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 7148.925,
-        "reason": "E[net] lower by Rs.2000.15 than the chosen candidate"
+        "expected_net": 7512.23025,
+        "reason": "E[net] lower by Rs.2088.22 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 7148.725,
-        "reason": "E[net] lower by Rs.2000.35 than the chosen candidate"
+        "expected_net": 7512.03025,
+        "reason": "E[net] lower by Rs.2088.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 6899.075,
-        "reason": "E[net] lower by Rs.2250.00 than the chosen candidate"
+        "expected_net": 7251.371,
+        "reason": "E[net] lower by Rs.2349.08 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 6898.925,
-        "reason": "E[net] lower by Rs.2250.15 than the chosen candidate"
+        "expected_net": 7251.221,
+        "reason": "E[net] lower by Rs.2349.23 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 6898.725,
-        "reason": "E[net] lower by Rs.2250.35 than the chosen candidate"
+        "expected_net": 7251.021,
+        "reason": "E[net] lower by Rs.2349.43 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 6649.075,
-        "reason": "E[net] lower by Rs.2500.00 than the chosen candidate"
+        "expected_net": 6990.36175,
+        "reason": "E[net] lower by Rs.2610.09 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 6648.925,
-        "reason": "E[net] lower by Rs.2500.15 than the chosen candidate"
+        "expected_net": 6990.21175,
+        "reason": "E[net] lower by Rs.2610.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 6648.725,
-        "reason": "E[net] lower by Rs.2500.35 than the chosen candidate"
+        "expected_net": 6990.01175,
+        "reason": "E[net] lower by Rs.2610.44 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.9149.08 than the chosen candidate"
+        "reason": "E[net] lower by Rs.9600.45 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.9149.08 than the chosen candidate"
+        "reason": "E[net] lower by Rs.9600.45 than the chosen candidate"
       }
     ],
     "requires_signoff": true,
     "rupee_math": {
       "amount": 25000.0,
       "cost": 0.0,
-      "expected_net": 9149.075,
+      "expected_net": 9600.45425,
       "ltv_remaining": 47250.0,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -2922,10 +2926,10 @@
       }
     ],
     "confidence_band": [
-      145.210484,
-      213.849898
+      159.290808,
+      219.527224
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -2961,47 +2965,47 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -3105,10 +3109,10 @@
       }
     ],
     "confidence_band": [
-      147.710945,
-      215.280299
+      160.871762,
+      220.308741
     ],
-    "expected_net": 184.596068,
+    "expected_net": 192.79358,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -3144,122 +3148,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 184.446068,
+        "expected_net": 192.64358,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 184.246068,
+        "expected_net": 192.44358,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 179.606068,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 187.603641,
+        "reason": "E[net] lower by Rs.5.19 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 179.456068,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
-      },
-      {
-        "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 179.256068,
+        "expected_net": 187.453641,
         "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
       },
       {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 187.253641,
+        "reason": "E[net] lower by Rs.5.54 than the chosen candidate"
+      },
+      {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 174.616068,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 182.413701,
+        "reason": "E[net] lower by Rs.10.38 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 174.466068,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 182.263701,
+        "reason": "E[net] lower by Rs.10.53 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 174.266068,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 182.063701,
+        "reason": "E[net] lower by Rs.10.73 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 149.666068,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 156.464005,
+        "reason": "E[net] lower by Rs.36.33 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 149.516068,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 156.314005,
+        "reason": "E[net] lower by Rs.36.48 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 149.316068,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 156.114005,
+        "reason": "E[net] lower by Rs.36.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 144.676068,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 151.274066,
+        "reason": "E[net] lower by Rs.41.52 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 144.526068,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 151.124066,
+        "reason": "E[net] lower by Rs.41.67 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 144.326068,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 150.924066,
+        "reason": "E[net] lower by Rs.41.87 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 139.686068,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 146.084126,
+        "reason": "E[net] lower by Rs.46.71 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 139.536068,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 145.934126,
+        "reason": "E[net] lower by Rs.46.86 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 139.336068,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 145.734126,
+        "reason": "E[net] lower by Rs.47.06 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 134.696068,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 140.894187,
+        "reason": "E[net] lower by Rs.51.90 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 134.546068,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 140.744187,
+        "reason": "E[net] lower by Rs.52.05 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 134.346068,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 140.544187,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.184.60 than the chosen candidate"
+        "reason": "E[net] lower by Rs.192.79 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.184.60 than the chosen candidate"
+        "reason": "E[net] lower by Rs.192.79 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 184.596068,
+      "expected_net": 192.79358,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0212,
+      "p_revoke": 0.012508,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -3337,10 +3341,10 @@
       }
     ],
     "confidence_band": [
-      145.210484,
-      213.849898
+      159.290808,
+      219.527224
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -3376,122 +3380,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -3569,10 +3573,10 @@
       }
     ],
     "confidence_band": [
-      145.210484,
-      213.849898
+      159.290808,
+      219.527224
     ],
-    "expected_net": 182.615537,
+    "expected_net": 191.625067,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -3608,122 +3612,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 182.465537,
+        "expected_net": 191.475067,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 182.265537,
+        "expected_net": 191.275067,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 177.625537,
-        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+        "expected_net": 186.415322,
+        "reason": "E[net] lower by Rs.5.21 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 177.475537,
-        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+        "expected_net": 186.265322,
+        "reason": "E[net] lower by Rs.5.36 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 177.275537,
-        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+        "expected_net": 186.065322,
+        "reason": "E[net] lower by Rs.5.56 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 172.635537,
-        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+        "expected_net": 181.205578,
+        "reason": "E[net] lower by Rs.10.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 172.485537,
-        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+        "expected_net": 181.055578,
+        "reason": "E[net] lower by Rs.10.57 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 172.285537,
-        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+        "expected_net": 180.855578,
+        "reason": "E[net] lower by Rs.10.77 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 147.685537,
-        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+        "expected_net": 155.156854,
+        "reason": "E[net] lower by Rs.36.47 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 147.535537,
-        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+        "expected_net": 155.006854,
+        "reason": "E[net] lower by Rs.36.62 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 147.335537,
-        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+        "expected_net": 154.806854,
+        "reason": "E[net] lower by Rs.36.82 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 142.695537,
-        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+        "expected_net": 149.94711,
+        "reason": "E[net] lower by Rs.41.68 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 142.545537,
-        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+        "expected_net": 149.79711,
+        "reason": "E[net] lower by Rs.41.83 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 142.345537,
-        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+        "expected_net": 149.59711,
+        "reason": "E[net] lower by Rs.42.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 137.705537,
-        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+        "expected_net": 144.737365,
+        "reason": "E[net] lower by Rs.46.89 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 137.555537,
-        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+        "expected_net": 144.587365,
+        "reason": "E[net] lower by Rs.47.04 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 137.355537,
-        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+        "expected_net": 144.387365,
+        "reason": "E[net] lower by Rs.47.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 132.715537,
-        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+        "expected_net": 139.527621,
+        "reason": "E[net] lower by Rs.52.10 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 132.565537,
-        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+        "expected_net": 139.377621,
+        "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 132.365537,
-        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+        "expected_net": 139.177621,
+        "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 499.0,
       "cost": 0.0,
-      "expected_net": 182.615537,
+      "expected_net": 191.625067,
       "ltv_remaining": 943.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null
@@ -3801,10 +3805,10 @@
       }
     ],
     "confidence_band": [
-      28.809294,
-      42.427134
+      31.602786,
+      43.553497
     ],
-    "expected_net": 36.230337,
+    "expected_net": 38.017799,
     "feature_attribution": {
       "amount": 0.049,
       "amount_vs_afa_threshold": 0.05,
@@ -3840,122 +3844,122 @@
     "rejected_alternatives": [
       {
         "description": "retry 2026-08-31T10:00:00 via sms",
-        "expected_net": 36.080337,
+        "expected_net": 37.867799,
         "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-31T10:00:00 via whatsapp",
-        "expected_net": 35.880337,
+        "expected_net": 37.667799,
         "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via push",
-        "expected_net": 35.240337,
-        "reason": "E[net] lower by Rs.0.99 than the chosen candidate"
+        "expected_net": 36.984202,
+        "reason": "E[net] lower by Rs.1.03 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via sms",
-        "expected_net": 35.090337,
-        "reason": "E[net] lower by Rs.1.14 than the chosen candidate"
+        "expected_net": 36.834202,
+        "reason": "E[net] lower by Rs.1.18 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-30T10:00:00 via whatsapp",
-        "expected_net": 34.890337,
-        "reason": "E[net] lower by Rs.1.34 than the chosen candidate"
+        "expected_net": 36.634202,
+        "reason": "E[net] lower by Rs.1.38 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via push",
-        "expected_net": 34.250337,
-        "reason": "E[net] lower by Rs.1.98 than the chosen candidate"
+        "expected_net": 35.950606,
+        "reason": "E[net] lower by Rs.2.07 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via sms",
-        "expected_net": 34.100337,
-        "reason": "E[net] lower by Rs.2.13 than the chosen candidate"
+        "expected_net": 35.800606,
+        "reason": "E[net] lower by Rs.2.22 than the chosen candidate"
       },
       {
         "description": "retry 2026-08-29T10:00:00 via whatsapp",
-        "expected_net": 33.900337,
-        "reason": "E[net] lower by Rs.2.33 than the chosen candidate"
+        "expected_net": 35.600606,
+        "reason": "E[net] lower by Rs.2.42 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via push",
-        "expected_net": 29.300337,
-        "reason": "E[net] lower by Rs.6.93 than the chosen candidate"
+        "expected_net": 30.782622,
+        "reason": "E[net] lower by Rs.7.24 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via sms",
-        "expected_net": 29.150337,
-        "reason": "E[net] lower by Rs.7.08 than the chosen candidate"
+        "expected_net": 30.632622,
+        "reason": "E[net] lower by Rs.7.39 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-04T10:00:00 via whatsapp",
-        "expected_net": 28.950337,
-        "reason": "E[net] lower by Rs.7.28 than the chosen candidate"
+        "expected_net": 30.432622,
+        "reason": "E[net] lower by Rs.7.59 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-03T10:00:00 via push",
-        "expected_net": 28.310337,
-        "reason": "E[net] lower by Rs.7.92 than the chosen candidate"
-      },
-      {
-        "description": "retry 2026-09-03T10:00:00 via sms",
-        "expected_net": 28.160337,
-        "reason": "E[net] lower by Rs.8.07 than the chosen candidate"
-      },
-      {
-        "description": "retry 2026-09-03T10:00:00 via whatsapp",
-        "expected_net": 27.960337,
+        "expected_net": 29.749026,
         "reason": "E[net] lower by Rs.8.27 than the chosen candidate"
       },
       {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 29.599026,
+        "reason": "E[net] lower by Rs.8.42 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 29.399026,
+        "reason": "E[net] lower by Rs.8.62 than the chosen candidate"
+      },
+      {
         "description": "retry 2026-09-02T10:00:00 via push",
-        "expected_net": 27.320337,
-        "reason": "E[net] lower by Rs.8.91 than the chosen candidate"
+        "expected_net": 28.715429,
+        "reason": "E[net] lower by Rs.9.30 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via sms",
-        "expected_net": 27.170337,
-        "reason": "E[net] lower by Rs.9.06 than the chosen candidate"
+        "expected_net": 28.565429,
+        "reason": "E[net] lower by Rs.9.45 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-02T10:00:00 via whatsapp",
-        "expected_net": 26.970337,
-        "reason": "E[net] lower by Rs.9.26 than the chosen candidate"
+        "expected_net": 28.365429,
+        "reason": "E[net] lower by Rs.9.65 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via push",
-        "expected_net": 26.330337,
-        "reason": "E[net] lower by Rs.9.90 than the chosen candidate"
+        "expected_net": 27.681833,
+        "reason": "E[net] lower by Rs.10.34 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via sms",
-        "expected_net": 26.180337,
-        "reason": "E[net] lower by Rs.10.05 than the chosen candidate"
+        "expected_net": 27.531833,
+        "reason": "E[net] lower by Rs.10.49 than the chosen candidate"
       },
       {
         "description": "retry 2026-09-01T10:00:00 via whatsapp",
-        "expected_net": 25.980337,
-        "reason": "E[net] lower by Rs.10.25 than the chosen candidate"
+        "expected_net": 27.331833,
+        "reason": "E[net] lower by Rs.10.69 than the chosen candidate"
       },
       {
         "description": "stop (negative_expected_value)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.36.23 than the chosen candidate"
+        "reason": "E[net] lower by Rs.38.02 than the chosen candidate"
       },
       {
         "description": "escalate (no positive-expected-value action found this cycle)",
         "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.36.23 than the chosen candidate"
+        "reason": "E[net] lower by Rs.38.02 than the chosen candidate"
       }
     ],
     "requires_signoff": false,
     "rupee_math": {
       "amount": 99.0,
       "cost": 0.0,
-      "expected_net": 36.230337,
+      "expected_net": 38.017799,
       "ltv_remaining": 187.11,
-      "p_revoke": 0.0233,
+      "p_revoke": 0.013747,
       "p_success": 0.41
     },
     "stopping_reason": null

@@ -41,15 +41,36 @@ post-hoc filter, per the spec's "structural enforcement, not advisory."
 
 `E[net|a] = P(success|t_a)*amount - P(revoke|attempts+1,...)*LTV_remaining -
 cost(channel_a)`, per docs/02-ARCHITECTURE.md "## The decision, formally". `P(success)`
-comes from `models.recovery` (Model 1, `models/recovery.py`), `P(revoke)` from
-`models.hazard` (Model 2, `models/hazard.py`) — **`hazard_per_failure_notification` is a
-declared assumption in `sim/params.yaml`, recalibrated 2026-08-25; the hazard model's
-prediction here is only as trustworthy as that assumption, which is exactly why
-`min_slice_n`/`max_slice_brier`/change-point abstention exists below rather than trusting
-every prediction blindly** (see `docs/DECISIONS.md` [2026-08-25] "Corrected: the hazard
-headline number does not confirm the thesis"). `LTV_remaining` comes from
-`models.life_table` (`models/ltv.py`, a transparent life-table estimate, not a model
-prediction). `cost` is read from `sim/params.yaml`'s `notification.cost_inr.*`.
+comes from `models.recovery` (Model 1, `models/recovery.py`).
+
+**`P(revoke)` is NOT the hazard model's raw output — it must be weighted by `P(fail)`,
+and getting this wrong is a real bug we found and fixed (2026-08-25).**
+`models/hazard.py`'s exposure unit is "one row per `soft_decline` attempt"
+(`features/hazard.py`'s docstring): the model is trained on, and therefore predicts,
+`P(revoke | this attempt already failed)` — a *conditional* probability. But `decide()`
+scores a candidate *before* its outcome is known, including a cycle's very first
+attempt, when no failure has happened yet. Using the model's raw output directly as the
+unconditional `P(revoke)` this formula needs silently substitutes `P(revoke | fail)` for
+`P(revoke)`, which — since `P(revoke) = P(fail) * P(revoke | fail)` and `P(fail) < 1` —
+overstates every candidate's downside by a factor of `1/P(fail)`. The fix:
+`p_revoke = (1 - p_success) * hazard_raw`, computed per candidate (since `p_success`
+varies by day `t`, `hazard_raw` does not — see `_score_all`'s docstring). This also
+corrected `docs/06-AGENT-SPEC.md`'s own worked audit-trail example, which had the same
+unweighted form. See `docs/DECISIONS.md` [2026-08-25] "Fixed: P(revoke) was the hazard
+model's raw conditional-on-failure output, not the unconditional probability the E[net]
+formula needs" for the full diagnosis (discovered via `dobara` underperforming
+`do_nothing` net LTV in Phase 4's eval harness — inflated `P(revoke)` was pushing
+`decide()` away from real `ScheduleDebit` retries toward `OfferDateChange`'s unmodelled
+flat placeholder score, which still costs a notification for no realized recovery).
+
+Separately, **`hazard_per_failure_notification` is a declared assumption in
+`sim/params.yaml`, recalibrated 2026-08-25; the hazard model's prediction here is only as
+trustworthy as that assumption, which is exactly why `min_slice_n`/`max_slice_brier`/
+change-point abstention exists below rather than trusting every prediction blindly** (see
+`docs/DECISIONS.md` [2026-08-25] "Corrected: the hazard headline number does not confirm
+the thesis"). `LTV_remaining` comes from `models.life_table` (`models/ltv.py`, a
+transparent life-table estimate, not a model prediction). `cost` is read from
+`sim/params.yaml`'s `notification.cost_inr.*`.
 
 **Confidence band, an approximation, stated honestly — deliberately not called "CI".**
 Neither model exposes a per-prediction posterior. Rather than inventing one, the band
@@ -298,10 +319,11 @@ def _score_all(candidates: list[Action], ctx: DecisionContext, models: ModelBund
     introduce):
 
     - `_hazard_row(ctx)` depends only on `ctx`, never on a candidate's proposed time `t` —
-      every `ScheduleDebit` candidate in a single `decide()` call was already getting an
-      *identical* hazard prediction before this refactor, just recomputed ~30 times.
-      Computed once here and reused. Same for the bank-health as-of lookup
-      (`_latest_bank_health`), which is also `ctx`-only.
+      every `ScheduleDebit` candidate in a single `decide()` call gets an *identical*
+      `hazard_raw` (the model's raw `P(revoke | fail)`) computed once here and reused;
+      the per-candidate unconditional `p_revoke = (1 - p_success) * hazard_raw` still
+      varies per candidate because `p_success` does. Same one-shot treatment for the
+      bank-health as-of lookup (`_latest_bank_health`), which is also `ctx`-only.
     - `_recovery_row(ctx, t, ...)` depends on the candidate's day `t` but not its
       `Channel` (channel only affects `cost`, looked up separately per candidate) — three
       `ScheduleDebit` candidates a day apart in `t` shared identical recovery rows before
@@ -310,7 +332,7 @@ def _score_all(candidates: list[Action], ctx: DecisionContext, models: ModelBund
     """
     schedule_debits = [a for a in candidates if isinstance(a, ScheduleDebit)]
 
-    p_revoke = 0.0
+    hazard_raw = 0.0
     n_recovery = 0
     n_hazard = 0
     p_success_by_day: dict[Any, float] = {}
@@ -337,7 +359,13 @@ def _score_all(candidates: list[Action], ctx: DecisionContext, models: ModelBund
             t: [float(c) for c in row] for t, row in zip(days, contrib_arr, strict=True)
         }
 
-        p_revoke = float(models.hazard.predict(_hazard_row(ctx))[0])
+        # Raw model output is P(revoke | this attempt fails) -- a conditional
+        # probability (features/hazard.py's exposure unit is one row per soft_decline
+        # attempt). _net_score converts it to the unconditional P(revoke) the E[net]
+        # formula needs by weighting with (1 - p_success), per-candidate, since
+        # p_success varies by day and hazard_raw does not. See module docstring
+        # "## Scoring" and docs/DECISIONS.md [2026-08-25].
+        hazard_raw = float(models.hazard.predict(_hazard_row(ctx))[0])
 
     ltv = ltv_remaining(
         ctx.amount, models.life_table, ctx.merchant_category, ctx.cycle_index - 1, models.sim_params
@@ -353,7 +381,7 @@ def _score_all(candidates: list[Action], ctx: DecisionContext, models: ModelBund
             scores.append(
                 _net_score(
                     p_success_by_day[action.t],
-                    p_revoke,
+                    hazard_raw,
                     ctx.amount,
                     ltv,
                     cost,
@@ -397,7 +425,7 @@ def _score_offer_date_change(
 
 def _net_score(
     p_success: float,
-    p_revoke: float,
+    hazard_raw: float,
     amount: Money,
     ltv: Money,
     cost: Money,
@@ -405,13 +433,28 @@ def _net_score(
     n_recovery: int,
     n_hazard: int,
 ) -> _Score:
+    """`hazard_raw` is the hazard model's raw `P(revoke | this attempt fails)`. The
+    unconditional `P(revoke)` the E[net] formula needs is `(1 - p_success) * hazard_raw`
+    (see module docstring "## Scoring") -- computed here, not passed in, so it is never
+    accidentally used unweighted elsewhere.
+    """
+    p_revoke = (1 - p_success) * hazard_raw
     expected_net = p_success * amount - p_revoke * ltv - cost
 
     p_success_lo, p_success_hi = _wilson_interval(p_success, n_recovery)
-    p_revoke_lo, p_revoke_hi = _wilson_interval(p_revoke, n_hazard)
+    hazard_lo, hazard_hi = _wilson_interval(hazard_raw, n_hazard)
 
-    band_lo = p_success_lo * amount - p_revoke_hi * ltv - cost
-    band_hi = p_success_hi * amount - p_revoke_lo * ltv - cost
+    # p_revoke = (1 - p_success) * hazard_raw is a product of two uncertain terms.
+    # Worst case for p_revoke (used in band_lo, the pessimistic E[net]) pairs the
+    # highest plausible hazard with the highest plausible (1 - p_success) -- i.e. the
+    # *lowest* plausible p_success; best case (band_hi) is the mirror. This is the same
+    # worst-case/best-case interval-arithmetic convention _net_score already used for
+    # p_success alone before this fix.
+    p_revoke_worst = (1 - p_success_lo) * hazard_hi
+    p_revoke_best = (1 - p_success_hi) * hazard_lo
+
+    band_lo = p_success_lo * amount - p_revoke_worst * ltv - cost
+    band_hi = p_success_hi * amount - p_revoke_best * ltv - cost
 
     feature_attribution = dict(
         zip(RECOVERY_FEATURE_COLUMNS, [float(c) for c in contrib[:-1]], strict=True)

@@ -468,3 +468,62 @@ produce a better-looking result. Reported to the user/coordinator instead of gue
 explicitly in `docs/06-AGENT-SPEC.md`'s own worked example — a change here needs the
 user's sign-off, not an agent's unilateral judgment call under a "fix it" mandate that
 could otherwise be read as license to tune the result toward a preferred conclusion.
+
+## [2026-08-25] Fixed: P(revoke) was the hazard model's raw conditional-on-failure output, not the unconditional probability the E[net] formula needs
+
+**Chose:** the user reviewed the reasoning above and explicitly authorized the fix.
+`agent/decide.py::_net_score` now computes `p_revoke = (1 - p_success) * hazard_raw`
+(the model's raw output renamed `hazard_raw` throughout `_score_all`/`_net_score` to make
+the distinction unmissable), used in `E[net]`, `RupeeMath.p_revoke` (so the audit trail's
+displayed rupee-math stays internally consistent — `rm.p_revoke * rm.ltv_remaining`
+equals the actual subtracted downside), and the Wilson confidence band (propagated as a
+product of two independent bounds: `p_revoke`'s worst case pairs the highest plausible
+`hazard_raw` with the highest plausible `1 - p_success`, i.e. the *lowest* plausible
+`p_success` — the same worst-case/best-case convention already used for `p_success`
+alone). `docs/06-AGENT-SPEC.md`'s worked example updated to show both the raw conditional
+value and the weighted result. `tests/test_agent_decide_characterization.py`'s fixture
+deliberately regenerated (documented in the test file's own docstring) — every case's
+`expected_net`/`confidence_band`/`rupee_math` shifted since `p_revoke` shrank everywhere.
+`make check` green (73 tests): the purity test, all 7 stopping-reason tests, all 4
+abstention tests, and the 200-example `hypothesis` property test needed no changes — none
+of them hard-code a specific `E[net]` number.
+**Because:** this is correct regardless of which arm it favors — `P(revoke | fail)` is
+not `P(revoke)`, and conflating them is a real conditional-probability error in the money
+path, independent of any eval-harness result.
+
+**But it does NOT resolve, and mildly sharpens, the `dobara`-vs-`do_nothing` puzzle from
+the entry above — reporting this honestly rather than assuming the fix worked.** Smoke-
+tested at two scales before committing to the ~2h full rerun (`_run_one_seed` directly,
+bypassing the harness's parquet/summary writing):
+- n=400 (seeds 901-902, 200 customers each): `dobara` net LTV/mandate ₹4,470 vs
+  `do_nothing` ₹4,777 — `dobara` still behind by ₹307/mandate.
+- n=4,000 (seeds 901-905, 800 customers each, less noisy): `do_nothing` ₹4,829,
+  `razorpay_default` ₹4,525, `dobara` ₹4,662/mandate. `dobara` beats `razorpay_default`
+  by ₹137/mandate (still a real, solid margin) but trails `do_nothing` by ₹167/mandate —
+  and critically, `dobara`'s mean attempts (7.95 → 8.12) and notifications (8.00 → 8.15)
+  *increased* after the fix, not decreased, because shrinking `p_revoke` makes every
+  retry candidate's perceived downside smaller, so `decide()` is now *more* willing to
+  retry, not less. This is the opposite of what would close the gap with a zero-retry
+  baseline, and it is exactly the direction the previous entry's diagnosis flagged as
+  "convenient" and declined to assume — the smoke check confirms that caution was
+  warranted: the fix was correct to make on statistical-correctness grounds alone, but it
+  is not, by itself, the explanation for why `dobara` loses to `do_nothing`.
+**Also corrects a misreading of the pre-fix headline number**, caught while computing
+these per-mandate comparisons: the completed (pre-oracle-fix) run's
+`paired_dobara_vs_razorpay_default.mean_diff` of ₹1,028,326.93 is the mean **per-seed**
+total difference (each seed = 5,000 mandates), not a total pooled across all 30 seeds'
+150,000 mandate-rows — so the correct pre-fix per-mandate lift was **≈₹205.67/mandate**,
+not ≈₹6.86 as an earlier per-150,000 division implied. Worth being careful about this
+distinction (`_total` metric names in `summary.json` are per-seed totals, aggregated by
+`eval/metrics.py::bootstrap_mean_ci` across seeds) whenever quoting these numbers.
+**Not rerun this session.** The full 30-seed harness was not relaunched: relaunching now
+would only reproduce the still-unresolved `dobara`-vs-`do_nothing` question at greater
+computational cost, on a premise (the fix explains the gap) the smoke check does not
+support. Rerunning is worthwhile once that deeper question — whether the hazard model's
+predictions, at the *specific* feature values `eval/runner.py::_run_dobara_arm` actually
+presents (not the small synthetic probe in the previous entry), systematically diverge
+from `sim.engine.revocation_hazard`'s true values for those same contexts, or whether
+`LTV_remaining`/`agent/decide.py`'s candidate-generation coarseness is doing something
+unexpected — has an answer, so the rerun's ~2h isn't spent re-discovering the same open
+question. `artifacts/results.parquet`/`summary.json` remain the pre-both-fixes run and
+must not be quoted anywhere; `PROGRESS.md` continues to flag them stale.

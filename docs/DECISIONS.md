@@ -228,3 +228,66 @@ across the *full* declared `sensitivity_range` [0.05, 0.15] of
 LTV — plus the break-even value of that parameter below which `aggressive_8x` would win.
 This is already scoped in `docs/07-EVAL-SPEC.md` and tracked in `PROGRESS.md` Phase 4 as
 the sensitivity analysis and break-even statement gate items.
+
+## [2026-08-25] Phase 3 agent: model loading, feature attribution, ESCALATE_TO_HUMAN scoring
+**Chose, three related design calls not fully specified by `docs/06-AGENT-SPEC.md`:**
+
+1. **Model loading.** Phase 2 (`models/recovery.py`, `models/hazard.py`) only trained and
+   persisted joblib artifacts — nothing loaded them back for inference. Added
+   `load_recovery_model`/`load_hazard_model` (read by exact filename convention
+   `_persist` already wrote) and `predict_lgbm_contrib`/`predict_contrib` methods (native
+   LightGBM `pred_contrib`) directly onto `TrainedRecoveryModel`/`TrainedHazardModel`,
+   and a single I/O-boundary function `agent/models.py::load_model_bundle` that also
+   builds the LTV life table and loads bank-health snapshots. **Over:** a separate
+   `agent/` -owned loader duplicating the joblib filename convention, or a lazy/cached
+   loader inside `decide()` itself. **Because:** `decide()` must stay I/O-free per spec;
+   the loading logic belongs next to the persistence logic it mirrors, not in a third
+   place.
+2. **Per-decision feature attribution** (the Phase 2 item `PROGRESS.md` deferred here).
+   Used LightGBM's native `pred_contrib=True` (real per-row SHAP-style values, not the
+   model's global feature importance) rather than adding a SHAP dependency — LightGBM
+   already computes the same Saabas-style contributions internally, so this is zero new
+   dependencies and zero new numerical approximation.
+3. **`ESCALATE_TO_HUMAN` scoring.** `docs/02-ARCHITECTURE.md` lists it as "always in the
+   candidate set" alongside `STOP`, but the formal `E[net|a*]>0 else STOP(...)` decision
+   rule only names `STOP` as the sub-zero fallback — it doesn't say what beats what
+   between `STOP` and `ESCALATE_TO_HUMAN` when neither is preferable to a real action.
+   **Chose:** both scored at a flat `E[net]=0.0` baseline; Python's stable sort plus
+   `STOP` being listed first in the candidate list means `STOP` wins ties. `ESCALATE_TO_HUMAN`
+   is therefore fully reachable, gated, and scored in this build — it appears in
+   `rejected_alternatives` whenever it loses — but its actual *selection* as the emitted
+   action, rather than a considered-and-declined alternative, has no forcing trigger yet
+   and is deferred to the human-facing proposal queue (Phase 5). **Because:** inventing a
+   forcing condition not named anywhere in `docs/01-REGULATORY.md` or
+   `docs/06-AGENT-SPEC.md` would be guessing at unwritten policy; `requires_signoff`
+   (above `human_signoff_threshold_inr`) already carries the real "needs a human"
+   signal the spec describes, decoupled from which specific action is chosen.
+
+**Also resolved, smaller:** the spec lists `INSUFFICIENT_CONFIDENCE` as stopping reason
+#7 (`docs/02-ARCHITECTURE.md`) but also describes a distinct `ABSTAIN(reason)` action
+whose own reasons are the four abstention triggers (`docs/06-AGENT-SPEC.md`). Resolved
+as: `Decision.chosen` is `Abstain(reason=<one of the four AbstentionReasons>)`, and
+`Decision.stopping_reason` is set to `StoppingReason.INSUFFICIENT_CONFIDENCE` alongside
+it — the two enums answer different questions (what action was taken vs. which of the
+seven named reasons explains a non-normal outcome) and both fields are populated
+together rather than picking one representation over the other.
+
+**Also, honestly scoped down:** `OfferDateChange`'s `E[net]` is a flat placeholder
+(`0.01`, just above the `Stop`/`EscalateToHuman` zero baseline) rather than modelled —
+its real value depends on the date-change offer's response rate, which is an eval-harness
+mechanic (`docs/07-EVAL-SPEC.md`, the `response_rate: 0.0` required run), not something
+`decide()` can compute from a single `DecisionContext`. It is gated exactly like every
+other candidate and appears in the audit trail, just not numerically optimized against
+in Phase 3. `SendPreDebitNotice` is similarly never generated as a free-standing
+top-level candidate — every notice in this build serves a specific proposed debit, so
+there is no scenario with a distinct scoreable value for sending one on its own; the type
+still exists for the compliance gate and a future reminder-only extension.
+
+**Confidence interval, stated as an approximation, not a posterior.** Neither model
+exposes a per-prediction predictive distribution. `agent/decide.py` approximates the CI
+on a candidate's `E[net]` with a normal approximation to the binomial proportion CI
+(`p ± 1.96·sqrt(p(1-p)/n)`), using each model's training-time slice observation count as
+the effective sample size, propagated through the linear `E[net]` formula by interval
+arithmetic. This correctly widens for thin slices and tightens for well-observed ones and
+is fully reproducible, but it is not a calibrated posterior — documented as such directly
+in `agent/decide.py`'s module docstring so it cannot be mistaken for one later.

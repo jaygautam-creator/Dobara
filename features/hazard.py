@@ -49,7 +49,7 @@ LABEL_COLUMN = "label_revoked"
 assert_no_banned_features(HAZARD_FEATURE_COLUMNS)
 
 
-def _amount_band(amount: float) -> str:
+def amount_band(amount: float) -> str:
     """Cohort band, not a continuous individual amount — deliberately coarse."""
     if amount < 250:
         return "under_250"
@@ -149,7 +149,7 @@ def build_hazard_features(db_path: str) -> pd.DataFrame:
                 "days_since_first_failure_this_cycle": days_since_first_failure,
                 "consecutive_failed_cycles": h.consecutive_failed_cycles,
                 "mandate_age_cycles": row.cycle_index - 1,
-                "amount_band": _amount_band(row.amount),
+                "amount_band": amount_band(row.amount),
                 "method": row.method,
                 "merchant_category": row.merchant_category,
                 # no notification-response tracking on the pre-debit notice itself in

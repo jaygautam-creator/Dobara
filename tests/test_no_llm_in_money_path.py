@@ -10,7 +10,7 @@ import ast
 from pathlib import Path
 
 MODELS_DIR = Path(__file__).parent.parent / "models"
-AGENT_DECIDE = Path(__file__).parent.parent / "agent" / "decide.py"
+AGENT_DIR = Path(__file__).parent.parent / "agent"
 
 BANNED_SUBSTRINGS = ("llm", "openai", "anthropic", "google.generativeai", "genai")
 
@@ -40,8 +40,13 @@ def test_models_package_has_no_llm_import() -> None:
     assert not offenders, f"models/ must never import the LLM layer: {offenders}"
 
 
-def test_agent_decide_has_no_llm_import() -> None:
-    if not AGENT_DECIDE.exists():
-        return  # agent/decide.py doesn't exist yet (Phase 3); nothing to check
-    hits = _banned_hits(_imported_modules(AGENT_DECIDE.read_text()))
-    assert not hits, f"agent/decide.py must never import the LLM layer: {hits}"
+def test_agent_package_has_no_llm_import() -> None:
+    """The whole decision layer (`agent/`), not just `decide.py` — `compliance.py`,
+    `audit.py`, `models.py` etc. all sit on the money path per docs/02-ARCHITECTURE.md's
+    `agent/` module contract ("Pure function, no I/O, no LLM. Fully unit-testable.")."""
+    offenders = []
+    for py_file in AGENT_DIR.rglob("*.py"):
+        hits = _banned_hits(_imported_modules(py_file.read_text()))
+        if hits:
+            offenders.append((py_file, hits))
+    assert not offenders, f"agent/ must never import the LLM layer: {offenders}"

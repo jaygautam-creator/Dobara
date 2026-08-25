@@ -1,0 +1,46 @@
+# Agent policy configuration — every tunable used by `agent/decide.py`, with the same
+# source-or-assumption discipline as `sim/params.yaml` (loaded through the same
+# `sim.params.load_params` validator: every leaf needs `source:` or `assumption: true`).
+# No magic numbers live in `agent/` code — they live here, cited.
+
+max_attempts_per_cycle:
+  value: 3
+  source: "docs/01-REGULATORY.md DOBARA-FATIGUE — bounded by max_notifications_per_cycle below, since retry_requires_fresh_pdn means every attempt costs a notification"
+
+max_notifications_per_cycle:
+  value: 3
+  source: "docs/01-REGULATORY.md DOBARA-FATIGUE — self-imposed hard cap, mirrors sim/params.yaml notification.fatigue_cap_per_cycle"
+
+cost_cap_inr:
+  value: 5.0
+  assumption: true
+  sensitivity_range: [1.0, 20.0]
+  note: "self-imposed budget on cumulative notification spend per mandate per cycle — several multiples above a typical single notification's cost (sim/params.yaml notification.cost_inr, max ₹0.35), meant to bind only in pathological repeated-whatsapp cases rather than shape normal behaviour"
+
+human_signoff_threshold_inr:
+  value: 15000
+  source: "docs/01-REGULATORY.md RBI-AFA-15K — reuses the AFA threshold (sim/params.yaml afa.threshold_inr) as the sign-off boundary, since debits above it already require a stronger customer-authentication flow"
+
+min_slice_n:
+  value: 30
+  source: "models/metrics.py MIN_SLICE_N — same threshold used everywhere else in the project for 'a slice metric is reported as insufficient rather than guessed'"
+
+max_slice_brier:
+  value: 0.15
+  assumption: true
+  sensitivity_range: [0.12, 0.20]
+  note: "chosen so the regime-shift-bank slice (Brier ~0.179, see PROGRESS.md Phase 2 slice metrics) triggers ABSTAIN while in-distribution slices (~0.113-0.122) pass — this is exactly the graceful-failure case docs/06-AGENT-SPEC.md's Abstention section calls for"
+
+holdout_fraction:
+  value: 0.1
+  assumption: true
+  sensitivity_range: [0.05, 0.2]
+  note: "permanent holdout arm reserved from evaluation for post-hoc audit per docs/07-EVAL-SPEC.md; not yet consumed anywhere until eval/ (Phase 4) is built"
+
+retry_requires_fresh_pdn:
+  value: true
+  source: "docs/01-REGULATORY.md: conservative reading of the 24h-PDN rule, mirrors sim/params.yaml retry_policy.retry_requires_fresh_pdn"
+
+converge_min_cycles_between_date_changes:
+  value: 4
+  source: "docs/01-REGULATORY.md DOBARA-CONVERGE, mirrors sim/params.yaml date_change_offer.converge_max_changes_per_n_cycles.n_cycles"

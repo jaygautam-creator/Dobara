@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -52,6 +53,30 @@ def _lgbm_frame(df: pd.DataFrame) -> pd.DataFrame:
         if X[c].dtype == bool:
             X[c] = X[c].astype(float)
     return X
+
+
+@dataclass
+class TrainedHazardModel:
+    """Loadable inference-time wrapper, added in Phase 3 (`agent/models.py`'s
+    `ModelBundle`) — Phase 2 only trained and persisted the raw booster/calibrator to
+    joblib. Mirrors `models/recovery.py::TrainedRecoveryModel`.
+    """
+
+    booster: lgb.Booster
+    calibrator: IsotonicRegression
+    model_version: str
+    feature_columns: list[str] = field(default_factory=lambda: list(HAZARD_FEATURE_COLUMNS))
+
+    def predict(self, df: pd.DataFrame) -> np.ndarray:
+        raw = self.booster.predict(_lgbm_frame(df))
+        return np.asarray(self.calibrator.predict(raw))
+
+    def predict_contrib(self, df: pd.DataFrame) -> np.ndarray:
+        """Per-row SHAP-style feature contributions (LightGBM's native `pred_contrib`),
+        mirrors `models/recovery.py::TrainedRecoveryModel.predict_lgbm_contrib` — see its
+        docstring.
+        """
+        return np.asarray(self.booster.predict(_lgbm_frame(df), pred_contrib=True))
 
 
 def _model_version(df: pd.DataFrame) -> str:
@@ -188,3 +213,19 @@ def _persist(
     out_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(booster, out_dir / f"hazard_lgbm_{model_version}.joblib")
     joblib.dump(calibrator, out_dir / f"hazard_calibrator_{model_version}.joblib")
+
+
+def load_hazard_model(
+    model_version: str, models_dir: str = "artifacts/models"
+) -> TrainedHazardModel:
+    """Loads a `TrainedHazardModel` back from the joblib artifacts `_persist` wrote,
+    named exactly `hazard_lgbm_{model_version}.joblib` /
+    `hazard_calibrator_{model_version}.joblib`. Used by `agent/models.py::ModelBundle`
+    for decision-time inference — training (`train_hazard_model`) never needs this.
+    """
+    import joblib
+
+    d = Path(models_dir)
+    booster = joblib.load(d / f"hazard_lgbm_{model_version}.joblib")
+    calibrator = joblib.load(d / f"hazard_calibrator_{model_version}.joblib")
+    return TrainedHazardModel(booster=booster, calibrator=calibrator, model_version=model_version)

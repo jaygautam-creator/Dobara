@@ -7,10 +7,67 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-25 (Day 1-4 session)
-**Phase:** Phase 0 + Phase 1 (simulator) + Phase 2 (models) complete. Ready to begin
-Phase 3 (agent). One Phase 2 item deliberately deferred to Phase 3: per-prediction feature
-attribution (belongs in the audit trail, which doesn't exist yet).
+**Last updated:** 2026-08-25 (Day 5 session)
+**Phase:** Phase 0 + Phase 1 (simulator) + Phase 2 (models) + Phase 3 (agent) complete.
+Ready to begin Phase 4 (evaluation — **the gate**).
+
+**Phase 3 done (this session), on top of Phase 0-2:**
+- Closed `Action` type (`agent/actions.py`): `ScheduleDebit`/`SendPreDebitNotice`/
+  `OfferDateChange`/`EscalateToHuman`/`Stop`/`Abstain` as frozen dataclasses. A bare
+  debit-without-notice is structurally unrepresentable — `ScheduleDebit` requires a
+  `notice` field — rather than relying on a predicate that could be forgotten.
+- `agent/stopping.py`: the seven named stopping reasons, all reachable and unit-tested
+  (`HARD_DECLINE`/`MANDATE_REVOKED`/`CUSTOMER_OPTED_OUT` as terminal preconditions;
+  `MAX_ATTEMPTS`/`COST_CAP` as candidate-generation preconditions;
+  `NEGATIVE_EXPECTED_VALUE` as the argmax fallback; `INSUFFICIENT_CONFIDENCE` via
+  abstention).
+- `agent/compliance.py`: all 15 rules from `docs/01-REGULATORY.md`'s table as declarative
+  `Rule` objects. The gate runs **inside** candidate generation
+  (`agent/decide.py::_generate_candidates` + `is_hard_compliant` filter before scoring),
+  not as a post-hoc check. Several predicates are honestly trivial (`True` by
+  construction — e.g. `CONDUCT-NO-SHAME` has no free-text/third-party-contact path to
+  guard against in this closed action set) and documented as such rather than faked.
+- `agent/decide.py`: the pure `decide(ctx, models, config) -> Decision` function. No I/O,
+  no clock (`ctx.now` supplied), no LLM. Candidates: `ScheduleDebit` per (day, channel)
+  in the legal window, `OfferDateChange` when a preferred day is declared, plus a
+  `Stop`/`EscalateToHuman` baseline pair always scored at `E[net]=0.0`. Scoring uses
+  `models/recovery.py` (P(success)), `models/hazard.py` (P(revoke) — **a reminder inline
+  in the docstring that `hazard_per_failure_notification` is a declared assumption, not
+  ground truth**, per the framing correction earlier this session), and `models/ltv.py`
+  (LTV_remaining). Confidence interval is an explicitly-approximate normal approximation
+  to the binomial proportion CI using each model's training-time slice `n` as the
+  effective sample size — documented as an approximation, not a real posterior.
+- Abstention: all four triggers from the spec (thin `(bank,method)` slice, bank-health
+  change-point, slice Brier over threshold, E[net] CI straddling zero), each with its own
+  unit test.
+- New model-loading plumbing that didn't exist before (Phase 2 only trained/persisted):
+  `TrainedRecoveryModel`/`TrainedHazardModel` gained `load_*` classmethods and
+  `predict_*_contrib` (LightGBM's native `pred_contrib`, the per-prediction feature
+  attribution `PROGRESS.md` deferred from Phase 2). `agent/models.py::ModelBundle` /
+  `load_model_bundle` is the single I/O boundary that assembles both models, the LTV life
+  table, bank-health snapshots and each model's slice metrics for `decide()` to score
+  against.
+- `agent/audit.py`: append-only `AuditTrail` (`append()` only ever grows the record list)
+  + `render()` producing the `SAW`/`THOUGHT`/`ALT`/`GATE`/`DID`/`WHY` block from
+  `docs/06-AGENT-SPEC.md`'s example, generated entirely from structured fields (no LLM).
+- `config/policy.yaml` + `agent/policy.py`: every tunable (`max_attempts_per_cycle`,
+  `max_notifications_per_cycle`, `cost_cap_inr`, `human_signoff_threshold_inr`,
+  `min_slice_n`, `max_slice_brier`, `holdout_fraction`, `retry_requires_fresh_pdn`,
+  `converge_min_cycles_between_date_changes`), same `source:`/`assumption:` discipline as
+  `sim/params.yaml`, loaded via the same `sim.params.load_params` validator.
+- `hypothesis` property test (`tests/test_agent_decide.py`, 200 examples over randomized
+  `DecisionContext`s): `decide()` never returns an action violating a HARD compliance
+  rule. Separately, `tests/test_agent_compliance.py` proves the gate itself catches
+  hand-built violating candidates (each HARD rule tested directly), since the property
+  test alone only proves `decide()`'s own careful construction stays compliant.
+  `tests/test_no_llm_in_money_path.py` broadened from `agent/decide.py` alone to the
+  whole `agent/` package. 72 tests total, `make check` green.
+- **Descoped from Phase 3, by design, not oversight:** `SendPreDebitNotice` is never
+  generated as a free-standing top-level candidate (always embedded in `ScheduleDebit`);
+  `OfferDateChange`'s `E[net]` is a flat placeholder (0.01) rather than modelled, since
+  its real value needs the eval harness's response-rate mechanic (Phase 4); the human
+  sign-off proposal *queue* (persistence/UI) is Phase 5, only the `requires_signoff` flag
+  exists now. See `docs/DECISIONS.md` [2026-08-25] for the full reasoning on each.
 
 **Done:**
 - Track, loss class, thesis and objective function decided and written up
@@ -102,13 +159,16 @@ attribution (belongs in the audit trail, which doesn't exist yet).
 
 **In progress:** nothing.
 
-**Next action:** Day 5 — Phase 3 (agent), spec `docs/06-AGENT-SPEC.md`. Build the closed
-`Action` enum, the pure `decide()` function (no I/O, no clock, no LLM — a test must assert
-this the way `tests/test_no_llm_in_money_path.py` already does for `models/`), the
-declarative compliance rule engine with a `hypothesis` property test ("no generated action
-ever violates a HARD rule"), the seven named stopping reasons, and the audit trail
-(append-only; this is also where the Phase 2 "per-prediction feature attribution" item
-belongs — LightGBM's built-in feature importance / SHAP values retained per decision).
+**Next action:** Day 6 — Phase 4 (evaluation, **the gate**), spec
+`docs/07-EVAL-SPEC.md`. Build the batch harness over all five arms (`do_nothing`,
+`razorpay_default`, `aggressive_8x`, `dobara`, `oracle`), 30 seeds with paired comparisons
+and bootstrap CIs, all nine metrics incl. net LTV/revocations caused/attempts not made,
+the money chart (gross vs net LTV crossover), and — this is now the load-bearing item
+given this session's circularity correction (`docs/DECISIONS.md` [2026-08-25]) — the
+**sensitivity analysis across the full declared `sensitivity_range` [0.05, 0.15]** of
+`revocation.hazard_per_failure_notification`, plus the **break-even statement**: the
+hazard value below which `aggressive_8x` would win. That comparison, not the Phase 2
+hazard headline, is what actually has to carry the thesis.
 
 **Blockers:** none.
 
@@ -171,18 +231,18 @@ GitHub repo is created and pushed.
 
 ## Phase 3 — Agent (Day 5) · spec: `docs/06-AGENT-SPEC.md`
 
-- [ ] `Action` closed enum; nothing outside it representable
-- [ ] `decide()` as a pure function — no I/O, no clock, no LLM
-- [ ] Candidate generation over legal times/channels, floored at now+24h
-- [ ] Declarative compliance rules with `id`/`citation`/`severity`/`source_url`
-- [ ] Gate runs **inside** candidate generation (structural, not advisory)
-- [ ] **`hypothesis` property test: no generated action ever violates a HARD rule**
-- [ ] Seven named stopping reasons
-- [ ] Abstention paths (slice size, change-point, calibration error, CI straddling zero)
-- [ ] `Decision` carries rejected alternatives with their own E[net]
-- [ ] Audit trail: append-only, structured + human-readable rendering
-- [ ] Human sign-off threshold and proposal queue
-- [ ] Import-boundary test: `agent/decide.py` has no LLM import
+- [x] `Action` closed enum; nothing outside it representable (`agent/actions.py`)
+- [x] `decide()` as a pure function — no I/O, no clock, no LLM (`agent/decide.py`)
+- [x] Candidate generation over legal times/channels, floored at now+24h
+- [x] Declarative compliance rules with `id`/`citation`/`severity`/`source_url` (`agent/compliance.py`, all 15 rules from `docs/01-REGULATORY.md`)
+- [x] Gate runs **inside** candidate generation (structural, not advisory)
+- [x] **`hypothesis` property test: no generated action ever violates a HARD rule** (`tests/test_agent_decide.py::test_decide_never_returns_an_action_violating_a_hard_rule`, 200 examples)
+- [x] Seven named stopping reasons (`agent/stopping.py`; all seven reachable and unit-tested)
+- [x] Abstention paths (slice size, change-point, calibration error, CI straddling zero) — all four unit-tested
+- [x] `Decision` carries rejected alternatives with their own E[net]
+- [x] Audit trail: append-only, structured + human-readable rendering (`agent/audit.py`)
+- [x] Human sign-off **threshold** (`Decision.requires_signoff`) — the proposal-queue UI/persistence itself is out of scope for Phase 3, deferred to Phase 5 (`api/`/`web/`)
+- [x] Import-boundary test: no LLM import anywhere in `agent/` (`tests/test_no_llm_in_money_path.py`, broadened from `decide.py` alone to the whole package)
 
 ## Phase 4 — Evaluation (Day 6) · **THE GATE** · spec: `docs/07-EVAL-SPEC.md`
 
@@ -251,3 +311,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-25** — Day 1-3, Phase 2 start. Fixed a Phase 1 gap: `Customer` rows (`bank_id` — observable, not latent) were never persisted, discovered while building the feature builder. Built `models/bank_health.py` (EWMA + adaptive decay + change-point flag) and `features/recovery.py` (strict as-of feature builder, 25 columns per `docs/05-ML-SPEC.md`, banned-feature guard, leakage test). 30 tests green. Next: recovery model, revocation hazard model, LTV estimator.
 - **2026-08-25** — Day 4, Phase 2 complete. Hardened the leakage test (completeness guard on compared columns; a second case that inserts rather than mutates, catching a different bug class — caught a real raw-SQL-datetime/pandas-parsing bug while writing it). Reframed the banned-feature guard honestly in the README (commitment + review, not proof). Fixed `Revocation.trigger_attempt_id` (was always `None`) and the `sim.run`→`models.train` default-db-path wiring gap. Built the recovery model, the revocation hazard model (with a documented per-soft-decline-attempt exposure unit and a headline marginal-hazard number: 0.113→0.130→0.207 as same-cycle failures go 0→1→2), and the LTV life-table estimator. `models/train.py` CLI wires all three; `make sim && python -m models.train` runs end-to-end. 40 tests green. Next: Phase 3 — agent (`docs/06-AGENT-SPEC.md`).
 - **2026-08-25** — Day 4-5, framing correction before Phase 3. The 0.113→0.130→0.207 hazard result was mis-described above as empirically confirming the thesis. It does not: `hazard_per_failure_notification` is a declared assumption in `sim/params.yaml` (recalibrated 2026-08-25), so the rising-hazard relationship was authored into the generator by hand, and the hazard model recovering it is circular — exactly the failure mode the hidden-latent-state design exists to prevent. Corrected everywhere it appeared (`PROGRESS.md`, `models/hazard.py` docstring) and added a "Circularity and what our numbers can and cannot show" section to the README distinguishing what the result actually shows (correct model specification) from what supports the thesis (the regulatory mechanism + the 20M/808M published figures, not fitted parameters). Full entry in `docs/DECISIONS.md` [2026-08-25]. Phase 4 will need to show the defensible claim instead: Dobara beats `aggressive_8x` on net LTV across the full declared `sensitivity_range` [0.05, 0.15] of `hazard_per_failure_notification`, plus the break-even value. Next: Phase 3 — agent (`docs/06-AGENT-SPEC.md`).
+- **2026-08-25** — Day 5, Phase 3 complete. Built the whole decision layer from scratch: closed `Action` type (`agent/actions.py`), seven stopping reasons (`agent/stopping.py`), all 15 compliance rules from `docs/01-REGULATORY.md` as a declarative, structurally-enforced gate (`agent/compliance.py`), the pure `decide()` function with candidate generation/scoring/abstention (`agent/decide.py`), an append-only audit trail with the spec's `SAW`/`THOUGHT`/`ALT`/`GATE`/`DID`/`WHY` rendering (`agent/audit.py`), a sourced `config/policy.yaml` + loader (`agent/policy.py`), and the model-loading plumbing Phase 2 never built (`load_recovery_model`/`load_hazard_model`, `predict_*_contrib` for per-decision feature attribution, `agent/models.py::ModelBundle`). Added a `hypothesis` property test (200 examples: `decide()` never violates a HARD rule) plus direct gate tests proving each HARD rule actually blocks a hand-built violating candidate (the property test alone only proves `decide()`'s own output stays compliant, not that the gate would catch a bug). 72 tests total, `make check` green. Two things worth flagging: the per-decision confidence interval is an explicitly-approximate normal approximation to the binomial proportion CI using each model's training-time slice `n` (no real predictive posterior exists yet — documented as an approximation in `agent/decide.py`'s docstring, not oversold); and `OfferDateChange` is scored at a flat placeholder value pending Phase 4's response-rate mechanic. Full reasoning for both, plus the ESCALATE_TO_HUMAN-scoring and ABSTAIN/STOP(INSUFFICIENT_CONFIDENCE) design calls, in `docs/DECISIONS.md` [2026-08-25]. Next: Phase 4 — evaluation, the gate (`docs/07-EVAL-SPEC.md`).

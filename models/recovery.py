@@ -73,6 +73,15 @@ class TrainedRecoveryModel:
         raw = self.logistic_pipeline.predict_proba(df[RECOVERY_FEATURE_COLUMNS])[:, 1]
         return np.asarray(self.logistic_calibrator.predict(raw))
 
+    def predict_lgbm_contrib(self, df: pd.DataFrame) -> np.ndarray:
+        """Per-row SHAP-style feature contributions (LightGBM's native `pred_contrib`),
+        one row of `len(feature_columns) + 1` values (the trailing value is the
+        expected-value/bias term) per input row. This is the per-prediction feature
+        attribution `PROGRESS.md` deferred from Phase 2 to Phase 3's audit trail
+        (`agent/decide.py` calls this per decision).
+        """
+        return np.asarray(self.lgbm_booster.predict(_lgbm_frame(df), pred_contrib=True))
+
 
 def _model_version(df: pd.DataFrame) -> str:
     payload = f"{sorted(RECOVERY_FEATURE_COLUMNS)}|{len(df)}|lgbm+logistic+isotonic|v1"
@@ -232,4 +241,23 @@ def _persist(model: TrainedRecoveryModel, out_dir: Path) -> None:
     joblib.dump(
         model.logistic_calibrator,
         out_dir / f"recovery_logistic_calibrator_{model.model_version}.joblib",
+    )
+
+
+def load_recovery_model(
+    model_version: str, models_dir: str = "artifacts/models"
+) -> TrainedRecoveryModel:
+    """Loads a `TrainedRecoveryModel` back from the joblib artifacts `_persist` wrote.
+    Used by `agent/models.py::ModelBundle` for decision-time inference — training
+    (`train_recovery_model`) never needs this.
+    """
+    import joblib
+
+    d = Path(models_dir)
+    return TrainedRecoveryModel(
+        lgbm_booster=joblib.load(d / f"recovery_lgbm_{model_version}.joblib"),
+        lgbm_calibrator=joblib.load(d / f"recovery_lgbm_calibrator_{model_version}.joblib"),
+        logistic_pipeline=joblib.load(d / f"recovery_logistic_{model_version}.joblib"),
+        logistic_calibrator=joblib.load(d / f"recovery_logistic_calibrator_{model_version}.joblib"),
+        model_version=model_version,
     )

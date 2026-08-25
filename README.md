@@ -108,6 +108,42 @@ the agent would learn its own generator and the evaluation would be circular.
 
 The test set is touched once. The evaluation count is recorded in `artifacts/summary.json`.
 
+### Circularity and what our numbers can and cannot show
+
+We caught ourselves making exactly the mistake the paragraph above exists to prevent, and
+we're naming it here rather than letting a reviewer find it first.
+
+The revocation hazard model's headline result — predicted hazard rising 0.113 → 0.130 →
+0.207 as same-cycle failure count goes 0 → 1 → 2 — **does not empirically confirm the
+thesis.** `sim/params.yaml`'s `revocation.hazard_per_failure_notification` is a declared
+`assumption` (recalibrated 2026-08-25 against the revocations/execution target ratio
+below). The rising-hazard-with-failures relationship was authored into the simulator by
+hand. The hazard model recovering it is not evidence about the world — it's evidence that
+the model is correctly specified and can recover a known relationship from data. That's a
+real and useful result, but it validates the *model*, not the *thesis*.
+
+**What the result actually shows:** the hazard model works as intended — discrete-time,
+calibrated, and able to recover a planted signal cleanly.
+
+**What actually supports the thesis** — none of it a fitted parameter:
+
+1. **The regulatory mechanism.** Every retry legally requires its own fresh 24-hour
+   pre-debit notification (`docs/01-REGULATORY.md`, RBI-PDN-24H). Retry volume mechanically
+   drives notification volume; this is a rule, not a model output.
+2. **The published NPCI figures.** ~20 million AutoPay revocations against ~808 million
+   executions per month (Business Standard, 2025, pinned in
+   [`docs/04-DATA-MODEL.md`](docs/04-DATA-MODEL.md#calibration-anchors-real-cited)).
+3. **Those revocations are attributed, in the source, to low customer balance** — the
+   population a harassment-driven retry strategy is most likely to push over the edge.
+
+**The defensible empirical claim**, to be established in Phase 4 rather than assumed here:
+across the *full* declared `sensitivity_range` [0.05, 0.15] of
+`hazard_per_failure_notification`, Dobara beats the `aggressive_8x` arm on net lifetime
+value — plus the break-even value of that parameter below which `aggressive_8x` would win
+instead. That comparison is falsifiable by construction: it's checked across the whole
+plausible range of the one assumption doing the work, not at the single value we happened
+to calibrate to, and it states the point at which our claim stops holding.
+
 **A concrete example of how we handle a sourcing conflict.** Press coverage disagrees on
 AutoPay volume: one recurring figure is "over 120 million mandates created every month,"
 another is "50 million new mandates in July 2025." We pinned the latter — 50M new

@@ -195,3 +195,36 @@ to back for the first time — `sim.run`'s only prior default was
 (via direct `run_simulation()` calls in tests) but never chained through their CLI
 entrypoints until this point, per docs/03-TECH-STACK.md's `git clone && make demo`
 reproducibility contract.
+
+## [2026-08-25] Corrected: the hazard headline number does not confirm the thesis
+**Chose:** stopped describing the revocation hazard model's headline result — hazard rises
+0.113 → 0.130 → 0.207 as same-cycle failure count goes 0 → 1 → 2 — as empirically
+confirming the thesis, everywhere that framing appeared (`PROGRESS.md`, `models/hazard.py`
+docstring). Added a "Circularity and what our numbers can and cannot show" section to the
+README stating the correction explicitly.
+**Over:** the framing used through Phase 2, that the rising marginal hazard was empirical
+support for "aggressive retrying costs mandates."
+**Because:** `sim/params.yaml`'s `revocation.hazard_per_failure_notification` (0.098) is a
+declared `assumption`, recalibrated on 2026-08-25 specifically to hit the
+revocations/execution target ratio — i.e. the rising-hazard-with-failures relationship was
+authored into the generator by hand. A model that recovers a relationship we put there
+ourselves has not validated anything about the world; it has validated that the model is
+correctly specified and can recover a known relationship from data it was trained on. This
+is the exact circularity the hidden-latent-state design (`sim/latent.py`, import-isolated
+from `features/`) exists to prevent elsewhere in the project, and it slipped through here
+because the hazard *parameter*, unlike balance/income, was never treated as something the
+model needed to be protected from recovering trivially.
+**What actually supports the thesis**, none of it a fitted parameter: (1) the regulatory
+mechanism — every retry legally requires its own 24h pre-debit notification
+(`docs/01-REGULATORY.md`, RBI-PDN-24H), so retry volume mechanically drives notification
+volume; (2) the published NPCI figures — 20M revocations vs 808M executions per month,
+Business Standard 2025, already pinned in `docs/04-DATA-MODEL.md`; (3) those revocations
+are attributed in the source to low balance, i.e. the population this project is trying not
+to harass into revoking. These are facts about the world; the hazard model's fitted
+coefficient is not one of them.
+**What Phase 4 needs to establish instead** to make an empirical, non-circular case:
+across the *full* declared `sensitivity_range` [0.05, 0.15] of
+`hazard_per_failure_notification` (`sim/params.yaml`), Dobara beats `aggressive_8x` on net
+LTV — plus the break-even value of that parameter below which `aggressive_8x` would win.
+This is already scoped in `docs/07-EVAL-SPEC.md` and tracked in `PROGRESS.md` Phase 4 as
+the sensitivity analysis and break-even statement gate items.

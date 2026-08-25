@@ -7,9 +7,17 @@ thesis lives.**
 - LightGBM, isotonic calibration on validation, same calibration-first treatment as
   Model 1 (`models/metrics.py`).
 - **Headline interpretable output:** the marginal hazard per additional failure
-  notification within a cycle — the empirical relationship that makes attempts costly and
-  inverts the aggressive-retry playbook. Reported as grouped mean predicted hazard by
+  notification within a cycle. Reported as grouped mean predicted hazard by
   `failure_notifications_this_cycle`, with the marginal deltas between consecutive counts.
+  **This is not independent empirical evidence for the thesis** —
+  `hazard_per_failure_notification` is a declared assumption in `sim/params.yaml`, so this
+  number shows the model correctly recovers a relationship the simulator was given by
+  hand, which validates the model's specification, not the world. See
+  `docs/DECISIONS.md` [2026-08-25] and the README's "Circularity and what our numbers can
+  and cannot show" section. What supports the thesis is the regulatory mechanism and the
+  published NPCI figures (`docs/01-REGULATORY.md`, `docs/04-DATA-MODEL.md`), not this
+  fitted number; Phase 4's sensitivity analysis over the full declared range, plus the
+  net-LTV comparison against `aggressive_8x`, is the actual empirical case.
 - **Survival conversion:** the fitted per-step hazards imply a survival curve —
   `S(k) = prod_{i=0}^{k-1} (1 - hazard(i failures already this cycle))` — the probability a
   mandate survives k consecutive same-cycle failures without being revoked.

@@ -591,3 +591,45 @@ found to fix, and this investigation was explicitly scoped not to hunt for one t
 onto the result. Two throwaway diagnostic scripts (`eval/_calibration_probe.py`,
 `eval/_calibration_probe2.py`) were used and deleted; not part of the shipped `eval/`
 module. The full 30-seed harness was not launched — that remains the coordinator's call.
+
+## [2026-08-25] Phase 4 closed out — full 30-seed harness rerun on corrected code, `paired_dobara_vs_do_nothing` added
+**Chose:** reran the full 30-seed x 5-arm harness (`python -m eval.run`, ~103 min,
+`n_customers=5000`/seed) on the code with both fixes in place (the `oracle`
+dominance-property fix, the `P(revoke)` conditional/unconditional weighting fix). Also
+added a `paired_dobara_vs_do_nothing` entry to `eval/run.py`'s `summary.json` output,
+alongside the two paired comparisons that already existed
+(`paired_dobara_vs_razorpay_default`, `paired_aggressive_8x_vs_razorpay_default`) — the
+prior investigation established this comparison matters enough to have its own CI, not
+just a point-estimate table row, and the prior fork's report claimed it "should already
+exist" but it did not, so added it. `artifacts/summary.json` was rewritten from the
+existing `artifacts/results.parquet` via `eval.run`'s own private aggregation functions
+(`_arm_summary`/`_paired_diff`/`_slice_*`/`_holdout_slice`) rather than rerunning the
+full simulation a second time for this one addition.
+**Result, verified:**
+- `oracle` now weakly dominates every arm at full scale (₹24.86M net LTV, highest of
+  all five) — confirms the dominance-property fix holds beyond the smoke-test scale it
+  was originally verified at.
+- **Headline** `dobara` vs `razorpay_default`: `dobara` wins by ₹664,275 total per
+  5,000-mandate seed-population (95% CI [₹596,602, ₹724,368], significant, ≈₹133/mandate
+  average) — the credible claim against the real incumbent, holding at full scale on
+  fully-corrected code.
+- `dobara` vs `do_nothing`: `do_nothing` still wins, by ₹1,015,417/seed-population (95%
+  CI on the `dobara-do_nothing` diff: [-₹1,077,083, -₹960,917], significant; ≈₹203/mandate
+  average) — consistent in sign and similar in magnitude to the pre-fix run and the
+  post-fix smoke-check, confirming this is a stable result of the world's current
+  calibration, not sampling noise from any one run.
+- `aggressive_8x` vs `razorpay_default`: `aggressive_8x` loses by ₹1,147,525/seed-population
+  (significant) — collapses as the thesis predicts; the mechanism-demonstration arm,
+  never presented as a "win."
+**Over:** treating either of the two earlier (pre-fix) full runs as final, or accepting
+the smoke-scale numbers as sufficient for the headline claim.
+**Because:** CLAUDE.md's non-negotiable that every reported number carries a source and a
+CI applies as much to internal decision-making as to the README — a ~2-hour full run is
+cheap relative to shipping a wrong headline number in the actual submission. The
+`do_nothing`-beats-`dobara` finding is reported here with the same rigor as the headline,
+per this project's stated ethos: naming a limitation ourselves is worth more than hiding
+it. Not yet done, and explicitly out of scope for this entry: the money chart (a
+frontend/polish deliverable), the full sensitivity sweep across every declared range
+(`hazard_per_failure_notification` only, and only at reduced population — needs
+rerunning on the corrected code before any break-even value is quoted), and a precise
+break-even statement.

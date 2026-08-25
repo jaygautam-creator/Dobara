@@ -297,6 +297,15 @@ def main() -> None:
         "paired_aggressive_8x_vs_razorpay_default": _paired_diff(
             df, Arm.AGGRESSIVE_8X.value, Arm.RAZORPAY_DEFAULT.value, "net_ltv_total"
         ),
+        # Not the headline (that's dobara vs razorpay_default, the real incumbent) -- but
+        # do_nothing outperforming dobara on net LTV in this world's current calibration
+        # is a real, CI-bearing finding worth reporting explicitly rather than only as a
+        # point-estimate table row. See docs/DECISIONS.md [2026-08-25] for why: investigated
+        # for a calibration bug (none found), so this is read as a genuine property of the
+        # current hazard-cost parameters, not a defect.
+        "paired_dobara_vs_do_nothing": _paired_diff(
+            df, Arm.DOBARA.value, Arm.DO_NOTHING.value, "net_ltv_total"
+        ),
         "robustness_slices": {
             "note": (
                 "Pooled across all 30 seeds' mandate rows for dobara/razorpay_default, "

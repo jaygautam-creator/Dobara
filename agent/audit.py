@@ -121,8 +121,8 @@ def render(record: AuditRecord) -> str:
         f"LTV_remaining = {_fmt_money(rm.ltv_remaining)}",
         f"          E[net] = {rm.p_success:.2f}x{rm.amount:.0f} - "
         f"{rm.p_revoke:.3f}x{rm.ltv_remaining:.0f} - {rm.cost:.2f} = "
-        f"{_fmt_money(rm.expected_net)}  [{_fmt_money(decision.confidence_interval[0])} - "
-        f"{_fmt_money(decision.confidence_interval[1])}]",
+        f"{_fmt_money(rm.expected_net)}  [{_fmt_money(decision.confidence_band[0])} - "
+        f"{_fmt_money(decision.confidence_band[1])}]",
     ]
 
     if decision.rejected_alternatives:

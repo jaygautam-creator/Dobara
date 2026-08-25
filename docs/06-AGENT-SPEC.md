@@ -15,7 +15,8 @@ def decide(ctx: DecisionContext, models: ModelBundle, config: PolicyConfig) -> D
 ```python
 chosen: Action
 expected_net: Money
-confidence_interval: tuple[Money, Money]
+# Wilson-interval approximation, not an eval CI — see docs/DECISIONS.md [2026-08-25]
+confidence_band: tuple[Money, Money]
 rejected_alternatives: list[RejectedAlternative]  # each with its own E[net] and reason
 clauses_satisfied: list[ClauseRef]
 clauses_blocked: list[ClauseRef]

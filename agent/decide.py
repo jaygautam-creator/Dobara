@@ -51,16 +51,27 @@ headline number does not confirm the thesis"). `LTV_remaining` comes from
 `models.life_table` (`models/ltv.py`, a transparent life-table estimate, not a model
 prediction). `cost` is read from `sim/params.yaml`'s `notification.cost_inr.*`.
 
-**Confidence interval, an approximation, stated honestly.** Neither model exposes a
-per-prediction posterior. Rather than inventing one, the CI here is a normal
-approximation to the binomial proportion CI (`p +/- 1.96*sqrt(p*(1-p)/n))`, using the
+**Confidence band, an approximation, stated honestly — deliberately not called "CI".**
+Neither model exposes a per-prediction posterior. Rather than inventing one, the band
+here is a **Wilson score interval** on each probability (`_wilson_interval`), using the
 *slice's* observation count (`ModelBundle.recovery_slices_by_bank` /
 `hazard_slices_by_method`, from the training-time slice metrics) as the effective sample
-size behind that calibrated probability. This is not a full predictive posterior — it is
-a reproducible, principled uncertainty band that (correctly) widens for thin slices and
-tightens for well-observed ones, propagated through the linear `E[net]` formula by
-interval arithmetic (worst case: low `p_success`, high `p_revoke`; best case: the
-reverse). Documented as an approximation, not oversold as a calibrated posterior.
+size behind that calibrated probability. Wilson, not the normal approximation
+(`p +/- z*sqrt(p*(1-p)/n)`): the normal approximation undercovers at small `n` and near
+`p` = 0 or 1 — precisely the thin-slice, low-hazard regime this band exists to adjudicate
+for `ABSTAIN` — and it isn't even bounded to `[0, 1]` there, whereas Wilson is bounded by
+construction. This is not a full predictive posterior — it is a reproducible, principled
+uncertainty band that (correctly) widens for thin slices and tightens for well-observed
+ones, propagated through the linear `E[net]` formula by interval arithmetic (worst case:
+low `p_success`, high `p_revoke`; best case: the reverse). Documented as an
+approximation, not oversold as a calibrated posterior. **Called `confidence_band`, never
+`confidence_interval`/"CI"**, throughout `Decision` and the audit renderer — Phase 4's
+evaluation harness produces real bootstrap/seed-variance confidence intervals over
+`artifacts/summary.json` metrics, and that is the only place "CI" should appear. The two
+are statistically unrelated (this one approximates uncertainty in a single calibrated
+probability at decision time; that one measures variance across simulated seeds), and
+labelling both "CI" would let this acknowledged approximation borrow the authority of a
+sound estimate. See `docs/DECISIONS.md` [2026-08-25].
 
 ## Abstention
 
@@ -75,7 +86,7 @@ even be allowed to win the argmax:
   EWMA change-point flag `features/recovery.py` joins as-of for `bank_health_changepoint`).
 - Slice calibration error (`brier_score.point`) exceeding `config.max_slice_brier`, on
   either the recovery bank-slice or the hazard method-slice.
-- The CI on the winning real action's `E[net]` straddling zero.
+- The confidence band on the winning real action's `E[net]` straddling zero.
 
 On any trigger the chosen action becomes `Abstain(reason)`; `agent/audit.py`'s renderer
 is responsible for stating the documented-baseline-policy fallback in the human-readable
@@ -120,7 +131,7 @@ from models.ltv import ltv_remaining
 
 AFA_THRESHOLD_INR = 15000.0
 DEBIT_HOUR = 10  # a fixed representative in-window hour; CONDUCT-HOURS is 08:00-19:00
-Z_95 = 1.959964  # two-sided 95% normal critical value, for the slice-n CI approximation
+Z_95 = 1.959964  # two-sided 95% critical value, for the slice-n Wilson confidence band
 
 
 def decide(ctx: DecisionContext, models: ModelBundle, config: PolicyConfig) -> Decision:
@@ -163,7 +174,7 @@ def decide(ctx: DecisionContext, models: ModelBundle, config: PolicyConfig) -> D
     return Decision(
         chosen=chosen,
         expected_net=best.expected_net,
-        confidence_interval=(best.ci_lo, best.ci_hi),
+        confidence_band=(best.band_lo, best.band_hi),
         rejected_alternatives=rejected,
         clauses_satisfied=clauses_satisfied,
         clauses_blocked=clauses_blocked,
@@ -196,7 +207,7 @@ def _terminal_stop(ctx: DecisionContext) -> Decision | None:
     return Decision(
         chosen=Stop(reason=reason),
         expected_net=0.0,
-        confidence_interval=(0.0, 0.0),
+        confidence_band=(0.0, 0.0),
         rejected_alternatives=[],
         clauses_satisfied=[],
         clauses_blocked=[],
@@ -262,8 +273,8 @@ def _generate_candidates(ctx: DecisionContext, config: PolicyConfig) -> list[Act
 @dataclass(frozen=True)
 class _Score:
     expected_net: Money
-    ci_lo: Money
-    ci_hi: Money
+    band_lo: Money
+    band_hi: Money
     rupee_math: RupeeMath
     feature_attribution: dict[str, float]
 
@@ -272,7 +283,7 @@ _ZERO_MATH = RupeeMath(
     p_success=0.0, amount=0.0, p_revoke=0.0, ltv_remaining=0.0, cost=0.0, expected_net=0.0
 )
 _ZERO_SCORE = _Score(
-    expected_net=0.0, ci_lo=0.0, ci_hi=0.0, rupee_math=_ZERO_MATH, feature_attribution={}
+    expected_net=0.0, band_lo=0.0, band_hi=0.0, rupee_math=_ZERO_MATH, feature_attribution={}
 )
 
 
@@ -320,8 +331,8 @@ def _score_offer_date_change(
     # numerically-modelled alternative — never silently dropped, never overclaimed.
     return _Score(
         expected_net=0.01,
-        ci_lo=0.01,
-        ci_hi=0.01,
+        band_lo=0.01,
+        band_hi=0.01,
         rupee_math=RupeeMath(
             p_success=0.0,
             amount=ctx.amount,
@@ -349,11 +360,11 @@ def _net_score(
 
     n_recovery = int(models.recovery_slices_by_bank.get(ctx.bank_id, {}).get("n", 0))
     n_hazard = int(models.hazard_slices_by_method.get(ctx.method, {}).get("n", 0))
-    p_success_lo, p_success_hi = _proportion_ci(p_success, n_recovery)
-    p_revoke_lo, p_revoke_hi = _proportion_ci(p_revoke, n_hazard)
+    p_success_lo, p_success_hi = _wilson_interval(p_success, n_recovery)
+    p_revoke_lo, p_revoke_hi = _wilson_interval(p_revoke, n_hazard)
 
-    ci_lo = p_success_lo * amount - p_revoke_hi * ltv - cost
-    ci_hi = p_success_hi * amount - p_revoke_lo * ltv - cost
+    band_lo = p_success_lo * amount - p_revoke_hi * ltv - cost
+    band_hi = p_success_hi * amount - p_revoke_lo * ltv - cost
 
     contrib = models.recovery.predict_lgbm_contrib(recovery_row)[0]
     feature_attribution = dict(
@@ -362,8 +373,8 @@ def _net_score(
 
     return _Score(
         expected_net=expected_net,
-        ci_lo=ci_lo,
-        ci_hi=ci_hi,
+        band_lo=band_lo,
+        band_hi=band_hi,
         rupee_math=RupeeMath(
             p_success=p_success,
             amount=amount,
@@ -376,11 +387,21 @@ def _net_score(
     )
 
 
-def _proportion_ci(p: float, n: int) -> tuple[float, float]:
+def _wilson_interval(p: float, n: int) -> tuple[float, float]:
+    """Wilson score interval on a binomial proportion, not the normal approximation
+    (`p +/- z*sqrt(p*(1-p)/n)`) it replaced. The normal approximation undercovers at
+    small `n` and near `p` = 0 or 1 — exactly the thin-slice, low-hazard regime this band
+    is checked against for `ABSTAIN` — and can fall outside `[0, 1]` there, which a
+    probability band never should. Wilson is bounded to `[0, 1]` by construction and
+    well-behaved at small `n`. See docs/DECISIONS.md [2026-08-25].
+    """
     if n <= 0:
         return 0.0, 1.0
-    se = math.sqrt(max(p * (1 - p), 0.0) / n)
-    return max(0.0, p - Z_95 * se), min(1.0, p + Z_95 * se)
+    z2 = Z_95 * Z_95
+    denom = 1 + z2 / n
+    center = (p + z2 / (2 * n)) / denom
+    margin = (Z_95 / denom) * math.sqrt(p * (1 - p) / n + z2 / (4 * n * n))
+    return max(0.0, center - margin), min(1.0, center + margin)
 
 
 def _recovery_row(
@@ -468,7 +489,7 @@ def _abstention_reason(
     if method_brier is not None and method_brier > max_brier:
         return AbstentionReason.SLICE_CALIBRATION_ERROR
 
-    if best.ci_lo < 0 < best.ci_hi:
+    if best.band_lo < 0 < best.band_hi:
         return AbstentionReason.EXPECTED_VALUE_CI_STRADDLES_ZERO
 
     return None

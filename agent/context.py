@@ -110,9 +110,17 @@ class RejectedAlternative:
 
 @dataclass(frozen=True)
 class Decision:
+    """`confidence_band` is `agent/decide.py`'s per-decision Wilson-interval-derived
+    uncertainty band on `expected_net` — an approximation, not a posterior, and
+    statistically unrelated to the bootstrap/seed-variance confidence intervals Phase 4's
+    evaluation harness reports. Deliberately named differently from "CI" so the two are
+    never conflated in an audit card or on /evidence. See docs/DECISIONS.md [2026-08-25]
+    "confidence_interval renamed to confidence_band".
+    """
+
     chosen: Action
     expected_net: Money
-    confidence_interval: tuple[Money, Money]
+    confidence_band: tuple[Money, Money]
     rejected_alternatives: list[RejectedAlternative]
     clauses_satisfied: list[ClauseRef]
     clauses_blocked: list[ClauseRef]

@@ -291,3 +291,38 @@ the effective sample size, propagated through the linear `E[net]` formula by int
 arithmetic. This correctly widens for thin slices and tightens for well-observed ones and
 is fully reproducible, but it is not a calibrated posterior — documented as such directly
 in `agent/decide.py`'s module docstring so it cannot be mistaken for one later.
+**Superseded by the two entries below, 2026-08-25** — both the naming and the formula
+changed before Phase 4 added any more call sites.
+
+## [2026-08-25] `confidence_interval` renamed to `confidence_band`
+**Chose:** renamed `Decision.confidence_interval` (and the internal `_Score.ci_lo/ci_hi`,
+now `band_lo`/`band_hi`) to `confidence_band` everywhere in `agent/` — the dataclass
+field, `agent/decide.py`'s docstrings, `agent/audit.py`'s renderer, plus the pseudocode in
+`docs/06-AGENT-SPEC.md`, the entity list in `docs/04-DATA-MODEL.md`, and the DB column
+`sim/schema.py::Decision.confidence_band_json` (unused so far — no persistence code reads
+or writes it yet, so this was a free rename with zero call sites to break).
+**Over:** leaving it named `confidence_interval`, which is also what Phase 4's eval
+harness will call its own bootstrap/seed-variance intervals over `artifacts/summary.json`.
+**Because:** the two are statistically unrelated — one approximates uncertainty in a
+single calibrated probability at decision time from a slice's observation count; the
+other measures variance across simulated seeds of a fully-run evaluation arm — and both
+being called "CI" would let this acknowledged approximation quietly borrow the authority
+of a sound estimate wherever it's displayed (an audit card, `/evidence`). Doing this now,
+before Phase 4 writes any evaluation-CI code, avoids ever having two same-named,
+differently-sound quantities in the same report. "CI" is now reserved exclusively for
+Phase 4's evaluation output.
+
+## [2026-08-25] Per-decision band switched from the normal approximation to Wilson
+**Chose:** `agent/decide.py::_wilson_interval` (was `_proportion_ci`, using
+`p ± 1.96·sqrt(p(1-p)/n)`) now computes the Wilson score interval on each probability
+before propagating it through the linear `E[net]` formula.
+**Over:** the normal approximation to the binomial proportion CI.
+**Because:** the normal approximation undercovers at small `n` and near `p` = 0 or 1 —
+exactly the thin-slice, low-hazard regime `confidence_band` exists to adjudicate for
+`ABSTAIN` — and is not even guaranteed to stay inside `[0, 1]` there (only rescued by the
+existing `max(0.0, ...)`/`min(1.0, ...)` clamps, which mask rather than fix the
+miscoverage). Wilson is bounded to `[0, 1]` by construction and well-behaved at small `n`,
+without changing anything else about the approach: still per-probability, still using the
+training-time slice `n` as the effective sample size, still an explicit approximation
+rather than a real posterior — that limitation is unchanged and still documented in
+`agent/decide.py`'s module docstring.

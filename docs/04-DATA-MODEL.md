@@ -84,7 +84,7 @@ Notification(id, mandate_id, cycle_id, kind, channel, sent_at,
 Revocation(id, mandate_id, revoked_at, trigger_attempt_id?)
 Decision(id, cycle_id, decided_at, chosen_action, expected_net,
          model_versions, rejected_alternatives_json, clauses_json,
-         rupee_math_json, stopping_reason?, confidence_interval_json)
+         rupee_math_json, stopping_reason?, confidence_band_json)
 BankHealthSnapshot(bank_id, method, as_of, ewma_success, decay_rate,
                    changepoint_flag, sample_n)
 ```

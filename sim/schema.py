@@ -119,7 +119,7 @@ class Decision(Base):
     clauses_json: Mapped[str]
     rupee_math_json: Mapped[str]
     stopping_reason: Mapped[str | None] = mapped_column(String(40))
-    confidence_interval_json: Mapped[str]
+    confidence_band_json: Mapped[str]  # agent's per-decision Wilson band, not an eval CI
 
 
 class BankHealthSnapshot(Base):

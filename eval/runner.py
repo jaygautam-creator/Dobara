@@ -112,6 +112,20 @@ class MandateResult:
     attempts_in_outage_window: int = 0
     routed_to_holdout: bool = False
     success_attempt_indices: list[int] = field(default_factory=list)
+    # Per-cycle failure/recovery bookkeeping, mirroring sim.engine.SimSummary's own
+    # recovery_rate definition exactly (n_cycles_with_failure_then_recovery /
+    # n_cycles_with_failure -- "of failed cycles", per docs/07-EVAL-SPEC.md's metric
+    # table) rather than the mandate-lifetime `n_attempts > 1` proxy this harness used
+    # before 2026-08-25 -- see docs/DECISIONS.md for why that proxy was wrong (it read
+    # 0.97-1.00 here against a >1.0-scale-incompatible published Phase 1 benchmark of
+    # 0.28-0.48, a different denominator entirely, not just a different number).
+    n_cycles_with_failure: int = 0
+    n_cycles_with_failure_then_recovery: int = 0
+    # attempts actually used in cycles whose first attempt failed -- the metric that
+    # actually reflects a cadence's retry ceiling; see docs/DECISIONS.md "aggressive_8x
+    # investigation" for why the mandate-lifetime attempts_mean cannot show this (~90% of
+    # cycles never fail at all, diluting any cadence difference in the aggregate).
+    attempts_in_failed_cycles: int = 0
 
     @property
     def net_ltv_inr(self) -> float:
@@ -291,11 +305,21 @@ def _maybe_offer_date_change(
     return 1
 
 
-def _end_of_cycle(state: _MandateState, cycle_succeeded: bool, had_failure: bool) -> None:
+def _end_of_cycle(
+    state: _MandateState,
+    res: MandateResult,
+    cycle_succeeded: bool,
+    had_failure: bool,
+    attempts_this_cycle: int,
+) -> None:
     if had_failure:
         state.consecutive_failed_cycles = (
             0 if cycle_succeeded else state.consecutive_failed_cycles + 1
         )
+        res.n_cycles_with_failure += 1
+        res.attempts_in_failed_cycles += attempts_this_cycle
+        if cycle_succeeded:
+            res.n_cycles_with_failure_then_recovery += 1
     elif cycle_succeeded:
         state.consecutive_failed_cycles = 0
 
@@ -335,6 +359,7 @@ def _run_cadence_arm(
             cycle_succeeded = False
             had_failure = False
             prior_attempt_failed = False
+            attempts_this_cycle = 0
 
             if cadence.offers_date_change:
                 notifications_this_cycle += _maybe_offer_date_change(
@@ -384,6 +409,7 @@ def _run_cadence_arm(
                     life_table,
                     m.merchant_category,
                 )
+                attempts_this_cycle += 1
                 prior_attempt_failed = outcome in ("soft_decline", "hard_decline")
 
                 if outcome == "success":
@@ -395,7 +421,7 @@ def _run_cadence_arm(
                 if outcome == "hard_decline" or state.revoked:
                     break
 
-            _end_of_cycle(state, cycle_succeeded, had_failure)
+            _end_of_cycle(state, res, cycle_succeeded, had_failure, attempts_this_cycle)
             if state.revoked:
                 break
 
@@ -425,7 +451,6 @@ def _run_dobara_arm(
     regime_from_cycle = int(params.get("regime_shift.applies_from_cycle_index"))
     regime_bd_mult = float(params.get("regime_shift.shift_multiplier_bd"))
     max_attempts_cap = int(policy.get("max_attempts_per_cycle"))
-    default_gap_hours = int(params.get("retry_policy.min_gap_hours_between_attempts"))
     rp_cadence = razorpay_default_cadence(params)
     afa_threshold = float(params.get("afa.threshold_inr"))
 
@@ -462,6 +487,7 @@ def _run_dobara_arm(
             cycle_succeeded = False
             had_failure = False
             prior_attempt_failed = False
+            attempts_this_cycle = 0
             now = due_date
 
             notifications_this_cycle += _maybe_offer_date_change(
@@ -524,43 +550,19 @@ def _run_dobara_arm(
                     break
 
                 if isinstance(action, Abstain):
+                    # CLAUDE.md: "when in doubt, the agent stops." Abstain means decide()
+                    # lacks enough confidence to act — it must not attempt anyway. Prior
+                    # behavior here silently fell back to a razorpay_default-style attempt
+                    # on abstention, contradicting that non-negotiable; the user overruled
+                    # docs/06-AGENT-SPEC.md's original "falls back to the documented
+                    # default policy" design explicitly. See docs/DECISIONS.md
+                    # [2026-08-25] "Abstain must stop, not fall back to an attempt".
+                    # `Abstain` stays a distinct emitted action from `Stop` in decide()
+                    # itself (the audit trail should still say *why*: genuine uncertainty
+                    # vs. a confident negative-EV call) but mechanically it now behaves
+                    # exactly like `Stop` here: no notification, no draw, no attempt.
                     res.n_abstentions += 1
-                    scheduled_at = now + timedelta(hours=default_gap_hours)
-                    notifications_this_cycle += 1
-                    res.n_notifications += 1
-                    cost = _notification_cost(params, "sms")
-                    notification_cost_this_cycle += cost
-                    res.notification_cost_inr += cost
-                    outcome = _draw_attempt(
-                        res,
-                        state,
-                        bank,
-                        m.customer,
-                        scheduled_at,
-                        m.amount,
-                        params,
-                        world.dated_outages,
-                        world.seed,
-                        m.mandate_id,
-                        cycle_index,
-                        attempt_index,
-                        bd_mult,
-                        prior_attempt_failed,
-                        notifications_this_cycle,
-                        life_table,
-                        m.merchant_category,
-                    )
-                    prior_attempt_failed = outcome in ("soft_decline", "hard_decline")
-                    if outcome == "success":
-                        cycle_succeeded = True
-                        break
-                    if outcome != "rejected_no_pdn":
-                        had_failure = True
-                    if outcome == "hard_decline" or state.revoked:
-                        break
-                    attempt_index += 1
-                    now = scheduled_at
-                    continue
+                    break
 
                 if isinstance(action, OfferDateChange):
                     # Recorded immediately, accepted or not — this is the field
@@ -619,6 +621,7 @@ def _run_dobara_arm(
                         life_table,
                         m.merchant_category,
                     )
+                    attempts_this_cycle += 1
                     prior_attempt_failed = outcome in ("soft_decline", "hard_decline")
                     if outcome == "success":
                         cycle_succeeded = True
@@ -633,7 +636,7 @@ def _run_dobara_arm(
 
                 raise TypeError(f"unhandled action {type(action).__name__}")  # pragma: no cover
 
-            _end_of_cycle(state, cycle_succeeded, had_failure)
+            _end_of_cycle(state, res, cycle_succeeded, had_failure, attempts_this_cycle)
             if state.revoked:
                 break
 
@@ -749,6 +752,7 @@ def _run_oracle_arm(world: World, params: Params, life_table: LifeTable) -> list
             cycle_succeeded = False
             had_failure = False
             prior_attempt_failed = False
+            attempts_this_cycle = 0
 
             for attempt_index in range(1, max_attempts + 1):
                 scheduled_at = best_day + timedelta(hours=min_gap_hours * (attempt_index - 1))
@@ -805,6 +809,7 @@ def _run_oracle_arm(world: World, params: Params, life_table: LifeTable) -> list
                     life_table,
                     m.merchant_category,
                 )
+                attempts_this_cycle += 1
                 prior_attempt_failed = outcome in ("soft_decline", "hard_decline")
 
                 if outcome == "success":
@@ -816,7 +821,7 @@ def _run_oracle_arm(world: World, params: Params, life_table: LifeTable) -> list
                 if outcome == "hard_decline" or state.revoked:
                     break
 
-            _end_of_cycle(state, cycle_succeeded, had_failure)
+            _end_of_cycle(state, res, cycle_succeeded, had_failure, attempts_this_cycle)
             if state.revoked:
                 break
 

@@ -19,13 +19,21 @@ single total/mean/rate over that seed's ~5000-mandate population for a given arm
 bootstrap-percentile-CI'd across the 30 per-seed values (`eval/metrics.py::bootstrap_mean_ci`,
 reusing `models/metrics.py`'s `RNG_SEED`/`N_BOOTSTRAP`) — this is exactly the shape
 docs/07-EVAL-SPEC.md's example line asks for ("₹4.2L recovered [95% CI ...], n=30
-seeds"). `recovery_rate` is approximated as: of mandates needing more than one attempt
-(a proxy for "had a failed cycle" at this row-level-per-mandate granularity, since this
-harness doesn't export a separate per-cycle table), the fraction that eventually
-succeeded. Paired `dobara - razorpay_default` comparisons use the same-seed per-seed
-net-LTV totals (`docs/07-EVAL-SPEC.md`: "Paired comparisons between arms use the same
-seeds"), bootstrapped over the 30 paired differences, not two independent CIs compared
-informally.
+seeds"). **`recovery_rate_of_failed_cycles`** is the spec's own metric-table definition
+("Recovery rate % | Of failed cycles") — `n_cycles_with_failure_then_recovery /
+n_cycles_with_failure`, tracked per-cycle in `eval/runner.py::MandateResult` and
+`_end_of_cycle`, matching `sim.engine.SimSummary.recovery_rate` exactly (the same metric
+Phase 1's calibration gate asserts in `(0.28, 0.48)`) — this is the metric any README text
+must quote as "recovery rate." A separate `mandate_ever_recovered_rate` (a mandate-*
+lifetime* proxy: of mandates needing more than one attempt across their whole run, the
+fraction that ever succeeded) is reported alongside for continuity but must never be
+called "recovery rate" — the two have different denominators and are not comparable
+numbers. (Before 2026-08-25 this harness only computed the lifetime proxy under the name
+`recovery_rate`, which is why an early run showed 0.97-1.00 against a >1.0-incompatible
+Phase 1 benchmark of 0.28-0.48 — see docs/DECISIONS.md.) Paired `dobara - razorpay_default`
+comparisons use the same-seed per-seed net-LTV totals (`docs/07-EVAL-SPEC.md`: "Paired
+comparisons between arms use the same seeds"), bootstrapped over the 30 paired
+differences, not two independent CIs compared informally.
 
 **Robustness slices** (per bank incl. the regime-shift bank, per method, per attempt
 index, cold-start, outage windows) are computed on the full pooled 30-seed x mandate
@@ -97,6 +105,9 @@ def _result_row(seed: int, arm: str, r: MandateResult) -> dict[str, Any]:
         "first_success_attempt_index": (
             r.success_attempt_indices[0] if r.success_attempt_indices else None
         ),
+        "n_cycles_with_failure": r.n_cycles_with_failure,
+        "n_cycles_with_failure_then_recovery": r.n_cycles_with_failure_then_recovery,
+        "attempts_in_failed_cycles": r.attempts_in_failed_cycles,
     }
 
 
@@ -128,18 +139,50 @@ def _run_one_seed(
 def _per_seed_totals(df: pd.DataFrame, arm: str) -> pd.DataFrame:
     a = df[df["arm"] == arm]
 
-    def _recovery_rate(g: pd.DataFrame) -> float:
+    def _recovery_rate_of_failed_cycles(g: pd.DataFrame) -> float:
+        """The docs/07-EVAL-SPEC.md metric-table definition ("Recovery rate % | Of failed
+        cycles"), matching `sim.engine.SimSummary.recovery_rate` exactly
+        (n_cycles_with_failure_then_recovery / n_cycles_with_failure) -- this is what
+        Phase 1's calibration gate (`tests/test_calibration.py`, band (0.28, 0.48))
+        asserts on the training population, and what any README text must quote. NOT the
+        same denominator as `mandate_ever_recovered_rate` below -- see docs/DECISIONS.md
+        [2026-08-25] "recovery-rate metric: two definitions, now distinct".
+        """
+        denom = g["n_cycles_with_failure"].sum()
+        if denom == 0:
+            return float("nan")
+        return float(g["n_cycles_with_failure_then_recovery"].sum()) / float(denom)
+
+    def _mandate_ever_recovered_rate(g: pd.DataFrame) -> float:
+        """The pre-2026-08-25 proxy metric, kept under an unambiguous name for
+        continuity/comparison only -- of mandates that needed more than one attempt
+        across their whole simulated lifetime (not one cycle), the fraction that ever
+        succeeded at all. This is NOT the spec's "of failed cycles" metric and must never
+        be reported as `recovery_rate` or quoted in a README."""
         denom = (g["n_attempts"] > 1).sum()
         if denom == 0:
             return float("nan")
         return float(((g["n_attempts"] > 1) & (g["n_successes"] > 0)).sum()) / float(denom)
 
+    def _attempts_mean_in_failed_cycles(g: pd.DataFrame) -> float:
+        """Mean attempts actually used in cycles whose first attempt failed -- the metric
+        that reflects a cadence's retry ceiling, unlike the lifetime `attempts_mean`
+        below (diluted by the ~90% of cycles that never fail at all, and by
+        revocation-driven early truncation of a mandate's remaining cycles). See
+        docs/DECISIONS.md [2026-08-25] "aggressive_8x investigation"."""
+        denom = g["n_cycles_with_failure"].sum()
+        if denom == 0:
+            return float("nan")
+        return float(g["attempts_in_failed_cycles"].sum()) / float(denom)
+
     per_seed = a.groupby("seed").apply(
         lambda g: pd.Series(
             {
                 "gross_recovered_inr": g["gross_recovered_inr"].sum(),
-                "recovery_rate": _recovery_rate(g),
+                "recovery_rate_of_failed_cycles": _recovery_rate_of_failed_cycles(g),
+                "mandate_ever_recovered_rate": _mandate_ever_recovered_rate(g),
                 "attempts_mean": g["n_attempts"].mean(),
+                "attempts_mean_in_failed_cycles": _attempts_mean_in_failed_cycles(g),
                 "notifications_total": g["n_notifications"].sum(),
                 "revocations_total": g["revoked"].sum(),
                 "net_ltv_total": g["net_ltv_inr"].sum(),
@@ -187,6 +230,13 @@ def _paired_diff(df: pd.DataFrame, arm_a: str, arm_b: str, metric: str) -> dict[
 
 
 def _slice_recovery_and_net_ltv(df: pd.DataFrame, arm: str, group_col: str) -> dict[str, Any]:
+    """Slice-level `mandate_recovered_rate` -- of mandates in this slice, the fraction
+    ever successfully collected at least once across their simulated lifetime. A
+    mandate-level question ("how many mandates in this bank ever got paid"), distinct
+    from the arm-level `recovery_rate_of_failed_cycles` in `_per_seed_totals` (a
+    per-cycle question) -- named differently on purpose, see docs/DECISIONS.md
+    [2026-08-25] "recovery-rate metric: two definitions, now distinct".
+    """
     a = df[df["arm"] == arm]
     out: dict[str, Any] = {}
     for key, g in a.groupby(group_col, observed=True):
@@ -194,7 +244,7 @@ def _slice_recovery_and_net_ltv(df: pd.DataFrame, arm: str, group_col: str) -> d
         recovered = int((g["n_successes"] > 0).sum())
         out[str(key)] = {
             "n_mandates": n,
-            "recovery_rate": recovered / n if n else float("nan"),
+            "mandate_recovered_rate": recovered / n if n else float("nan"),
             "mean_net_ltv_inr": float(g["net_ltv_inr"].mean()) if n else float("nan"),
             "revocations": int(g["revoked"].sum()),
         }
@@ -208,19 +258,20 @@ def _slice_attempt_index(df: pd.DataFrame, arm: str) -> dict[str, Any]:
 
 
 def _slice_outage(df: pd.DataFrame, arm: str) -> dict[str, Any]:
+    """See `_slice_recovery_and_net_ltv`'s docstring -- `mandate_recovered_rate` here too."""
     a = df[df["arm"] == arm]
     in_outage = a[a["attempts_in_outage_window"] > 0]
     not_outage = a[a["attempts_in_outage_window"] == 0]
     return {
         "attempts_touched_an_outage_window": {
             "n_mandates": len(in_outage),
-            "recovery_rate": (
+            "mandate_recovered_rate": (
                 float((in_outage["n_successes"] > 0).mean()) if len(in_outage) else float("nan")
             ),
         },
         "no_outage_window": {
             "n_mandates": len(not_outage),
-            "recovery_rate": (
+            "mandate_recovered_rate": (
                 float((not_outage["n_successes"] > 0).mean()) if len(not_outage) else float("nan")
             ),
         },
@@ -234,12 +285,16 @@ def _holdout_slice(df: pd.DataFrame) -> dict[str, Any]:
     return {
         "served_population": {
             "n_mandates": len(served),
-            "recovery_rate": float((served["n_successes"] > 0).mean()) if len(served) else None,
+            "mandate_recovered_rate": (
+                float((served["n_successes"] > 0).mean()) if len(served) else None
+            ),
             "mean_net_ltv_inr": float(served["net_ltv_inr"].mean()) if len(served) else None,
         },
         "holdout_control_population": {
             "n_mandates": len(holdout),
-            "recovery_rate": float((holdout["n_successes"] > 0).mean()) if len(holdout) else None,
+            "mandate_recovered_rate": (
+                float((holdout["n_successes"] > 0).mean()) if len(holdout) else None
+            ),
             "mean_net_ltv_inr": float(holdout["net_ltv_inr"].mean()) if len(holdout) else None,
         },
         "note": (
@@ -297,12 +352,15 @@ def main() -> None:
         "paired_aggressive_8x_vs_razorpay_default": _paired_diff(
             df, Arm.AGGRESSIVE_8X.value, Arm.RAZORPAY_DEFAULT.value, "net_ltv_total"
         ),
-        # Not the headline (that's dobara vs razorpay_default, the real incumbent) -- but
-        # do_nothing outperforming dobara on net LTV in this world's current calibration
-        # is a real, CI-bearing finding worth reporting explicitly rather than only as a
-        # point-estimate table row. See docs/DECISIONS.md [2026-08-25] for why: investigated
-        # for a calibration bug (none found), so this is read as a genuine property of the
-        # current hazard-cost parameters, not a defect.
+        # Not the headline (that's dobara vs razorpay_default, the real incumbent) -- this
+        # is a structural sanity check with a CI-bearing invariant test attached
+        # (tests/test_eval_invariants.py): dobara's candidate space always includes
+        # STOP/ABSTAIN with a positivity floor on E[net], so its worst case degenerates to
+        # do_nothing's zero-attempt behaviour -- losing to it significantly would be a
+        # logical impossibility and always a bug signal, never a finding. A prior run
+        # showed do_nothing "beating" dobara; that was traced to a do_nothing
+        # arm-construction bug (max_attempts=1, not 0 -- do_nothing was silently making
+        # the originally-scheduled debit), fixed 2026-08-25, see docs/DECISIONS.md.
         "paired_dobara_vs_do_nothing": _paired_diff(
             df, Arm.DOBARA.value, Arm.DO_NOTHING.value, "net_ltv_total"
         ),

@@ -109,9 +109,12 @@ even be allowed to win the argmax:
   either the recovery bank-slice or the hazard method-slice.
 - The confidence band on the winning real action's `E[net]` straddling zero.
 
-On any trigger the chosen action becomes `Abstain(reason)`; `agent/audit.py`'s renderer
-is responsible for stating the documented-baseline-policy fallback in the human-readable
-line — `decide()` itself only names *why*, per the pure-function/no-I/O boundary.
+On any trigger the chosen action becomes `Abstain(reason)`; the caller must not attempt
+this cycle when it sees `Abstain` (per CLAUDE.md: "when in doubt, the agent stops" — see
+docs/DECISIONS.md [2026-08-25] "Abstain must stop, not fall back to an attempt", which
+overrules this module's earlier fall-back-to-the-default-policy design). `agent/audit.py`'s
+renderer states this in the human-readable line — `decide()` itself only names *why*, per
+the pure-function/no-I/O boundary.
 """
 
 from __future__ import annotations

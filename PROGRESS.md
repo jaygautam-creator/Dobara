@@ -7,38 +7,55 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-25 (Day 5-6 session)
-**Phase:** Phase 0-4 complete. **Phase 4 (evaluation — the gate) DONE.**
-The harness runs end-to-end (`eval/world.py`, `eval/rng.py`, `eval/arms.py`,
-`eval/runner.py`, `eval/metrics.py`, `eval/sensitivity.py`, `eval/run.py`), `agent/decide.py`
-was batch-score-optimized (~26x) with a characterization test locking in behavior-identity,
-a real bug in the `oracle` arm was found and fixed (it now weakly dominates every arm, as
-an oracle must), and a real `P(revoke)` conditional/unconditional-probability bug in
-`agent/decide.py`'s `E[net]` formula was found, user-approved, and fixed. The
-`dobara`-vs-`do_nothing` question raised by that fix's smoke-check was then investigated
-directly (a live calibration probe comparing both models' predictions against the eval
-world's own ground truth): **no calibration bug found** — the recovery model's eval-world
-Brier (0.1115) is no worse than its training-population test-set Brier (0.1219), and the
-hazard model's ~12% aggregate overestimate of true revocation risk is in the wrong
-direction to explain `dobara` retrying more than `do_nothing` (it should bias toward
-*less* retrying, not more).
-Conclusion: at `sim/params.yaml`'s current hazard-cost parameters, a well-calibrated
-agent's retries genuinely, honestly, barely pay for themselves against never retrying at
-all in this simulated world — a real finding, not a defect. Full reasoning across all
-three investigation rounds in `docs/DECISIONS.md` [2026-08-25] (five entries, in order:
-the harness build, the oracle fix, the P(revoke) fix + its inconclusive smoke-check, the
-calibration-probe conclusion, and the final full-scale numbers below).
+**Last updated:** 2026-08-25 (Day 5-6 session, continued)
+**Phase:** Phase 0-3 complete. **Phase 4 (evaluation — the gate) IN PROGRESS, NOT done —
+the previous "DONE" state below was RETRACTED this session: the full 30-seed run it was
+based on had a critical control-arm bug.**
 
-**The full 30-seed x 5-arm harness was rerun on the fully-corrected code** (`artifacts/results.parquet`/`summary.json`, ~103 min). Verified: `oracle` now weakly dominates
-every arm (₹24.86M net LTV, highest of all five). **Headline: `dobara` beats
-`razorpay_default`** by ₹664,275 total per 5,000-mandate seed-population (95% CI
-[₹596,602, ₹724,368], significant, ≈₹133/mandate) — the credible claim against the real
-incumbent. Honestly reported alongside, not as the headline: `do_nothing` still beats
-`dobara` by ₹1,015,417/seed-population (95% CI [₹1,077,083, ₹960,917] on the loss, i.e.
-significant; ≈₹203/mandate) — `paired_dobara_vs_do_nothing` now in `summary.json`
-alongside the two pre-existing paired comparisons. `aggressive_8x` collapses relative to
-`razorpay_default` as the thesis predicts (-₹1,147,525/seed-population, significant) —
-the mechanism-demonstration arm, never the headline.
+**RETRACTED:** the `do_nothing` arm was silently making the originally-scheduled debit
+every cycle (`eval/arms.py::DO_NOTHING_CADENCE` had `max_attempts=1`, not `0`) — a true
+"no recovery attempted" arm must make zero attempts, zero notifications. The user caught
+this directly from the numbers (`do_nothing` reporting `attempts_mean=7.75`,
+`notifications_total=38,742`). This invalidates every number in the previous full run,
+**including the ₹133/mandate `dobara`-beats-`razorpay_default` headline** and the
+"`do_nothing`-beats-`dobara`, a genuine property of the world" conclusion — both built on
+the broken control. **Fixed** this session: `do_nothing` now correctly makes zero
+attempts/notifications/revocations (verified: `sim.engine.revocation_hazard` only ever
+rolls inside a real attempt, so zero attempts implies exactly zero revocations, not an
+approximation). Three more real issues found and fixed in the same pass: (1) `Abstain`
+was silently falling back to a `razorpay_default`-style attempt instead of stopping —
+fixed to actually stop, per CLAUDE.md's "when in doubt, the agent stops" (the user
+explicitly overruled `docs/06-AGENT-SPEC.md`'s original fall-back design); (2)
+`aggressive_8x`'s distinguishing behaviour (up to 8 retries vs. `razorpay_default`'s
+effective 3) was invisible in the old lifetime-total `attempts_mean` metric — added a
+per-cycle `attempts_mean_in_failed_cycles` metric that actually shows it (~20% higher,
+confirmed real, not a bug); (3) the `recovery_rate` metric conflated two different
+definitions (a mandate-lifetime proxy vs. the spec's own "of failed cycles" per-cycle
+definition, matching Phase 1's calibration-gate metric) — now computed correctly as
+`recovery_rate_of_failed_cycles`, with the old proxy kept separately as
+`mandate_ever_recovered_rate`. Four hard invariant tests added
+(`tests/test_eval_invariants.py`, ~1 min, small population) so this class of bug — a
+control arm silently not doing what it claims — cannot recur silently; all four pass on
+the corrected code.
+
+**Not resolved, needs a decision before any full rerun:** with the `Abstain`-must-stop
+fix in place (correct, and non-negotiable per CLAUDE.md), `dobara` now **loses** to
+`razorpay_default` at smoke scale (n=600, two seeds, consistent: -₹1,022/mandate and
+-₹910/mandate) — a much larger, opposite-direction result from the previous (contaminated)
+₹133/mandate "win." Root mechanism understood: `dobara` abstains on ~25-28% of
+cycle-decisions; before the fix those silently attempted anyway and often recovered
+revenue by luck, and correctly making them do nothing removes that revenue.
+`razorpay_default` has no abstention concept and cannot lose ground this way. This traces
+to an abstention-rate finding from the same session: `bank_health_changepoint` (Phase 2's
+`models/bank_health.py`) fires roughly *evenly* across all 8 banks (10-19%), not
+concentrated on the regime-shift bank it's meant to catch — suggesting a real Phase 2
+miscalibration that may now be the deciding factor for whether the headline claim holds
+at all. **Deliberately not fixed this session** — touching already-shipped Phase 2 model
+code specifically because the headline number depends on it needs a second person's
+judgment, not a unilateral call, even though the likely fix direction happens to also
+help the number. The full 30-seed harness has NOT been rerun pending this decision — see
+`docs/DECISIONS.md` [2026-08-25] "STOPPED HERE" for the full writeup. `artifacts/results.parquet`/`summary.json` on disk are from the pre-retraction run and must not be
+quoted anywhere.
 
 **Phase 3 done (this session), on top of Phase 0-2:**
 - Closed `Action` type (`agent/actions.py`): `ScheduleDebit`/`SendPreDebitNotice`/
@@ -279,27 +296,31 @@ GitHub repo is created and pushed.
 
 ## Phase 4 — Evaluation (Day 6) · **THE GATE** · spec: `docs/07-EVAL-SPEC.md`
 
-**Status note (2026-08-25):** the *post-oracle-fix, post-P(revoke)-fix* full 30-seed run
-completed and the `dobara`-vs-`do_nothing` finding is resolved (investigated, no bug
-found, reported honestly — see `## CURRENT STATE` above). Boxes below reflect what that
-run actually produced; unticked items are genuinely not done, not overclaimed.
+**Status note (2026-08-25, retraction):** the previous "DONE" state and every ticked box
+below it were based on a full 30-seed run with a broken `do_nothing` control arm — see
+`## CURRENT STATE` above and `docs/DECISIONS.md` [2026-08-25] for the full account.
+Un-ticked accordingly. What's real: the harness architecture, arms, and metrics all
+exist and run correctly on corrected code, verified at smoke scale with four hard
+invariant tests — but the **headline number itself is not yet re-established**, pending
+a decision on the `bank_health_changepoint` miscalibration finding, and the full 30-seed
+run has not been repeated since the fixes.
 
-- [x] Arm: `do_nothing`
+- [x] Arm: `do_nothing` (fixed 2026-08-25: was silently making the scheduled debit every cycle; now correctly zero attempts)
 - [x] Arm: `razorpay_default` (their documented behaviour, cited)
 - [x] Arm: `aggressive_8x`
-- [x] Arm: `dobara`
-- [x] Arm: `oracle` (fixed to weakly dominate; verified)
-- [x] 30 seeds; seed variance + bootstrap CIs (`eval/metrics.py::bootstrap_mean_ci`, reusing `models/metrics.py`'s `RNG_SEED`/`N_BOOTSTRAP`)
-- [x] **Paired comparisons on identical seeds**; non-significance stated plainly (`paired_dobara_vs_razorpay_default`, `paired_aggressive_8x_vs_razorpay_default`, `paired_dobara_vs_do_nothing` in `artifacts/summary.json`, each with `significant: bool`)
-- [x] All nine metrics per arm incl. net LTV, revocations caused, attempts not made (`gross_recovered_inr`/`recovery_rate`/`attempts_mean`/`notifications_total`/`revocations_total`/`net_ltv_total`/`human_escalations_total`/`abstentions_total`/`recovered_per_notification` — all in `artifacts/summary.json`'s per-arm blocks)
-- [ ] The money chart: gross vs net LTV, crossover annotated — a frontend/polish deliverable, not yet built; the underlying numbers it needs now exist in `artifacts/summary.json`
-- [ ] Sensitivity analysis across every declared range, incl. response_rate 0% — only `hazard_per_failure_notification` swept so far (`eval/sensitivity.py`), and at reduced population/single seed pre-full-scale (`docs/DECISIONS.md` [2026-08-25]); LTV horizon, notification channel cost, and `response_rate` (incl. 0%) not yet swept
-- [ ] **Break-even statement**: hazard value at which the headline comparison would flip — the sweep so far shows `dobara`'s margin over `razorpay_default` *widening* monotonically as hazard increases (no crossover found within the declared [0.05, 0.15] range), which is itself reportable, but no precise break-even value has been computed and the sweep needs rerunning at full scale on the corrected code
-- [x] Robustness slices reported separately (`by_bank` incl. regime-shift, `by_method`, `by_first_success_attempt_index`, `cold_start`, `outage_windows` — all in `artifacts/summary.json`)
-- [x] Permanent holdout arm implemented and measured (`config/policy.yaml`'s `holdout_fraction` wired into the `dobara` arm, reported as `permanent_holdout_arm` in `artifacts/summary.json`) — the UI toggle is Phase 8 scope, not this
-- [x] `artifacts/summary.json` + `artifacts/results.parquet` written
-- [ ] Test-set evaluation count recorded as an honesty marker — Phase 2's models already track `n_test_evaluations`; the eval harness itself generates fresh worlds per seed rather than reusing a single held-out test set, so this item doesn't map cleanly onto Phase 4 and hasn't been separately addressed
-- [x] **GATE CHECK: numbers exist**, and they're real: `dobara` beats `razorpay_default` on net LTV, ≈₹133/mandate, 95% CI excludes zero, 30 seeds, full population
+- [ ] Arm: `dobara` — runs correctly, but see the open headline-flip question in `## CURRENT STATE`
+- [x] Arm: `oracle` (fixed to weakly dominate; verified, incl. against `aggressive_8x` on attempts)
+- [ ] 30 seeds; seed variance + bootstrap CIs — the machinery exists and works (`eval/metrics.py::bootstrap_mean_ci`), but the full 30-seed run has not been repeated on the corrected code
+- [ ] **Paired comparisons on identical seeds**; non-significance stated plainly — machinery exists (`paired_dobara_vs_razorpay_default`, `paired_aggressive_8x_vs_razorpay_default`, `paired_dobara_vs_do_nothing`), needs rerunning
+- [ ] All nine metrics per arm incl. net LTV, revocations caused, attempts not made — computed correctly now (`recovery_rate_of_failed_cycles` fixed, `attempts_mean_in_failed_cycles` added), needs a fresh full run
+- [ ] The money chart: gross vs net LTV, crossover annotated — not built; blocked on a trustworthy headline number first
+- [ ] Sensitivity analysis across every declared range, incl. response_rate 0% — only `hazard_per_failure_notification` swept so far, at reduced population, and predates all of this session's fixes; needs a full redo
+- [ ] **Break-even statement** — not computed; blocked on the headline question
+- [x] Robustness slices reported separately (mechanism exists — `by_bank` incl. regime-shift, `by_method`, `by_first_success_attempt_index`, `cold_start`, `outage_windows`; renamed `recovery_rate` -> `mandate_recovered_rate` at slice level for clarity, per docs/DECISIONS.md)
+- [x] Permanent holdout arm implemented and measured (`config/policy.yaml`'s `holdout_fraction` wired into the `dobara` arm) — the UI toggle is Phase 8 scope, not this
+- [ ] `artifacts/summary.json` + `artifacts/results.parquet` written — exist on disk but are from the retracted pre-fix run; must not be quoted
+- [ ] Test-set evaluation count recorded as an honesty marker — doesn't map cleanly onto Phase 4's fresh-world-per-seed design; not separately addressed
+- [ ] **GATE CHECK: numbers exist** — the harness produces real numbers, but the headline comparison itself is an open question pending the `bank_health_changepoint` decision; do not gate frontend work on this yet
 
 ## Phase 5 — API + Razorpay (Day 7) · spec: `docs/02-ARCHITECTURE.md`
 
@@ -353,3 +374,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-25** — Day 5, two refinements to the per-decision uncertainty band before Phase 4 widened its call sites. (1) Renamed `Decision.confidence_interval` -> `confidence_band` everywhere (`agent/context.py`, `agent/decide.py`, `agent/audit.py`, `docs/06-AGENT-SPEC.md`, `docs/04-DATA-MODEL.md`, `sim/schema.py`'s unused `confidence_band_json` column) — "CI" is now reserved exclusively for Phase 4's evaluation-harness bootstrap/seed-variance intervals, so an acknowledged per-decision approximation can never be mistaken for a sound evaluation estimate on an audit card or `/evidence`. (2) Replaced the normal approximation to the binomial proportion CI with the Wilson score interval (`agent/decide.py::_wilson_interval`, was `_proportion_ci`) — the normal approximation undercovers at small `n` and near p=0/1, exactly the thin-slice/low-hazard regime the band adjudicates for `ABSTAIN`. Both documented in `docs/DECISIONS.md` [2026-08-25]. `make check` green, no test call sites broken (none existed yet). Next: Phase 4 — evaluation, the gate (`docs/07-EVAL-SPEC.md`); note it now carries more argumentative weight than originally planned, since the sensitivity analysis across `hazard_per_failure_notification`'s full declared range plus the break-even statement ARE the empirical case for the thesis, not supporting material (see the framing-correction entry above).
 - **2026-08-25** — Day 6, Phase 4 harness built end-to-end (`eval/world.py`/`rng.py`/`arms.py`/`runner.py`/`metrics.py`/`sensitivity.py`/`run.py`), `agent/decide.py` batch-score-optimized (~26x, characterization-tested), and a real full 30-seed x 5-arm run completed (~110 min). Before accepting it, verification found the `oracle` arm violated its own dominance property (underperformed `do_nothing` and `dobara` on net LTV — should be impossible for the arm with the most information) because it only used foresight for day-selection, never for deciding whether to retry at all. **Fixed**: oracle now stops each cycle the instant the true (closed-form, not estimated) expected net value of another attempt is non-positive; verified at smoke scale it now dominates every arm. Separately, that completed run also showed `dobara` underperforming `do_nothing` (more attempts, more notifications, fewer successes, more revocations, lower net LTV) — investigated three hypotheses (documented in `docs/DECISIONS.md`), found `agent/decide.py`'s `E[net]` formula uses the hazard model's output unweighted by `P(failure)`, which structurally overstates the revocation downside — but this exact form is also what `docs/06-AGENT-SPEC.md`'s own worked example uses, so it may be a spec-level choice, not a Phase 3 implementation bug, and fixing it would both touch already-shipped/reviewed/characterization-tested code AND happen to point toward making `dobara` look better — deliberately **not fixed** without the user's sign-off. `artifacts/results.parquet`/`summary.json` on disk right now predate the oracle fix and must not be treated as final. `make check` green (73 tests). Next: user decides how to resolve the `dobara`-vs-`do_nothing` question, then rerun the full 30-seed harness (~2h) with the oracle fix in place.
 - **2026-08-25** — Day 6 continued, Phase 4 closed out. User authorized fixing the P(revoke) conditional/unconditional-probability bug: `agent/decide.py` now weights the hazard model's output by `P(fail) = 1 - p_success` before using it as `E[net]`'s `P(revoke)` term; `docs/06-AGENT-SPEC.md`'s worked example corrected to match; the characterization test's fixture baseline deliberately regenerated (it necessarily locked in the pre-fix numbers). Smoke-check (n=4,000) showed the fix was correct but didn't close the `dobara`-vs-`do_nothing` gap — `dobara` retried slightly *more* post-fix, the wrong direction. User authorized a live calibration probe comparing both models' predictions against the eval world's ground truth (not the original training-population test split): **no calibration bug found** — recovery-model Brier on the eval world (0.1115) is no worse than training-test-set Brier (0.1219); the hazard model's ~12% aggregate overestimate of true revocation risk points the wrong way to explain over-retrying. Conclusion, recorded honestly: at the current `hazard_per_failure_notification` and related cost parameters, a well-calibrated agent's retries genuinely, barely pay for themselves against not retrying at all — a real property of this world, not a defect. Reran the full 30-seed x 5-arm harness on the fully-corrected code (~103 min): `oracle` now weakly dominates every arm (confirms the fix held at scale); **headline** `dobara` beats `razorpay_default` by ≈₹133/mandate net LTV, 95% CI excludes zero, significant; `do_nothing` still beats `dobara` by ≈₹203/mandate, also significant — added `paired_dobara_vs_do_nothing` to `eval/run.py`'s summary output (wasn't there before) and reported it explicitly rather than only as a table row. `aggressive_8x` collapses as the thesis predicts, never the headline. `make check` green. Full nine-metric breakdown and robustness slices in `artifacts/summary.json`. Not yet done: the money chart, the full sensitivity sweep (only `hazard_per_failure_notification` swept, and only at reduced scale pre-full-scale-fix), and a precise break-even value. Next: Phase 5 — API + Razorpay test mode (`docs/02-ARCHITECTURE.md`), or finish Phase 4's remaining sensitivity/break-even/chart items first — user's call.
+- **2026-08-25** — Day 6 continued, RETRACTION. The user caught a critical bug the whole prior session missed: `do_nothing` reported `attempts_mean=7.75`/`notifications_total=38,742` in the "final" full run — a true no-recovery-attempted arm must be zero on both. Root cause: `eval/arms.py::DO_NOTHING_CADENCE.max_attempts=1` (read as "no retries, but the scheduled debit still happens" — wrong). This invalidates the previous entry's headline (`dobara` beating `razorpay_default` by ≈₹133/mandate) and the `do_nothing`-beats-`dobara` "genuine property of the world" conclusion — both built on the broken control. **Fixed**: `max_attempts=0`; verified do_nothing is now exactly zero attempts/notifications/gross/revocations (confirmed the last one isn't an approximation: `sim.engine.revocation_hazard` only ever rolls inside a real attempt). Also fixed in the same pass, all user-directed: `Abstain` now actually stops instead of silently falling back to an attempt (`docs/06-AGENT-SPEC.md`'s original "falls back to the default policy" design explicitly overruled — CLAUDE.md's "when in doubt, the agent stops" is literal); `aggressive_8x`'s real distinguishing behavior was invisible in the old lifetime `attempts_mean` (added `attempts_mean_in_failed_cycles`, confirmed ~20% higher, not a bug); `recovery_rate` was conflating two definitions (fixed to `recovery_rate_of_failed_cycles`, matching the spec's own "of failed cycles" wording and Phase 1's calibration-gate metric exactly). Added `tests/test_eval_invariants.py` — 4 hard invariants, ~1 min, all pass on corrected code. **Then found something bigger**: with `Abstain` correctly stopping, `dobara` now *loses* to `razorpay_default` at smoke scale (two seeds, consistent, ~₹900-1000/mandate) — abstaining ~25-28% of the time and truly doing nothing on those decisions (instead of quietly guessing right sometimes) costs real revenue `razorpay_default`'s no-abstention cadence never forgoes. Traced probable cause to Phase 2's `models/bank_health.py` changepoint detector firing evenly across all 8 banks (10-19%) rather than concentrating on the regime-shift bank it's meant to catch — likely miscalibrated, but deliberately not touched this session (a Phase 2 fix that happens to also help the headline number needs a second person's sign-off, not a unilateral call). Full 30-seed rerun NOT done — stopped to report instead of spending 2h to confirm what smoke scale already shows. `make check` green (77 tests: 73 prior + 4 new). Next: user decides on the `bank_health_changepoint` question before any further rerun.

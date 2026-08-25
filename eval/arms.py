@@ -3,10 +3,18 @@ attempt-cadence parameters for the two non-live arms live here (`razorpay_defaul
 `sim/params.yaml`'s existing `retry_policy.*` — the same values that generated the Phase
 1/2 training data — so the arm can't silently drift from what it claims to replicate;
 `aggressive_8x` gets its own declared block, `sim/params.yaml`'s `eval.*`, since those
-numbers don't exist anywhere else). `do_nothing`, `dobara`, and `oracle` don't need a
-cadence spec here: `do_nothing` is one attempt, no retries; `dobara` calls `agent.decide()`
-live; `oracle` peeks at latent balance instead of following a fixed cadence (see
-`eval/runner.py::_run_oracle_cycle`).
+numbers don't exist anywhere else). `dobara` calls `agent.decide()` live; `oracle` peeks
+at latent balance instead of following a fixed cadence (see
+`eval/runner.py::_run_oracle_arm`).
+
+**`do_nothing` is the floor: ZERO attempts, ZERO notifications, ZERO gross recovered.**
+Per docs/07-EVAL-SPEC.md's arm table: "No recovery attempted. The floor. Establishes what
+is at stake." `max_attempts=0` below is the whole implementation — the mandate's cycles
+elapse with no debit ever tried. This was previously `max_attempts=1` (read as "the
+original scheduled debit still happens, only retries are skipped"), which is wrong: it
+made `do_nothing` recover almost everything (nearly identical to every retrying arm) and
+sent tens of thousands of notifications — the opposite of "no recovery attempted." Fixed
+2026-08-25 after the bug was caught in review; see docs/DECISIONS.md.
 """
 
 from __future__ import annotations
@@ -61,5 +69,5 @@ def aggressive_8x_cadence(params: Params) -> Cadence:
 
 
 DO_NOTHING_CADENCE = Cadence(
-    max_attempts=1, min_gap_hours=24, offers_date_change=False, respects_fatigue_cap=True
+    max_attempts=0, min_gap_hours=24, offers_date_change=False, respects_fatigue_cap=True
 )

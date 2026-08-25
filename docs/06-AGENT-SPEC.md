@@ -86,9 +86,15 @@ gated" language from the brief, made literal.
 - Calibration error in this slice exceeds `config.max_slice_brier`
 - The CI on `E[net]` for the best action straddles zero
 
-On abstention the agent **falls back to Razorpay's documented default policy and says so in
-plain language.** It does not guess. The demo deliberately includes a case where this
-fires — the regime-shift bank in the test window is exactly that case.
+On abstention the agent **does not attempt this cycle, and says so in plain language.** It
+does not guess, and — corrected 2026-08-25, see `docs/DECISIONS.md` — it does not fall
+back to a default policy either: `ABSTAIN` means "not enough confidence to act," and
+CLAUDE.md's non-negotiable is "when in doubt, the agent stops," not "when in doubt, act
+on someone else's policy instead." `ABSTAIN` stays a distinct emitted action from `STOP`
+(the audit trail should say *why* — genuine uncertainty vs. a confident negative-EV call)
+but mechanically the two now do the same thing: no notification, no attempt. The demo
+deliberately includes a case where this fires — the regime-shift bank in the test window
+is exactly that case.
 
 > This satisfies the brief's requirement for a failure the agent handles gracefully, and it
 > is a stronger version of it: the failure is *designed, detected, named, and measured*

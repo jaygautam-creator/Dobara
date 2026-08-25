@@ -68,7 +68,7 @@ def _did_line(decision: Decision) -> str:
     if isinstance(action, Stop):
         return f"STOP({action.reason.value})"
     if isinstance(action, Abstain):
-        return f"ABSTAIN({action.reason.value})   [falls back to documented default policy]"
+        return f"ABSTAIN({action.reason.value})   [no attempt -- not confident enough to act]"
     if isinstance(action, EscalateToHuman):
         return f"ESCALATE_TO_HUMAN({action.reason})"
     raise TypeError(f"no DID rendering for {type(action).__name__}")  # pragma: no cover
@@ -96,8 +96,8 @@ def _why_line(ctx: DecisionContext, decision: Decision) -> str:
     if isinstance(action, Abstain):
         return (
             f"\"The model's evidence for ({ctx.bank_id}, {ctx.method}) is not trusted enough "
-            f"to act on ({action.reason.value}) — falling back to the documented default "
-            f'policy rather than guessing."'
+            f"to act on ({action.reason.value}) — no attempt made this cycle. When in doubt, "
+            f'the agent stops rather than guessing or falling back to an unvalidated default."'
         )
     if isinstance(action, EscalateToHuman):
         return f'"Handed to a human: {action.reason}."'

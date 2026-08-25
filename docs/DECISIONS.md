@@ -527,3 +527,67 @@ from `sim.engine.revocation_hazard`'s true values for those same contexts, or wh
 unexpected — has an answer, so the rerun's ~2h isn't spent re-discovering the same open
 question. `artifacts/results.parquet`/`summary.json` remain the pre-both-fixes run and
 must not be quoted anywhere; `PROGRESS.md` continues to flag them stale.
+
+## [2026-08-25] Calibration probe: models are reasonably sound on the eval world — the `dobara`-vs-`do_nothing` gap is not explained by model miscalibration
+
+**Investigated:** whether the recovery/hazard models (trained once on the original
+seed-42 training population, `data/dobara.sqlite3`) generalize to the fresh eval-world
+populations `eval/world.py` generates (seeds 101+), since a train/eval calibration gap
+could bias `agent/decide.py`'s `E[net]` and explain why `dobara` retries more than
+`do_nothing` while doing worse on net LTV. Method: monkeypatched
+`TrainedHazardModel.predict`/`TrainedRecoveryModel.predict_lgbm` and
+`eval.runner.revocation_hazard` (the ground-truth generative function) to capture
+predicted-vs-realized pairs while running the live `dobara` arm at n=2,400 (seeds
+901-902, 1,200 customers each) — small enough to run in minutes, matching the actual
+feature distribution `agent.decide()` sees in production use (not a synthetic probe).
+
+**Hazard model**: predicted `P(revoke | fail)` mean 0.135 vs true `revocation_hazard()`
+mean 0.120 (3,030 paired observations) — a real, measurable **~12% aggregate
+overestimate** (mean signed gap +0.0147), moderate correlation (0.58, structurally
+capped well below 1 by `CustomerLatent.revocation_propensity` — an intentionally latent,
+unobservable per-customer trait that multiplicatively scales true hazard by 0.3-1.7x per
+`sim/engine.py::revocation_hazard`, so no observable-feature-only model could fully
+track it, by design). **Critically, the bias direction is wrong to explain the puzzle**:
+if the model overstates `P(revoke)`, `agent/decide.py` perceives retrying as *riskier*
+than it truly is, which should bias `decide()` toward *less* retrying, not more — the
+opposite of what would make `dobara` over-retry relative to `do_nothing`.
+
+**Recovery model**: eval-world Brier score 0.1115 [0.1083, 0.1147] vs the
+training-population test-set's 0.1219 [0.1179, 0.1260] (`artifacts/recovery_model_report.json`)
+— **no degradation, if anything slightly better** (plausibly because `dobara` actively
+selects better-than-average days, an easier prediction target). Reliability-diagram bins
+track closely (e.g. predicted 0.85 vs realized 0.87 in the busiest bin). ROC AUC is lower
+on the eval world (0.678 vs 0.735), but that reflects reduced *discrimination* from
+`dobara`'s day-selection narrowing the range of days actually attempted, not miscalibration
+— calibration and discrimination are different properties, and the one `E[net]` actually
+depends on (calibration) holds up.
+
+**LTV life table**: eval-world-independent (it's a pure function of the training
+population's `Mandate`/`Cycle`/`Revocation` history, `models/ltv.py`), sampled directly —
+survival curves decay smoothly and plausibly (e.g. `ott` category: 1.0 at age 0, 0.96 at
+age 2, 0.90 at age 4, 0.85 at age 6), nothing structurally broken.
+
+**Conclusion: no calibration bug found.** Both models are reasonably well-calibrated on
+the eval world; the hazard model's modest bias, if it matters at all, works against
+over-retrying rather than for it. **The `dobara`-vs-`do_nothing` gap is most likely a
+genuine property of this simulated world's current parameter calibration** — at
+`sim/params.yaml`'s present values (particularly `revocation.hazard_per_contact_density`
+and the cumulative-failure-notification term), the true marginal benefit of a retry is
+close to, or below, its true marginal revocation-hazard cost, so even a reasonably
+well-calibrated agent's retries barely break even against never retrying at all. This is
+not a failure of the thesis — it is an even stronger, more uncomfortable version of it
+(retrying is so costly under India's notification-mandated regime that a *smart* policy
+struggles to beat a *zero-effort* one) — but it is a genuine open question about whether
+`agent/decide.py`'s remaining known simplifications (the coarse day/channel candidate
+grid; `OfferDateChange`'s flat 0.01 placeholder `E[net]`, which could be winning
+selections it shouldn't against candidates whose real cost is now correctly represented)
+are contributing, versus this being an intrinsic property of the world. Not investigated
+further this session — a decision point for the user on how much more time to spend here
+versus accepting `do_nothing`-beats-`dobara` as a documented, honest finding alongside
+the solid `dobara`-beats-`razorpay_default` headline result.
+
+**Not modified**: `agent/decide.py`, `sim/params.yaml`, `config/policy.yaml` — no bug
+found to fix, and this investigation was explicitly scoped not to hunt for one to force
+onto the result. Two throwaway diagnostic scripts (`eval/_calibration_probe.py`,
+`eval/_calibration_probe2.py`) were used and deleted; not part of the shipped `eval/`
+module. The full 30-seed harness was not launched — that remains the coordinator's call.

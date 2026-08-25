@@ -7,9 +7,20 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-25 (Day 5 session)
-**Phase:** Phase 0 + Phase 1 (simulator) + Phase 2 (models) + Phase 3 (agent) complete.
-Ready to begin Phase 4 (evaluation — **the gate**).
+**Last updated:** 2026-08-25 (Day 5-6 session)
+**Phase:** Phase 0-3 complete. **Phase 4 (evaluation — the gate) IN PROGRESS, not done.**
+The harness exists and runs end-to-end (`eval/world.py`, `eval/rng.py`, `eval/arms.py`,
+`eval/runner.py`, `eval/metrics.py`, `eval/sensitivity.py`, `eval/run.py`), `agent/decide.py`
+was batch-score-optimized (~26x) with a characterization test locking in behavior-identity,
+and a real bug in the `oracle` arm was found and fixed. **But:** the one full 30-seed x
+5-arm run completed so far (`artifacts/results.parquet`/`summary.json`, both now stale)
+ran *before* the oracle fix, and a second, unresolved finding — `dobara` underperforming
+`do_nothing` on net LTV in that run — is diagnosed but deliberately not code-fixed pending
+the user's call (see `docs/DECISIONS.md` [2026-08-25] "Full 30-seed harness ran; two
+anomalies found in verification, oracle fixed"). **The current `artifacts/results.parquet`
+and `artifacts/summary.json` must NOT be treated as final or quoted anywhere (README, UI,
+video) — they predate the oracle fix and the harness needs a rerun.** Do not tick Phase 4
+checkboxes below based on these artifacts.
 
 **Phase 3 done (this session), on top of Phase 0-2:**
 - Closed `Action` type (`agent/actions.py`): `ScheduleDebit`/`SendPreDebitNotice`/
@@ -250,6 +261,12 @@ GitHub repo is created and pushed.
 
 ## Phase 4 — Evaluation (Day 6) · **THE GATE** · spec: `docs/07-EVAL-SPEC.md`
 
+**Status note (2026-08-25):** every item below has code that implements it and the
+harness runs end-to-end, but boxes stay unticked until a *post-oracle-fix* full 30-seed
+run completes and the `dobara`-vs-`do_nothing` finding is resolved one way or the other —
+see the `## CURRENT STATE` note above. Ticking these now would overclaim a validated
+result the project doesn't have yet.
+
 - [ ] Arm: `do_nothing`
 - [ ] Arm: `razorpay_default` (their documented behaviour, cited)
 - [ ] Arm: `aggressive_8x`
@@ -317,3 +334,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-25** — Day 4-5, framing correction before Phase 3. The 0.113→0.130→0.207 hazard result was mis-described above as empirically confirming the thesis. It does not: `hazard_per_failure_notification` is a declared assumption in `sim/params.yaml` (recalibrated 2026-08-25), so the rising-hazard relationship was authored into the generator by hand, and the hazard model recovering it is circular — exactly the failure mode the hidden-latent-state design exists to prevent. Corrected everywhere it appeared (`PROGRESS.md`, `models/hazard.py` docstring) and added a "Circularity and what our numbers can and cannot show" section to the README distinguishing what the result actually shows (correct model specification) from what supports the thesis (the regulatory mechanism + the 20M/808M published figures, not fitted parameters). Full entry in `docs/DECISIONS.md` [2026-08-25]. Phase 4 will need to show the defensible claim instead: Dobara beats `aggressive_8x` on net LTV across the full declared `sensitivity_range` [0.05, 0.15] of `hazard_per_failure_notification`, plus the break-even value. Next: Phase 3 — agent (`docs/06-AGENT-SPEC.md`).
 - **2026-08-25** — Day 5, Phase 3 complete. Built the whole decision layer from scratch: closed `Action` type (`agent/actions.py`), seven stopping reasons (`agent/stopping.py`), all 15 compliance rules from `docs/01-REGULATORY.md` as a declarative, structurally-enforced gate (`agent/compliance.py`), the pure `decide()` function with candidate generation/scoring/abstention (`agent/decide.py`), an append-only audit trail with the spec's `SAW`/`THOUGHT`/`ALT`/`GATE`/`DID`/`WHY` rendering (`agent/audit.py`), a sourced `config/policy.yaml` + loader (`agent/policy.py`), and the model-loading plumbing Phase 2 never built (`load_recovery_model`/`load_hazard_model`, `predict_*_contrib` for per-decision feature attribution, `agent/models.py::ModelBundle`). Added a `hypothesis` property test (200 examples: `decide()` never violates a HARD rule) plus direct gate tests proving each HARD rule actually blocks a hand-built violating candidate (the property test alone only proves `decide()`'s own output stays compliant, not that the gate would catch a bug). 72 tests total, `make check` green. Two things worth flagging: the per-decision confidence interval is an explicitly-approximate normal approximation to the binomial proportion CI using each model's training-time slice `n` (no real predictive posterior exists yet — documented as an approximation in `agent/decide.py`'s docstring, not oversold); and `OfferDateChange` is scored at a flat placeholder value pending Phase 4's response-rate mechanic. Full reasoning for both, plus the ESCALATE_TO_HUMAN-scoring and ABSTAIN/STOP(INSUFFICIENT_CONFIDENCE) design calls, in `docs/DECISIONS.md` [2026-08-25]. Next: Phase 4 — evaluation, the gate (`docs/07-EVAL-SPEC.md`).
 - **2026-08-25** — Day 5, two refinements to the per-decision uncertainty band before Phase 4 widened its call sites. (1) Renamed `Decision.confidence_interval` -> `confidence_band` everywhere (`agent/context.py`, `agent/decide.py`, `agent/audit.py`, `docs/06-AGENT-SPEC.md`, `docs/04-DATA-MODEL.md`, `sim/schema.py`'s unused `confidence_band_json` column) — "CI" is now reserved exclusively for Phase 4's evaluation-harness bootstrap/seed-variance intervals, so an acknowledged per-decision approximation can never be mistaken for a sound evaluation estimate on an audit card or `/evidence`. (2) Replaced the normal approximation to the binomial proportion CI with the Wilson score interval (`agent/decide.py::_wilson_interval`, was `_proportion_ci`) — the normal approximation undercovers at small `n` and near p=0/1, exactly the thin-slice/low-hazard regime the band adjudicates for `ABSTAIN`. Both documented in `docs/DECISIONS.md` [2026-08-25]. `make check` green, no test call sites broken (none existed yet). Next: Phase 4 — evaluation, the gate (`docs/07-EVAL-SPEC.md`); note it now carries more argumentative weight than originally planned, since the sensitivity analysis across `hazard_per_failure_notification`'s full declared range plus the break-even statement ARE the empirical case for the thesis, not supporting material (see the framing-correction entry above).
+- **2026-08-25** — Day 6, Phase 4 harness built end-to-end (`eval/world.py`/`rng.py`/`arms.py`/`runner.py`/`metrics.py`/`sensitivity.py`/`run.py`), `agent/decide.py` batch-score-optimized (~26x, characterization-tested), and a real full 30-seed x 5-arm run completed (~110 min). Before accepting it, verification found the `oracle` arm violated its own dominance property (underperformed `do_nothing` and `dobara` on net LTV — should be impossible for the arm with the most information) because it only used foresight for day-selection, never for deciding whether to retry at all. **Fixed**: oracle now stops each cycle the instant the true (closed-form, not estimated) expected net value of another attempt is non-positive; verified at smoke scale it now dominates every arm. Separately, that completed run also showed `dobara` underperforming `do_nothing` (more attempts, more notifications, fewer successes, more revocations, lower net LTV) — investigated three hypotheses (documented in `docs/DECISIONS.md`), found `agent/decide.py`'s `E[net]` formula uses the hazard model's output unweighted by `P(failure)`, which structurally overstates the revocation downside — but this exact form is also what `docs/06-AGENT-SPEC.md`'s own worked example uses, so it may be a spec-level choice, not a Phase 3 implementation bug, and fixing it would both touch already-shipped/reviewed/characterization-tested code AND happen to point toward making `dobara` look better — deliberately **not fixed** without the user's sign-off. `artifacts/results.parquet`/`summary.json` on disk right now predate the oracle fix and must not be treated as final. `make check` green (73 tests). Next: user decides how to resolve the `dobara`-vs-`do_nothing` question, then rerun the full 30-seed harness (~2h) with the oracle fix in place.

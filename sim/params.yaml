@@ -235,3 +235,15 @@ rng:
   seed_default:
     value: 42
     source: "arbitrary, fixed for reproducibility; overridable via --seed"
+
+eval:
+  # Not simulator parameters (nothing in sim/engine.py reads this block) — arm-policy
+  # parameters used only by eval/arms.py to define the aggressive_8x arm per
+  # docs/07-EVAL-SPEC.md's arm table ("up to 8 retries on a fixed escalating cadence").
+  # Declared with the same source-or-assumption discipline as everywhere else.
+  aggressive_8x_max_attempts:
+    value: 8
+    source: "docs/07-EVAL-SPEC.md arm table: 'up to 8 retries on a fixed escalating cadence'"
+  aggressive_8x_min_gap_hours_between_attempts:
+    value: 24
+    source: "RBI-PDN-24H floor (docs/01-REGULATORY.md) — every arm must obey the same 24h pre-debit-notification minimum to stay legally comparable, so 'escalating cadence' is read as more attempts at the legal minimum spacing (8 vs razorpay_default's 4), not faster spacing, since faster would breach RBI-PDN-24H. See docs/DECISIONS.md [2026-08-25]."

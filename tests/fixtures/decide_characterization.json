@@ -1,0 +1,3963 @@
+{
+  "abstain_changepoint": {
+    "chosen": {
+      "reason": "bank_health_changepoint",
+      "type": "Abstain"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      171.547605,
+      193.062137
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": "insufficient_confidence"
+  },
+  "abstain_ci_straddles_zero": {
+    "chosen": {
+      "reason": "expected_value_ci_straddles_zero",
+      "type": "Abstain"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      -16.1798,
+      289.539821
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": "insufficient_confidence"
+  },
+  "abstain_insufficient_slice_n": {
+    "chosen": {
+      "reason": "insufficient_slice_n",
+      "type": "Abstain"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      -372.83182,
+      386.418386
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": "insufficient_confidence"
+  },
+  "abstain_slice_calibration_error": {
+    "chosen": {
+      "reason": "slice_calibration_error",
+      "type": "Abstain"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      171.547605,
+      193.062137
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": "insufficient_confidence"
+  },
+  "at_cost_cap": {
+    "chosen": {
+      "reason": "cost_cap",
+      "type": "Stop"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      0.0,
+      0.0
+    ],
+    "expected_net": 0.0,
+    "feature_attribution": {},
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "escalate (notification cost cap reached this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.0.00 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 0.0,
+      "cost": 0.0,
+      "expected_net": 0.0,
+      "ltv_remaining": 0.0,
+      "p_revoke": 0.0,
+      "p_success": 0.0
+    },
+    "stopping_reason": "cost_cap"
+  },
+  "at_max_attempts": {
+    "chosen": {
+      "reason": "max_attempts",
+      "type": "Stop"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      0.0,
+      0.0
+    ],
+    "expected_net": 0.0,
+    "feature_attribution": {},
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "escalate (max attempts this cycle reached)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.0.00 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 0.0,
+      "cost": 0.0,
+      "expected_net": 0.0,
+      "ltv_remaining": 0.0,
+      "p_revoke": 0.0,
+      "p_success": 0.0
+    },
+    "stopping_reason": "max_attempts"
+  },
+  "attempt_index_1": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      145.210484,
+      213.849898
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "bank_sbi": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      145.210484,
+      213.849898
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "baseline": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      145.210484,
+      213.849898
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "cold_start_early_attempt": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      90.470944,
+      195.957911
+    ],
+    "expected_net": 151.200194,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 151.050194,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 150.850194,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 146.210194,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 146.060194,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 145.860194,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 141.220194,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 141.070194,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 140.870194,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 116.270194,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 116.120194,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 115.920194,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 111.280194,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 111.130194,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 110.930194,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 106.290194,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 106.140194,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 105.940194,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 101.300194,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 101.150194,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 100.950194,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.151.20 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.151.20 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 151.200194,
+      "ltv_remaining": 2291.408,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "customer_opted_out": {
+    "chosen": {
+      "reason": "customer_opted_out",
+      "type": "Stop"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [],
+    "confidence_band": [
+      0.0,
+      0.0
+    ],
+    "expected_net": 0.0,
+    "feature_attribution": {},
+    "model_versions": {},
+    "rejected_alternatives": [],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 0.0,
+      "cost": 0.0,
+      "expected_net": 0.0,
+      "ltv_remaining": 0.0,
+      "p_revoke": 0.0,
+      "p_success": 0.0
+    },
+    "stopping_reason": "customer_opted_out"
+  },
+  "declared_day": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      145.210484,
+      213.849898
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-08-29T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-08-30T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-08-31T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-01T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-02T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-03T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-04T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.182.61 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "declared_day_recent_offer": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      157.376485,
+      217.826437
+    ],
+    "expected_net": 189.597676,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 189.447676,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 189.247676,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 184.607676,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 184.457676,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 184.257676,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 179.617676,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 179.467676,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 179.267676,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 154.667676,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 154.517676,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 154.317676,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 149.677676,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 149.527676,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 149.327676,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 144.687676,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 144.537676,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 144.337676,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 139.697676,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 139.547676,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 139.347676,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-08-29T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-08-30T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-08-31T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-01T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-02T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-03T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+      },
+      {
+        "description": "offer date change to day 12 at 2026-09-04T10:00:00",
+        "expected_net": 0.01,
+        "reason": "E[net] lower by Rs.189.59 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.189.60 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.189.60 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 189.597676,
+      "ltv_remaining": 643.447368,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "hard_decline": {
+    "chosen": {
+      "reason": "hard_decline",
+      "type": "Stop"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [],
+    "confidence_band": [
+      0.0,
+      0.0
+    ],
+    "expected_net": 0.0,
+    "feature_attribution": {},
+    "model_versions": {},
+    "rejected_alternatives": [],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 0.0,
+      "cost": 0.0,
+      "expected_net": 0.0,
+      "ltv_remaining": 0.0,
+      "p_revoke": 0.0,
+      "p_success": 0.0
+    },
+    "stopping_reason": "hard_decline"
+  },
+  "large_amount_afa": {
+    "chosen": {
+      "afa_confirmed": true,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      7275.074343,
+      10713.922752
+    ],
+    "expected_net": 9149.075,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 9148.925,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 9148.725,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 8899.075,
+        "reason": "E[net] lower by Rs.250.00 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 8898.925,
+        "reason": "E[net] lower by Rs.250.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 8898.725,
+        "reason": "E[net] lower by Rs.250.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 8649.075,
+        "reason": "E[net] lower by Rs.500.00 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 8648.925,
+        "reason": "E[net] lower by Rs.500.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 8648.725,
+        "reason": "E[net] lower by Rs.500.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 7399.075,
+        "reason": "E[net] lower by Rs.1750.00 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 7398.925,
+        "reason": "E[net] lower by Rs.1750.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 7398.725,
+        "reason": "E[net] lower by Rs.1750.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 7149.075,
+        "reason": "E[net] lower by Rs.2000.00 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 7148.925,
+        "reason": "E[net] lower by Rs.2000.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 7148.725,
+        "reason": "E[net] lower by Rs.2000.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 6899.075,
+        "reason": "E[net] lower by Rs.2250.00 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 6898.925,
+        "reason": "E[net] lower by Rs.2250.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 6898.725,
+        "reason": "E[net] lower by Rs.2250.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 6649.075,
+        "reason": "E[net] lower by Rs.2500.00 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 6648.925,
+        "reason": "E[net] lower by Rs.2500.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 6648.725,
+        "reason": "E[net] lower by Rs.2500.35 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.9149.08 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.9149.08 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": true,
+    "rupee_math": {
+      "amount": 25000.0,
+      "cost": 0.0,
+      "expected_net": 9149.075,
+      "ltv_remaining": 47250.0,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "late_cycle_window": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      145.210484,
+      213.849898
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "mandate_revoked": {
+    "chosen": {
+      "reason": "mandate_revoked",
+      "type": "Stop"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [],
+    "confidence_band": [
+      0.0,
+      0.0
+    ],
+    "expected_net": 0.0,
+    "feature_attribution": {},
+    "model_versions": {},
+    "rejected_alternatives": [],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 0.0,
+      "cost": 0.0,
+      "expected_net": 0.0,
+      "ltv_remaining": 0.0,
+      "p_revoke": 0.0,
+      "p_success": 0.0
+    },
+    "stopping_reason": "mandate_revoked"
+  },
+  "method_card": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      147.710945,
+      215.280299
+    ],
+    "expected_net": 184.596068,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 184.446068,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 184.246068,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 179.606068,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 179.456068,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 179.256068,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 174.616068,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 174.466068,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 174.266068,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 149.666068,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 149.516068,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 149.316068,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 144.676068,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 144.526068,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 144.326068,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 139.686068,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 139.536068,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 139.336068,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 134.696068,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 134.546068,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 134.346068,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.184.60 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.184.60 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 184.596068,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0212,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "near_cost_cap": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      145.210484,
+      213.849898
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "near_max_attempts": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      145.210484,
+      213.849898
+    ],
+    "expected_net": 182.615537,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 182.465537,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 182.265537,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 177.625537,
+        "reason": "E[net] lower by Rs.4.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 177.475537,
+        "reason": "E[net] lower by Rs.5.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 177.275537,
+        "reason": "E[net] lower by Rs.5.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 172.635537,
+        "reason": "E[net] lower by Rs.9.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 172.485537,
+        "reason": "E[net] lower by Rs.10.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 172.285537,
+        "reason": "E[net] lower by Rs.10.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 147.685537,
+        "reason": "E[net] lower by Rs.34.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 147.535537,
+        "reason": "E[net] lower by Rs.35.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 147.335537,
+        "reason": "E[net] lower by Rs.35.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 142.695537,
+        "reason": "E[net] lower by Rs.39.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 142.545537,
+        "reason": "E[net] lower by Rs.40.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 142.345537,
+        "reason": "E[net] lower by Rs.40.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 137.705537,
+        "reason": "E[net] lower by Rs.44.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 137.555537,
+        "reason": "E[net] lower by Rs.45.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 137.355537,
+        "reason": "E[net] lower by Rs.45.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 132.715537,
+        "reason": "E[net] lower by Rs.49.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 132.565537,
+        "reason": "E[net] lower by Rs.50.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 132.365537,
+        "reason": "E[net] lower by Rs.50.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.182.62 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 499.0,
+      "cost": 0.0,
+      "expected_net": 182.615537,
+      "ltv_remaining": 943.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  },
+  "small_amount": {
+    "chosen": {
+      "afa_confirmed": false,
+      "notice_channel": "push",
+      "notice_t": "2026-08-30T10:00:00",
+      "notice_template_id": "tmpl_pdn_defer_v3",
+      "t": "2026-08-31T10:00:00",
+      "type": "ScheduleDebit"
+    },
+    "clauses_blocked": [],
+    "clauses_satisfied": [
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-24H"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-PDN-OPTOUT"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-POST-CONF"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-AFA-15K"
+      },
+      {
+        "citation": "RBI e-mandate framework",
+        "id": "RBI-NO-CHARGE"
+      },
+      {
+        "citation": "RBI Fair Practices / Digital Lending",
+        "id": "CONDUCT-HOURS"
+      },
+      {
+        "citation": "RBI Digital Lending Guidelines",
+        "id": "CONDUCT-NO-SHAME"
+      },
+      {
+        "citation": "RBI Fair Practices",
+        "id": "CONDUCT-RECORD"
+      },
+      {
+        "citation": "TRAI TCCCPR",
+        "id": "TRAI-DLT"
+      },
+      {
+        "citation": "WhatsApp Business Policy",
+        "id": "WA-UTILITY"
+      },
+      {
+        "citation": "DPDP Act 2023",
+        "id": "DPDP-PURPOSE"
+      },
+      {
+        "citation": "DPDP Act 2023 s.6",
+        "id": "DPDP-MINIMISE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-NO-PROBE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-CONVERGE"
+      },
+      {
+        "citation": "Self-imposed",
+        "id": "DOBARA-FATIGUE"
+      }
+    ],
+    "confidence_band": [
+      28.809294,
+      42.427134
+    ],
+    "expected_net": 36.230337,
+    "feature_attribution": {
+      "amount": 0.049,
+      "amount_vs_afa_threshold": 0.05,
+      "amount_vs_mandate_typical": 0.051,
+      "attempt_index": 0.038,
+      "bank_dow_profile": 0.034,
+      "bank_health_changepoint": 0.033,
+      "bank_health_ewma": 0.032,
+      "bank_id": 0.031,
+      "consecutive_failed_cycles": 0.041,
+      "day_of_month": 0.044,
+      "day_of_week": 0.047,
+      "days_from_declared_day": 0.056,
+      "days_until_cycle_end": 0.048,
+      "has_declared_preferred_day": 0.055,
+      "hours_since_last_attempt": 0.039,
+      "is_bank_holiday": 0.035,
+      "is_mid_month_window": 0.046,
+      "is_month_start_window": 0.045,
+      "mandate_age_cycles": 0.043,
+      "mandate_success_rate_to_date": 0.042,
+      "method": 0.036,
+      "method_x_bank_success_rate": 0.037,
+      "prev_error_reason": 0.054,
+      "prev_error_source": 0.052,
+      "prev_error_step": 0.053,
+      "prior_failures_this_cycle": 0.04
+    },
+    "model_versions": {
+      "hazard": "fake_hazard_varying_v1",
+      "recovery": "fake_recovery_varying_v1"
+    },
+    "rejected_alternatives": [
+      {
+        "description": "retry 2026-08-31T10:00:00 via sms",
+        "expected_net": 36.080337,
+        "reason": "E[net] lower by Rs.0.15 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-31T10:00:00 via whatsapp",
+        "expected_net": 35.880337,
+        "reason": "E[net] lower by Rs.0.35 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via push",
+        "expected_net": 35.240337,
+        "reason": "E[net] lower by Rs.0.99 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via sms",
+        "expected_net": 35.090337,
+        "reason": "E[net] lower by Rs.1.14 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-30T10:00:00 via whatsapp",
+        "expected_net": 34.890337,
+        "reason": "E[net] lower by Rs.1.34 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via push",
+        "expected_net": 34.250337,
+        "reason": "E[net] lower by Rs.1.98 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via sms",
+        "expected_net": 34.100337,
+        "reason": "E[net] lower by Rs.2.13 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-08-29T10:00:00 via whatsapp",
+        "expected_net": 33.900337,
+        "reason": "E[net] lower by Rs.2.33 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via push",
+        "expected_net": 29.300337,
+        "reason": "E[net] lower by Rs.6.93 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via sms",
+        "expected_net": 29.150337,
+        "reason": "E[net] lower by Rs.7.08 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-04T10:00:00 via whatsapp",
+        "expected_net": 28.950337,
+        "reason": "E[net] lower by Rs.7.28 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via push",
+        "expected_net": 28.310337,
+        "reason": "E[net] lower by Rs.7.92 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via sms",
+        "expected_net": 28.160337,
+        "reason": "E[net] lower by Rs.8.07 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-03T10:00:00 via whatsapp",
+        "expected_net": 27.960337,
+        "reason": "E[net] lower by Rs.8.27 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via push",
+        "expected_net": 27.320337,
+        "reason": "E[net] lower by Rs.8.91 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via sms",
+        "expected_net": 27.170337,
+        "reason": "E[net] lower by Rs.9.06 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-02T10:00:00 via whatsapp",
+        "expected_net": 26.970337,
+        "reason": "E[net] lower by Rs.9.26 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via push",
+        "expected_net": 26.330337,
+        "reason": "E[net] lower by Rs.9.90 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via sms",
+        "expected_net": 26.180337,
+        "reason": "E[net] lower by Rs.10.05 than the chosen candidate"
+      },
+      {
+        "description": "retry 2026-09-01T10:00:00 via whatsapp",
+        "expected_net": 25.980337,
+        "reason": "E[net] lower by Rs.10.25 than the chosen candidate"
+      },
+      {
+        "description": "stop (negative_expected_value)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.36.23 than the chosen candidate"
+      },
+      {
+        "description": "escalate (no positive-expected-value action found this cycle)",
+        "expected_net": 0.0,
+        "reason": "E[net] lower by Rs.36.23 than the chosen candidate"
+      }
+    ],
+    "requires_signoff": false,
+    "rupee_math": {
+      "amount": 99.0,
+      "cost": 0.0,
+      "expected_net": 36.230337,
+      "ltv_remaining": 187.11,
+      "p_revoke": 0.0233,
+      "p_success": 0.41
+    },
+    "stopping_reason": null
+  }
+}

@@ -22,7 +22,7 @@ web:
 check:
 	uv run ruff check .
 	uv run ruff format --check .
-	uv run mypy agent models sim features
+	uv run mypy agent models sim features eval
 	uv run pytest -q
 
 demo: sim train eval

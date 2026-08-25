@@ -141,7 +141,8 @@ def decide(ctx: DecisionContext, models: ModelBundle, config: PolicyConfig) -> D
 
     candidates = _generate_candidates(ctx, config)
     legal = [a for a in candidates if is_hard_compliant(a, ctx, config)]
-    scored = [(a, _score(a, ctx, models, config)) for a in legal]
+    scores = _score_all(legal, ctx, models)
+    scored = list(zip(legal, scores, strict=True))
     scored.sort(key=lambda pair: pair[1].expected_net, reverse=True)
 
     best_action, best = scored[0]
@@ -287,36 +288,85 @@ _ZERO_SCORE = _Score(
 )
 
 
-def _score(
-    action: Action, ctx: DecisionContext, models: ModelBundle, config: PolicyConfig
-) -> _Score:
-    del config
-    if isinstance(action, Stop | EscalateToHuman):
-        return _ZERO_SCORE
-    if isinstance(action, ScheduleDebit):
-        return _score_schedule_debit(action, ctx, models)
-    if isinstance(action, OfferDateChange):
-        return _score_offer_date_change(action, ctx, models)
-    raise TypeError(f"no scoring rule for {type(action).__name__}")  # pragma: no cover
+def _score_all(candidates: list[Action], ctx: DecisionContext, models: ModelBundle) -> list[_Score]:
+    """Scores every candidate with **one** `predict_lgbm`/`predict_lgbm_contrib`/`predict`
+    call each per `decide()` invocation, not one call per candidate.
 
+    Two invariance facts make this a pure vectorization, not a behavior change (locked in
+    by `tests/test_agent_decide_characterization.py`, which uses fakes whose predictions
+    vary per row specifically to catch a row-misalignment bug this refactor could
+    introduce):
 
-def _score_schedule_debit(
-    action: ScheduleDebit, ctx: DecisionContext, models: ModelBundle
-) -> _Score:
-    bank_ewma, bank_changepoint = _latest_bank_health(models, ctx)
-    recovery_row = _recovery_row(ctx, action.t, bank_ewma, bank_changepoint)
-    hazard_row = _hazard_row(ctx)
+    - `_hazard_row(ctx)` depends only on `ctx`, never on a candidate's proposed time `t` —
+      every `ScheduleDebit` candidate in a single `decide()` call was already getting an
+      *identical* hazard prediction before this refactor, just recomputed ~30 times.
+      Computed once here and reused. Same for the bank-health as-of lookup
+      (`_latest_bank_health`), which is also `ctx`-only.
+    - `_recovery_row(ctx, t, ...)` depends on the candidate's day `t` but not its
+      `Channel` (channel only affects `cost`, looked up separately per candidate) — three
+      `ScheduleDebit` candidates a day apart in `t` shared identical recovery rows before
+      this refactor too. Batched here into one `predict_lgbm`/`predict_lgbm_contrib` call
+      over the unique days, keyed back per candidate by `t`.
+    """
+    schedule_debits = [a for a in candidates if isinstance(a, ScheduleDebit)]
 
-    p_success = float(models.recovery.predict_lgbm(recovery_row)[0])
-    p_revoke = float(models.hazard.predict(hazard_row)[0])
+    p_revoke = 0.0
+    n_recovery = 0
+    n_hazard = 0
+    p_success_by_day: dict[Any, float] = {}
+    contrib_by_day: dict[Any, list[float]] = {}
+    if schedule_debits:
+        bank_ewma, bank_changepoint = _latest_bank_health(models, ctx)
+        n_recovery = int(models.recovery_slices_by_bank.get(ctx.bank_id, {}).get("n", 0))
+        n_hazard = int(models.hazard_slices_by_method.get(ctx.method, {}).get("n", 0))
+
+        days: list[Any] = []
+        seen_days: set[Any] = set()
+        for debit in schedule_debits:
+            if debit.t not in seen_days:
+                seen_days.add(debit.t)
+                days.append(debit.t)
+
+        recovery_rows = pd.concat(
+            [_recovery_row(ctx, t, bank_ewma, bank_changepoint) for t in days], ignore_index=True
+        )
+        p_success_arr = models.recovery.predict_lgbm(recovery_rows)
+        contrib_arr = models.recovery.predict_lgbm_contrib(recovery_rows)
+        p_success_by_day = {t: float(p) for t, p in zip(days, p_success_arr, strict=True)}
+        contrib_by_day = {
+            t: [float(c) for c in row] for t, row in zip(days, contrib_arr, strict=True)
+        }
+
+        p_revoke = float(models.hazard.predict(_hazard_row(ctx))[0])
+
     ltv = ltv_remaining(
         ctx.amount, models.life_table, ctx.merchant_category, ctx.cycle_index - 1, models.sim_params
     )
-    cost = float(models.sim_params.get(f"notification.cost_inr.{action.notice.channel.value}"))
 
-    return _net_score(
-        p_success, p_revoke, ctx.amount, ltv, cost, ctx, models, recovery_row, hazard_row
-    )
+    scores: list[_Score] = []
+    for action in candidates:
+        if isinstance(action, Stop | EscalateToHuman):
+            scores.append(_ZERO_SCORE)
+        elif isinstance(action, ScheduleDebit):
+            channel = action.notice.channel.value
+            cost = float(models.sim_params.get(f"notification.cost_inr.{channel}"))
+            scores.append(
+                _net_score(
+                    p_success_by_day[action.t],
+                    p_revoke,
+                    ctx.amount,
+                    ltv,
+                    cost,
+                    contrib_by_day[action.t],
+                    n_recovery,
+                    n_hazard,
+                )
+            )
+        elif isinstance(action, OfferDateChange):
+            scores.append(_score_offer_date_change(action, ctx, models))
+        else:
+            raise TypeError(f"no scoring rule for {type(action).__name__}")  # pragma: no cover
+    return scores
 
 
 def _score_offer_date_change(
@@ -351,22 +401,18 @@ def _net_score(
     amount: Money,
     ltv: Money,
     cost: Money,
-    ctx: DecisionContext,
-    models: ModelBundle,
-    recovery_row: pd.DataFrame,
-    hazard_row: pd.DataFrame,
+    contrib: list[float],
+    n_recovery: int,
+    n_hazard: int,
 ) -> _Score:
     expected_net = p_success * amount - p_revoke * ltv - cost
 
-    n_recovery = int(models.recovery_slices_by_bank.get(ctx.bank_id, {}).get("n", 0))
-    n_hazard = int(models.hazard_slices_by_method.get(ctx.method, {}).get("n", 0))
     p_success_lo, p_success_hi = _wilson_interval(p_success, n_recovery)
     p_revoke_lo, p_revoke_hi = _wilson_interval(p_revoke, n_hazard)
 
     band_lo = p_success_lo * amount - p_revoke_hi * ltv - cost
     band_hi = p_success_hi * amount - p_revoke_lo * ltv - cost
 
-    contrib = models.recovery.predict_lgbm_contrib(recovery_row)[0]
     feature_attribution = dict(
         zip(RECOVERY_FEATURE_COLUMNS, [float(c) for c in contrib[:-1]], strict=True)
     )

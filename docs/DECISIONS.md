@@ -326,3 +326,145 @@ without changing anything else about the approach: still per-probability, still 
 training-time slice `n` as the effective sample size, still an explicit approximation
 rather than a real posterior — that limitation is unchanged and still documented in
 `agent/decide.py`'s module docstring.
+
+## [2026-08-25] `agent/decide.py` batched scoring — perf fix for Phase 4, characterization-tested
+**Chose:** `agent/decide.py::_score_all` now calls `models.recovery.predict_lgbm`/
+`predict_lgbm_contrib` **once** per `decide()` call (batched over the unique candidate
+days) and `models.hazard.predict`/`_latest_bank_health` **once** per call (both are
+`ctx`-only, so every `ScheduleDebit` candidate was already getting an identical
+prediction before this change — just recomputed ~30-90 times), instead of once per
+candidate. Verified behavior-preserving with a new characterization test
+(`tests/test_agent_decide_characterization.py`), which snapshots the full `Decision`
+output for 20 varied `DecisionContext`s against fakes whose predictions vary *per row*
+(by `day_of_month`) — a constant-output fake (as used elsewhere in `tests/test_agent_decide.py`)
+cannot catch a batching bug that scrambles which prediction maps back to which candidate,
+since every candidate would score identically either way; this one can. Baseline fixture
+captured pre-refactor, asserted byte-identical (post 6dp float rounding, to absorb
+harmless floating-point-reordering noise, not real divergence) post-refactor. All of
+Phase 3's existing tests (purity, 7 stopping reasons, 4 abstention triggers, the
+200-example `hypothesis` property test) stayed green throughout, unmodified.
+**Over:** leaving the ~90-separate-predict-calls-per-decision structure Phase 3 shipped
+with, or reducing Phase 4's population/seed count instead of fixing it.
+**Because:** Phase 4's eval harness calls `decide()` live for every mandate/cycle in the
+`dobara` arm. Measured before this fix: 89s for 15 mandates (~5.9s/mandate), which
+projects to ~8h for a single seed at `sim/params.yaml`'s default population (5000
+customers) — infeasible for even one point of the sensitivity sweep, let alone the full
+30-seed harness. The user was explicit this must be fixed by making `decide()` actually
+faster (behavior-preserving, provably so via the characterization test), not by quietly
+shrinking the population or seed count, since those degrade the things the project's
+credibility rests on (CI width, the 2.5% revocation calibration target).
+**Measured result:** `eval` arm smoke run (15 mandates, all 5 arms) — `dobara` arm:
+89s -> 3.4s (~26x). Full-scale single-`decide()`-call benchmark against real trained
+models (`data/dobara.sqlite3` artifacts): ~25ms/call. Extrapolated: ~0.227-0.29s/mandate
+in the `dobara` arm end-to-end (incl. simulation-loop overhead, not just `decide()`),
+confirmed at both n=15 and n=500 scale (world generation itself is negligible: 0.43s at
+n=5000). At the default population (5000 customers): ~19-23 min/seed for the `dobara`
+arm alone (the only arm making model calls — the other four are cadence-based and
+effectively free). Also added `joblib`-based parallelization across sweep points
+(`eval/sensitivity.py::sweep_hazard_per_failure_notification`'s new `n_jobs` parameter) —
+each point is independent given the shared `world`, so this parallelizes cleanly.
+
+## [2026-08-25] Sensitivity sweep — first real result: `dobara` beats `razorpay_default` across the full range, at n=500/seed=1
+**Finding:** ran `eval/sensitivity.py::sweep_hazard_per_failure_notification` (5 points
+across the declared `[0.05, 0.15]` range, common-random-numbers via one shared seeded
+`world`, `n_jobs=5`) at `n_customers=500` (population reduced from the default 5000
+*for this preliminary sweep only*, per the user's explicit allowance — "applies to the
+sensitivity sweep only, never the headline 30-seed run" — flagged here and needs
+flagging in the README when that section is written): **`dobara`'s mean net LTV per
+mandate beat `razorpay_default`'s at every one of the 5 points**, and the margin widened
+monotonically with the hazard value — exactly the mechanism the thesis predicts (higher
+per-failure-notification hazard makes `dobara`'s restraint more valuable, not less):
+
+| `hazard_per_failure_notification` | dobara mean net LTV | razorpay_default mean net LTV | dobara − razorpay_default |
+|---|---|---|---|
+| 0.05  | 5014.9 | 4948.0 | **+67.0**  |
+| 0.075 | 4952.3 | 4794.4 | **+157.9** |
+| 0.10  | 4887.6 | 4651.4 | **+236.2** |
+| 0.125 | 4742.1 | 4371.0 | **+371.1** |
+| 0.15  | 4626.8 | 4255.2 | **+371.6** |
+
+**Caveat, stated honestly, not glossed over:** this is a single seed (seed=1) at a
+reduced population (500 mandates, not the default 5000), with per-mandate bootstrap CIs
+that still overlap substantially at the low end of the range (e.g. at 0.05: dobara
+[4627, 5527] vs razorpay_default [4531, 5517]) — this is NOT yet the properly-powered,
+paired-same-seed, 30-seed statistical claim `docs/07-EVAL-SPEC.md` requires for the
+headline. It is a real, mechanically-sensible directional finding from a real run (not a
+guess, not a forced result — the sweep was run once and reported as-is), sufficient to
+proceed to the full harness rather than stop and reframe.
+**Runtime measured:** 145.8s wall (2:26) for the full 5-point parallelized sweep at
+n=500. Projected for the full 30-seed x 5-arm harness at the default n=5000: ~19-23
+min/seed x 30 seeds / (parallelism across seeds, ~8 cores available) ≈ **60-90 minutes**,
+dominated entirely by the `dobara` arm's live `decide()` calls. This is a real,
+multi-tens-of-minutes-to-low-hours commitment even after the batching fix and
+parallelization — the coordinator stopped here (checkpoint, not blocker) to report these
+numbers before committing further session budget to that run, per the user's explicit
+instruction to report speedup/runtime "before kicking off the full harness."
+
+## [2026-08-25] Full 30-seed harness ran; two anomalies found in verification, oracle fixed
+
+**Chose:** before accepting the completed 30-seed x 5-arm run's numbers, the coordinator
+independently verified the arm-dominance structure the spec assumes (`oracle` should
+weakly dominate every arm; `do_nothing` is framed as "the floor"). Two problems surfaced.
+
+**Problem 1 — `oracle` violated the dominance property it is supposed to guarantee.**
+`eval/runner.py::_run_oracle_arm` used its latent-state access only to pick *which day*
+to attempt (maximizing expected balance, avoiding known outage days), then still blindly
+retried up to `retry_policy.max_attempts_default_policy` times per cycle on a fixed
+cadence with no stopping logic — structurally identical to `razorpay_default`'s retry
+loop. Result: oracle's revocations (1,180) exceeded `razorpay_default`'s (1,049), and its
+net LTV (22.69M) fell below both `do_nothing` (24.34M) and `dobara` (23.69M) — a logical
+impossibility for an arm with strictly more information than every other arm.
+**Fixed:** oracle now also uses its latent access to decide, before every attempt,
+whether attempting is worth it — `_true_p_success` (an exact closed-form expectation over
+`sim.latent.balance_available`'s log-normal noise, replicating `attempt_outcome`'s
+td/bd/correlation arithmetic exactly, not a Monte Carlo approximation) and the real
+`sim.engine.revocation_hazard` feed `E[net] = p_success_true*amount -
+(1-p_success_true)*p_revoke_true*ltv - cost`; the cycle stops the instant this is not
+positive. Verified at n=200-1000 smoke scale post-fix: oracle now weakly dominates every
+other arm on net LTV, as it must.
+**Because:** an oracle is only a meaningful ceiling if it is provably at least as good as
+every feasible policy, including "attempt once and never retry" — using foresight for
+timing alone without a stopping rule doesn't buy that; a rigorous ceiling needs the
+correct expected-value accounting (weighted by true P(failure), since only a failed
+attempt can trigger a revocation roll), not a copy of `razorpay_default`'s cadence.
+
+**Problem 2 — `dobara` underperformed `do_nothing` on both gross and net LTV in the
+completed run** (gross: 24.93M vs 25.25M; net: 23.69M vs 24.34M; notifications: 40,009
+vs 38,742; revocations: 636 vs 395) — `dobara` made *more* attempts, sent *more*
+notifications, achieved *fewer* successes, and caused *more* revocations than a policy
+that never retries at all. Investigated three concrete hypotheses before deciding not to
+act unilaterally:
+- Confirmed `agent/decide.py`'s `E[net] = p_success*amount - p_revoke*ltv - cost` uses
+  `models.hazard`'s raw output directly as `p_revoke`, **not weighted by `(1 -
+  p_success)`** — but `models/hazard.py`'s training data is one row per *already-failed*
+  (`soft_decline`) attempt (`features/hazard.py`'s documented exposure unit), so the
+  model's output is `P(revoke | this attempt fails)`, not `P(revoke | this attempt is
+  made)`. Using it unweighted overstates the downside by a factor of `1/P(fail)`. This
+  exact unweighted form is also what `docs/06-AGENT-SPEC.md`'s own worked example uses
+  (`E[net] = 0.71×499 − 0.038×4240 − 0.35`) — so it is a spec-level formula, inherited by
+  Phase 3's implementation, not a slip introduced in this session.
+- A synthetic probe comparing `models.hazard`'s predictions against
+  `sim.engine.revocation_hazard`'s true values for matched contexts (failures=1..4,
+  n=50 synthetic customers) found the model's predictions were *higher* than the true
+  mean in every case tested — i.e. no clear evidence the hazard model *under*-prices risk,
+  which would have been the simpler explanation for `dobara` over-retrying. The direction
+  of the unweighted-formula question above and this calibration probe point different
+  ways, and the sample was small and not matched to the actual eval population.
+- Confirmed empirically `dobara` never has zero attempts on a mandate (no full-mandate
+  skip) but does have lower mean successes than `do_nothing` (6.77 vs 6.85) despite more
+  mean attempts (7.95 vs 7.75) and more notifications (8.00 vs 7.75) — consistent with the
+  extra retries triggering more revocations that truncate mandates before they reach
+  later, easier-to-bank cycles, exactly the mechanism the thesis describes, just landing
+  on `dobara`'s own calibration rather than `razorpay_default`'s.
+**Not fixed this session — deliberately.** Whether `agent/decide.py`'s unweighted use of
+`p_revoke` is a genuine correctness bug or an intentional spec-level simplification is
+unresolved, the fix would touch already-shipped, reviewed, characterization-tested Phase 3
+code, and — critically — the fix happens to point in the direction that would make
+`dobara` retry *more*, the "convenient" direction for this specific finding, which is
+exactly the kind of change that should not be made unilaterally under time pressure to
+produce a better-looking result. Reported to the user/coordinator instead of guessing.
+**Because:** CLAUDE.md: "Never re-litigate a decision recorded in `docs/DECISIONS.md` or
+`docs/03-TECH-STACK.md`... unless the user overrules," and this touches a formula stated
+explicitly in `docs/06-AGENT-SPEC.md`'s own worked example — a change here needs the
+user's sign-off, not an agent's unilateral judgment call under a "fix it" mandate that
+could otherwise be read as license to tune the result toward a preferred conclusion.

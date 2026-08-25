@@ -106,7 +106,18 @@ even be allowed to win the argmax:
 - A detected bank-health change-point at `ctx.now` (`ModelBundle.bank_health`, the same
   EWMA change-point flag `features/recovery.py` joins as-of for `bank_health_changepoint`).
 - Slice calibration error (`brier_score.point`) exceeding `config.max_slice_brier`, on
-  either the recovery bank-slice or the hazard method-slice.
+  the hazard method-slice only. **The recovery model's per-bank Brier score is
+  deliberately NOT checked here anymore** (removed 2026-08-25) — it is a single number
+  measured once at training time on the test-split cycles (6-8), so for a bank whose
+  test-window calibration happened to be bad (the regime-shift bank, by design), the
+  check fired on *every* decision for that bank for its *entire* mandate life, cycles 1-5
+  included, where nothing was actually wrong. A static, time-unaware number cannot tell
+  "this bank in general" from "this bank right now" — exactly the job the change-point
+  detector above already does, correctly, with real temporal granularity, once it was
+  recalibrated (see `docs/DECISIONS.md` [2026-08-25] "`bank_health_changepoint` detector
+  recalibrated"). Keeping both was strictly worse than the change-point detector alone:
+  the static check could only ever produce false positives it couldn't tell were false.
+  See `docs/DECISIONS.md` [2026-08-25] "Static per-bank Brier abstention check removed".
 - The confidence band on the winning real action's `E[net]` straddling zero.
 
 On any trigger the chosen action becomes `Abstain(reason)`; the caller must not attempt
@@ -572,10 +583,11 @@ def _abstention_reason(
     if changepoint:
         return AbstentionReason.BANK_HEALTH_CHANGEPOINT
 
+    # No static per-bank recovery-slice Brier check here (removed 2026-08-25) — see the
+    # module docstring's "## Abstention" section for why a training-time-static number is
+    # the wrong tool and the change-point detector above already covers this concern with
+    # real temporal granularity.
     max_brier = float(config.get("max_slice_brier"))
-    bank_brier = bank_slice.get("brier_score", {}).get("point")
-    if bank_brier is not None and bank_brier > max_brier:
-        return AbstentionReason.SLICE_CALIBRATION_ERROR
     method_slice = models.hazard_slices_by_method.get(ctx.method, {})
     method_brier = method_slice.get("brier_score", {}).get("point")
     if method_brier is not None and method_brier > max_brier:

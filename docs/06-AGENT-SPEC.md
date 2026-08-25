@@ -83,7 +83,14 @@ gated" language from the brief, made literal.
 
 - The `(bank, method)` slice has fewer than `config.min_slice_n` observations
 - Bank health shows a detected change-point (our model's assumptions no longer hold)
-- Calibration error in this slice exceeds `config.max_slice_brier`
+- Calibration error on the hazard method-slice exceeds `config.max_slice_brier` (corrected
+  2026-08-25: this used to also check the recovery model's per-bank Brier score, a single
+  number fixed at training time — for the regime-shift bank, whose test-window Brier was
+  bad by design, that fired on every decision for the bank's whole mandate life, not just
+  the cycles actually affected. The change-point detector above already covers "this bank
+  is behaving differently than training" with real temporal granularity; the static
+  per-bank check only added false positives it had no way to know were false. See
+  `docs/DECISIONS.md` [2026-08-25].)
 - The CI on `E[net]` for the best action straddles zero
 
 On abstention the agent **does not attempt this cycle, and says so in plain language.** It

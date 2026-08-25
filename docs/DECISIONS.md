@@ -919,3 +919,54 @@ of this session's authorized scope (fixing the changepoint detector specifically
 real candidate for the next round: whether it's a second instance of the same class of
 miscalibration, or a legitimate reflection of the recovery model's real calibration gap
 on this bank/method slice, is unknown.
+
+## [2026-08-26] Static per-bank Brier abstention check removed
+**Chose:** removed the recovery model's per-bank static Brier-score check from
+`agent/decide.py::_abstention_reason`'s `slice_calibration_error` trigger, leaving
+`min_slice_n`, `bank_health_changepoint`, the hazard model's method-slice Brier check,
+and the `E[net]` confidence-band-straddles-zero check in place. Updated
+`agent/decide.py`'s module docstring and `docs/06-AGENT-SPEC.md`'s "## Abstention"
+section to match; no test needed rewriting (`tests/test_agent_decide.py`'s
+`test_abstains_on_slice_calibration_error` shares one fixture Brier value across both the
+recovery and hazard slices, so it still exercises the surviving hazard-slice path
+unchanged).
+**Investigated first, not assumed** (prior session, same day): confirmed empirically that
+only `SBI` (the regime-shift bank) exceeds `config.max_slice_brier` (0.179 vs 0.15;
+next-highest bank 0.134). That Brier score is a single number measured once, at training
+time, on the test-split cycles (6-8) — exactly the window `SBI`'s regime shift is active
+in. Direct instrumentation of live `decide()` calls confirmed the check fired on `SBI`
+decisions across cycles 1, 3, 5, 6, 7, 8 alike — including cycles 1-5, where the eval
+world's own `SBI` mandates are not yet regime-shifted (`regime_from_cycle=6`, same as
+training) and the model's calibration is presumably fine. With `SBI` ~1/8 of the bank
+population, this meant `dobara` abstained on that whole 1/8 of the eval population for
+its entire 8-cycle mandate life, not just the 3 cycles where the concern is real.
+**Over:** keeping the static check alongside the now-recalibrated `bank_health_changepoint`
+detector (previous entry, same day) — the two triggers were not doing different jobs. The
+change-point detector's whole purpose is "this bank is behaving differently than the
+model was trained on, right now" — the exact concern the static Brier check was a worse,
+time-blind proxy for.
+**Because:** a number computed once, from a single historical window, cannot distinguish
+"this bank is currently degraded" from "this bank was degraded three months of simulated
+time ago and I still haven't updated." Once the change-point detector was fixed to
+actually have the temporal precision this problem needs (previous entry: ~0.2-0.5%
+false-positive, 55-70% true-positive specifically through `SBI`'s real shift window), the
+static check could only ever fire as an uncaught false positive — it had no path left to
+be right that the change-point detector wasn't already catching more precisely.
+**Tradeoff, stated plainly:** `dobara` will now act on `SBI` during its genuinely-degraded
+cycles 6-8 in the ~30-45% of cases the change-point detector's true-positive rate misses.
+This is a real, smaller residual risk, not zero — but it replaces "abstain on this bank
+unconditionally, forever, including when there's nothing wrong" with "abstain when there's
+actual, currently-detected evidence something is wrong, most of the time." The latter is
+the more honest version of the graceful-failure design `docs/06-AGENT-SPEC.md` describes.
+**Measured, not assumed:** smoke-scale (n=600, seeds 101/102, same seeds as every prior
+check this session for a clean series): `dobara` vs `razorpay_default` net LTV per mandate
+went from -₹348/-₹430 (post-change-point-fix, pre-this-fix) to **+₹116.08 (seed 101) /
+-₹99.81 (seed 102)** — split seeds, near parity, a dramatic further narrowing from the
+original -₹1,022/-₹910. This is close enough, and the two seeds disagree on direction
+narrowly enough, that only the full 30-seed harness with proper bootstrap CIs can actually
+resolve whether `dobara` beats, ties, or loses to `razorpay_default` — reported here as an
+open question pending that run, not decided from two seeds. All four invariant tests
+(`tests/test_eval_invariants.py`) still pass at this scale. Full 30-seed x 5-arm harness
+launched (`nohup ... &`, PID recorded in session notes, log at `/private/tmp/eval_run3.log`,
+~2h projected) — not yet complete as of this entry; the next session/agent must pick up
+the result before quoting any final number.

@@ -857,3 +857,65 @@ than picking a side.
 `aggressive_8x` investigation and its new metric, the `recovery_rate` metric fix, and the
 four invariant tests are all real, user-authorized, and verified — committed regardless
 of the open headline question, since none of them depend on its resolution.
+
+## [2026-08-25] `bank_health_changepoint` detector recalibrated — empirically validated, narrows the gap but doesn't close it
+**Chose:** replaced `models/bank_health.py::detect_changepoint`'s rolling split-half
+comparator (window=8, absolute threshold=0.20) with a frozen early-history baseline
+(`BASELINE_N=300` first-attempt-only observations per (bank, method), established once
+and never updated) compared by two-sample proportion z-test against a rolling recent
+window (`RECENT_N=100`, same first-attempt-only restriction), flagging at
+`CHANGEPOINT_Z_THRESHOLD=3.0`.
+**Over:** the original design, and — tried and rejected first — a version of the same
+split-half design with a properly-scaled two-sample z-test at various window sizes
+(8 through 150). Both alternatives were tested against the real training data
+(`data/dobara.sqlite3`) before being rejected, not assumed to fail.
+**Because, in order of what was actually found, not assumed:**
+1. **Confirmed the diagnosis empirically first.** SBI's real first-attempt success rate
+   drops 88.7% -> 79.2% from cycle 6 onward (n=2,982 pre / 1,568 post) — a large, genuine,
+   easily-significant-in-aggregate effect. The old detector fired 13-18% on *every* bank
+   (SBI barely distinguishable from PNB's 18.1%), confirming it was mostly noise, not
+   signal — a 0.20 absolute gap on an 8-vs-8 window is only ~1.1 standard deviations at
+   this simulator's realistic success rates, rechecked after every single attempt (a
+   repeated-significance-testing setup).
+2. **A properly-scaled z-test on the same rolling-split-half shape still failed**, and
+   understanding *why* mattered: at any window/threshold combination tried (up to
+   window=150, z=3.0), detection during cycles 7-8 (well past the transition, comfortably
+   inside the new regime) stayed under ~2.5%, despite the large aggregate effect size.
+   Root cause, found by inspecting a 100-wide rolling mean of SBI's raw outcome sequence
+   directly: a **split-half** window only sees a *transition* — once both halves of the
+   window are drawn from the same post-shift regime, the comparison goes quiet again,
+   even though the bank remains persistently different from what the models were trained
+   on. This is a structural property of the split-half shape, not a tuning problem;
+   widening or raising the bar on the same design cannot fix it.
+3. Separately, per-attempt outcomes are strongly retry-correlated
+   (`retry_policy.within_cycle_repeat_failure_correlation=0.65`), which inflates the
+   *true* variance of a per-attempt stream well past what a z-test's i.i.d. binomial
+   formula assumes — restricting both the baseline and the recent window to
+   **first-attempt-only** observations (one per mandate-cycle, much closer to
+   independent) fixed this.
+**Validated, not assumed, before shipping:** `BASELINE_N=300`/`RECENT_N=100`/`z=3.0`
+against the real training data gives a ~0.2-0.5% false-positive rate on the seven
+unaffected banks and 55-70% detection specifically for SBI through cycles 6-8,
+*persisting* for the whole shift window (unlike the split-half design). Two regression
+tests added (`tests/test_bank_health.py::test_changepoint_low_false_positive_rate_on_a_stable_series`,
+`test_changepoint_detects_a_sustained_shift`) lock in both properties against synthetic
+series, independent of this specific training run. `BankHealthSnapshot` rows regenerated
+against `data/dobara.sqlite3`; `models/train.py` already calls
+`compute_bank_health_snapshots` on every training run, so this requires no extra wiring
+for a fresh `make train`.
+**Consequence, measured, not assumed:** at smoke scale (n=600, seeds 101/102, unchanged
+from the prior session's numbers for direct comparison): abstention rate fell from
+~25-28% to ~14-17%. `dobara`'s loss to `razorpay_default` narrowed from -₹1,022/-₹910 per
+mandate to **-₹348/-₹430 per mandate** — same direction, roughly a third the previous
+magnitude, but still a loss, not a win.
+**Deliberately stopped here, not extended further:** per the standing instruction in this
+investigation (report honestly rather than force a result), the full 30-seed harness was
+NOT rerun — it would either reproduce this same still-negative result at full scale
+(informative, but the deciding question would remain open) or cost ~2h to learn what two
+smoke-scale seeds already show clearly. The other dominant abstention trigger identified
+earlier this session, `slice_calibration_error` (~10% of decisions, second only to
+`bank_health_changepoint`'s original ~16%), was **not investigated in this pass** — out
+of this session's authorized scope (fixing the changepoint detector specifically), and a
+real candidate for the next round: whether it's a second instance of the same class of
+miscalibration, or a legitimate reflection of the recovery model's real calibration gap
+on this bank/method slice, is unknown.

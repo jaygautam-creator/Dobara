@@ -87,10 +87,55 @@ seeds throughout this investigation): `dobara` vs `razorpay_default` net LTV/man
 from -₹348/-₹430 to **+₹116.08 (seed 101) / -₹99.81 (seed 102)** — split seeds, near
 parity. This is close enough that only the full 30-seed harness with real bootstrap CIs
 can resolve win/tie/loss; two seeds splitting narrowly is not a verdict. **The full
-30-seed x 5-arm harness has been launched** (`nohup uv run python -m eval.run`, log at
-`/private/tmp/eval_run3.log`, ~2h projected, not yet complete as of this update) — the
-next session/agent must pick up the result before quoting any final number, and must not
-assume which way it breaks.
+30-seed x 5-arm harness was launched that session but killed unfinished this session**
+(9/30 seed-tasks done after 7+ hours, far past the ~2h estimate, machine needed) —
+`artifacts/results.parquet`/`summary.json` were never written by it; do not look for them.
+
+**2026-08-26, later same day — user-directed decomposition before any further rerun.**
+Built a diagnostic (not committed — a scratch script replaying `eval/runner.py`'s exact
+`dobara`/`razorpay_default` cycle loops side by side, paired via `eval.rng.event_rng`'s
+per-key determinism) to split `dobara`'s decisions into acted vs. abstained and measure
+each separately, per the user's explicit request, before touching `models/bank_health.py`
+again. **The split is no longer ~73/27** — the two prior fixes above already pushed real
+abstention down to **~3.2%** (94.3-94.8% acted, 3.0-3.5% abstained, 2.2% confident
+`Stop(NEGATIVE_EXPECTED_VALUE)`, smoke scale n=600 seeds 101/102). **On the acted subset,
+`dobara` beats `razorpay_default` on the identical paired cycles in both seeds** (+Rs.107k/
++Rs.22k) — the policy is sound; abstention is the whole gap. **On the abstained subset,
+`razorpay_default` earns more than the acted subset gained** (Rs.112k/Rs.71k forgone) —
+this is why the headline stayed near parity even after the change-point fix. 100% of
+abstention attributes to `bank_health_changepoint` in both seeds. Full account, including
+the precision/recall pre-registration and its results, in `docs/DECISIONS.md` [2026-08-26].
+
+**Pre-registered acceptance criteria (committed BEFORE any further change or rerun, per
+the user's explicit instruction) — then measured:** recall (63-66%) and precision (84-88%)
+of `bank_health_changepoint` against the known injected regime (`SBI`, cycle>=6) both pass
+their pre-stated targets. A third criterion — false positives must not concentrate on one
+specific wrong bank — **fails both seeds** (`AXIS` = 61-72% of false positives), but was
+root-caused rather than left unexplained: 6 of 7 non-`SBI` banks have a true 0% changepoint
+rate in the training snapshot table; `AXIS` alone carries one sustained ~4.5-month false
+episode baked into the single frozen training realization (seed 42) that every eval seed's
+`AXIS` customers inherit identically, since the snapshot table isn't recomputed per eval
+seed. **User's call: accept as documented residual risk, `models/bank_health.py`'s
+detector logic stays untouched.**
+
+**The second pre-registered fix — `max_slice_brier` re-derived as a Brier Skill Score
+against each slice's own held-out climatology baseline, replacing the hand-picked 0.15
+constant — is implemented** (`models/metrics.py`, `agent/decide.py`, `config/policy.yaml`).
+Confirmed dormant as anticipated (BSS=0.023, barely positive, on the sole `upi_autopay`
+method-slice — this simulator hardcodes one method everywhere, so there was never a second
+slice to make this check discriminative). Also fixed, incidentally caught this session: a
+real bug in `models/bank_health.py::compute_bank_health_snapshots` — no clear-before-write,
+so a second `make train` on the same DB silently duplicated every snapshot row. Now
+idempotent. `make check` green (79 tests; one `test_ltv.py` flake reproduced isolated-pass/
+full-suite-fail, confirmed pre-existing and unrelated — own fresh temp DB, touches nothing
+changed here).
+
+**Not yet done: Step 3, the full 30-seed x 5-arm rerun on this fully-corrected code.**
+Deliberately deferred — it is the same ~8-core, hours-long job that overheated the machine
+earlier this session, and the user was not at a stable desk. Must be run before quoting
+any final `dobara`-vs-`razorpay_default` number; per the user's explicit instruction,
+**whatever the result, it goes in the README as-is — no retuning, no narrowing the
+reported range** if `dobara` still loses.
 
 **Phase 3 done (this session), on top of Phase 0-2:**
 - Closed `Action` type (`agent/actions.py`): `ScheduleDebit`/`SendPreDebitNotice`/
@@ -244,16 +289,19 @@ assume which way it breaks.
 
 **In progress:** nothing.
 
-**Next action:** Day 6 — Phase 4 (evaluation, **the gate**), spec
-`docs/07-EVAL-SPEC.md`. Build the batch harness over all five arms (`do_nothing`,
-`razorpay_default`, `aggressive_8x`, `dobara`, `oracle`), 30 seeds with paired comparisons
-and bootstrap CIs, all nine metrics incl. net LTV/revocations caused/attempts not made,
-the money chart (gross vs net LTV crossover), and — this is now the load-bearing item
-given this session's circularity correction (`docs/DECISIONS.md` [2026-08-25]) — the
-**sensitivity analysis across the full declared `sensitivity_range` [0.05, 0.15]** of
-`revocation.hazard_per_failure_notification`, plus the **break-even statement**: the
-hazard value below which `aggressive_8x` would win. That comparison, not the Phase 2
-hazard headline, is what actually has to carry the thesis.
+**Next action:** Step 3 — rerun the full 30-seed x 5-arm harness (`make eval` /
+`python -m eval.run`) on the now-fully-corrected code (change-point recalibration + static-
+Brier removal, both already on `main`; `max_slice_brier`→Brier-Skill-Score re-derivation,
+also on `main` as of this session). Needs a stable desk with power — it's an 8-core,
+hours-long job (the last unsupervised attempt ran 7+ hours for 9/30 seed-tasks and had to
+be killed for machine safety). Per the user's explicit instruction: **whatever the result,
+publish it as-is** — if `dobara` still loses to `razorpay_default`, that is the headline,
+written up in the README with the acted/abstained decomposition explaining why (see
+`## CURRENT STATE` above) plus the break-even condition under which `dobara` would win.
+Do not retune, do not narrow the reported range. After that: the money chart, the
+sensitivity sweep across `hazard_per_failure_notification`'s full declared range, and the
+break-even statement — all still genuinely outstanding, per the untouched checkboxes in
+Phase 4 below.
 
 **Blockers:** none.
 
@@ -412,3 +460,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-25** — Day 6 continued, RETRACTION. The user caught a critical bug the whole prior session missed: `do_nothing` reported `attempts_mean=7.75`/`notifications_total=38,742` in the "final" full run — a true no-recovery-attempted arm must be zero on both. Root cause: `eval/arms.py::DO_NOTHING_CADENCE.max_attempts=1` (read as "no retries, but the scheduled debit still happens" — wrong). This invalidates the previous entry's headline (`dobara` beating `razorpay_default` by ≈₹133/mandate) and the `do_nothing`-beats-`dobara` "genuine property of the world" conclusion — both built on the broken control. **Fixed**: `max_attempts=0`; verified do_nothing is now exactly zero attempts/notifications/gross/revocations (confirmed the last one isn't an approximation: `sim.engine.revocation_hazard` only ever rolls inside a real attempt). Also fixed in the same pass, all user-directed: `Abstain` now actually stops instead of silently falling back to an attempt (`docs/06-AGENT-SPEC.md`'s original "falls back to the default policy" design explicitly overruled — CLAUDE.md's "when in doubt, the agent stops" is literal); `aggressive_8x`'s real distinguishing behavior was invisible in the old lifetime `attempts_mean` (added `attempts_mean_in_failed_cycles`, confirmed ~20% higher, not a bug); `recovery_rate` was conflating two definitions (fixed to `recovery_rate_of_failed_cycles`, matching the spec's own "of failed cycles" wording and Phase 1's calibration-gate metric exactly). Added `tests/test_eval_invariants.py` — 4 hard invariants, ~1 min, all pass on corrected code. **Then found something bigger**: with `Abstain` correctly stopping, `dobara` now *loses* to `razorpay_default` at smoke scale (two seeds, consistent, ~₹900-1000/mandate) — abstaining ~25-28% of the time and truly doing nothing on those decisions (instead of quietly guessing right sometimes) costs real revenue `razorpay_default`'s no-abstention cadence never forgoes. Traced probable cause to Phase 2's `models/bank_health.py` changepoint detector firing evenly across all 8 banks (10-19%) rather than concentrating on the regime-shift bank it's meant to catch — likely miscalibrated, but deliberately not touched this session (a Phase 2 fix that happens to also help the headline number needs a second person's sign-off, not a unilateral call). Full 30-seed rerun NOT done — stopped to report instead of spending 2h to confirm what smoke scale already shows. `make check` green (77 tests: 73 prior + 4 new). Next: user decides on the `bank_health_changepoint` question before any further rerun.
 - **2026-08-25** — Day 6 continued. User authorized the `bank_health_changepoint` fix. Confirmed the diagnosis empirically on real training data first: SBI shows a genuine, large aggregate success-rate drop post-shift (88.7% -> 79.2% on first attempts), but the old rolling split-half comparator (window=8, threshold=0.20) could barely detect it, and widening the same design (tried a proper two-sample z-test at several window sizes first) still failed — because a rolling *split-half* window structurally only catches the brief moment of transition, then goes quiet again once both halves are past the boundary and drawn from the same new regime; and because per-attempt outcomes are retry-correlated (`within_cycle_repeat_failure_correlation=0.65`), which inflates true variance well past what a naive i.i.d. formula assumes. **Fix**: replaced the detector with a frozen early-history baseline (first 300 first-attempt-only observations per bank/method, never updated) compared by two-sample z-test against a rolling recent window (last 100 first-attempt-only observations), threshold z>3.0. Empirically validated on the real training data: ~0.2-0.5% false-positive rate on the seven unaffected banks, 55-70% detection through cycles 6-8 specifically for SBI, persisting for the whole shift window rather than firing once. Two new regression tests added (`tests/test_bank_health.py`). Regenerated `BankHealthSnapshot` rows; `models/train.py` already calls this every training run, so no extra wiring needed. All four Phase 4 invariants still pass. **Smoke-scale result (n=600, seeds 101/102): real, substantial improvement, not a full resolution.** Abstention rate ~25-28% -> ~14-17%. `dobara`'s loss to `razorpay_default` narrowed from -₹1,022/-₹910 per mandate to -₹348/-₹430 per mandate — same direction, much smaller, still a loss. Stopped here per the standing instruction rather than spend ~2h on a full rerun that would just confirm a still-negative smoke result. `make check` green. Next: investigate the other dominant abstention trigger (`slice_calibration_error`, ~10% of decisions) as the next candidate, or the user may choose a different path forward for the headline claim.
 - **2026-08-26** — Day 6 continued further. User authorized removing the `slice_calibration_error` trigger's static per-bank recovery-model Brier check, per the investigation flagged the day before. Confirmed empirically first: only `SBI` exceeded `max_slice_brier` (0.179 vs 0.15), and — because that Brier score is a single number fixed at training time on the test-split cycles 6-8 — it fired on `SBI` decisions across cycles 1-5 too, where nothing was actually wrong (the eval world's own regime shift also starts at cycle 6). With `SBI` ~1/8 of the population, `dobara` was abstaining on that whole 1/8 for its entire mandate life over an issue real for only 3 of 8 cycles. Removed the static check from `agent/decide.py::_abstention_reason`, kept `min_slice_n`/change-point/hazard-method-slice-Brier/confidence-band triggers, updated `docs/06-AGENT-SPEC.md`'s Abstention section, no test rewrite needed. All four invariants still pass. `make check` green (81 tests). Smoke-scale (n=600, same seeds 101/102): `dobara` vs `razorpay_default` net LTV/mandate moved from -₹348/-₹430 to +₹116.08 (seed 101) / -₹99.81 (seed 102) — split, near parity, a dramatic further narrowing from the original -₹1,022/-₹910. Too close for two seeds to call. Launched the full 30-seed x 5-arm harness (`nohup uv run python -m eval.run`, log `/private/tmp/eval_run3.log`, ~2h). Not yet complete — next session/agent must pick up the actual result before quoting any number, win, tie, or loss.
+- **2026-08-26** — Day 6 continued further still. Killed the prior entry's unfinished 30-seed harness run (7+ hours for 9/30 seed-tasks, well past the ~2h estimate; unsafe to leave running unattended on a laptop about to be closed/carried). Per the user's explicit decomposition request, before touching `models/bank_health.py` again: split `dobara`'s smoke-scale decisions into acted (~94.5%) vs. abstained (~3.2%, down from the ~73/27 the user's request assumed — already narrowed by the two prior fixes) and compared each against `razorpay_default` on the identical paired cycles. Result: `dobara`-when-acting beats `razorpay_default` in both seeds — the policy is sound, abstention is the whole gap; the abstained subset (100% `bank_health_changepoint`) forgoes more than the acted subset gains. Pre-registered acceptance criteria for the fix in `docs/DECISIONS.md`, committed before any rerun; measured them: recall/precision both pass, but false positives concentrate on `AXIS` (61-72%) — root-caused to one sustained ~4.5-month false episode frozen into the single training realization (seed 42), not a systematic detector defect. User accepted this as documented residual risk. Implemented the other pre-registered fix: `max_slice_brier` re-derived as a Brier Skill Score against each slice's own held-out climatology baseline (`models/metrics.py`, `agent/decide.py`, `config/policy.yaml`); confirmed dormant as anticipated (BSS=0.023). Incidentally caught and fixed a real duplicate-row bug in `models/bank_health.py::compute_bank_health_snapshots` (no clear-before-write). `make check` green (79 tests). Full account in `docs/DECISIONS.md`. **Step 3, the full 30-seed rerun, deliberately not started this session** — needs a stable desk with power; will publish whatever it shows, per the user's explicit "do not retune" instruction.

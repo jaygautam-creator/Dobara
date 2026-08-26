@@ -1,0 +1,95 @@
+<svg viewBox="0 0 900 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Money chart: gross recovered and net LTV by arm, over an 8-cycle horizon">
+<style>
+  .viz-root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  :root { color-scheme: light; }
+  .surface { fill: #fcfcfb; }
+  .grid { stroke: #e1e0d9; stroke-width: 1; }
+  .axis { stroke: #c3c2b7; stroke-width: 1; }
+  .tick { fill: #898781; font-size: 12px; }
+  .title { fill: #0b0b0b; font-size: 18px; font-weight: 600; }
+  .subtitle { fill: #52514e; font-size: 12.5px; }
+  .label { fill: #0b0b0b; font-size: 12.5px; font-weight: 600; }
+  .sublabel { fill: #52514e; font-size: 11px; }
+  .annot { fill: #52514e; font-size: 11.5px; }
+  .legend-text { fill: #0b0b0b; font-size: 12px; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; }
+    .grid { stroke: #2c2c2a; }
+    .axis { stroke: #383835; }
+    .tick { fill: #898781; }
+    .title { fill: #ffffff; }
+    .subtitle { fill: #c3c2b7; }
+    .label { fill: #ffffff; }
+    .sublabel { fill: #c3c2b7; }
+    .annot { fill: #c3c2b7; }
+    .legend-text { fill: #ffffff; }
+  }
+</style>
+<rect class="surface" x="0" y="0" width="900" height="540"/>
+<text class="title" x="70" y="28">The money chart: gross recovery vs. net LTV</text>
+<text class="subtitle" x="70" y="47">8-cycle horizon, cumulative Rs. &#8212; single seed (301, n=5,000 mandates), illustrates the mechanism's shape. Seed-bootstrapped headline is in "Honest metrics" above.</text>
+
+<line class="grid" x1="70" y1="484.00" x2="728" y2="484.00"/>
+<text class="tick" x="60" y="488.00" text-anchor="end">₹0</text>
+<line class="grid" x1="70" y1="411.50" x2="728" y2="411.50"/>
+<text class="tick" x="60" y="415.50" text-anchor="end">₹5M</text>
+<line class="grid" x1="70" y1="339.00" x2="728" y2="339.00"/>
+<text class="tick" x="60" y="343.00" text-anchor="end">₹10M</text>
+<line class="grid" x1="70" y1="266.50" x2="728" y2="266.50"/>
+<text class="tick" x="60" y="270.50" text-anchor="end">₹15M</text>
+<line class="grid" x1="70" y1="194.00" x2="728" y2="194.00"/>
+<text class="tick" x="60" y="198.00" text-anchor="end">₹20M</text>
+<line class="grid" x1="70" y1="121.50" x2="728" y2="121.50"/>
+<text class="tick" x="60" y="125.50" text-anchor="end">₹25M</text>
+<line class="axis" x1="70" y1="484" x2="728" y2="484"/>
+<text class="tick" x="70.00" y="506" text-anchor="middle">1</text>
+<text class="tick" x="164.00" y="506" text-anchor="middle">2</text>
+<text class="tick" x="258.00" y="506" text-anchor="middle">3</text>
+<text class="tick" x="352.00" y="506" text-anchor="middle">4</text>
+<text class="tick" x="446.00" y="506" text-anchor="middle">5</text>
+<text class="tick" x="540.00" y="506" text-anchor="middle">6</text>
+<text class="tick" x="634.00" y="506" text-anchor="middle">7</text>
+<text class="tick" x="728.00" y="506" text-anchor="middle">8</text>
+<text class="sublabel" x="399.00" y="524" text-anchor="middle">Cycle</text>
+<path d="M 70.00,436.23 L 164.00,389.27 L 258.00,342.30 L 352.00,295.64 L 446.00,250.22 L 540.00,208.69 L 634.00,167.70 L 728.00,127.91" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" opacity="0.85"/>
+<path d="M 70.00,438.09 L 164.00,392.85 L 258.00,347.26 L 352.00,302.95 L 446.00,259.90 L 540.00,220.14 L 634.00,180.94 L 728.00,142.02" fill="none" stroke="#2a78d6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="728.00" cy="142.02" r="6" class="surface"/>
+<circle cx="728.00" cy="142.02" r="4" fill="#2a78d6"/>
+<path d="M 70.00,432.43 L 164.00,382.87 L 258.00,334.66 L 352.00,288.34 L 446.00,243.77 L 540.00,201.31 L 634.00,160.74 L 728.00,122.43" fill="none" stroke="#eb6834" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" opacity="0.85"/>
+<path d="M 70.00,440.41 L 164.00,399.62 L 258.00,357.11 L 352.00,316.61 L 446.00,276.84 L 540.00,238.30 L 634.00,200.43 L 728.00,163.54" fill="none" stroke="#eb6834" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="728.00" cy="163.54" r="6" class="surface"/>
+<circle cx="728.00" cy="163.54" r="4" fill="#eb6834"/>
+<path d="M 70.00,433.60 L 164.00,385.03 L 258.00,336.39 L 352.00,289.33 L 446.00,243.56 L 540.00,199.73 L 634.00,157.25 L 728.00,116.77" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" opacity="0.85"/>
+<path d="M 70.00,439.88 L 164.00,397.37 L 258.00,352.58 L 352.00,309.38 L 446.00,267.48 L 540.00,226.81 L 634.00,186.35 L 728.00,147.03" fill="none" stroke="#1baf7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="728.00" cy="147.03" r="6" class="surface"/>
+<circle cx="728.00" cy="147.03" r="4" fill="#1baf7a"/>
+<line x1="735.00" y1="142.02" x2="750.00" y2="118.78" class="axis" stroke-width="1"/>
+<text class="label" x="754.00" y="115.78">dobara</text>
+<text class="sublabel" x="754.00" y="129.78">net ₹23.58M</text>
+<line x1="735.00" y1="147.03" x2="750.00" y2="152.78" class="axis" stroke-width="1"/>
+<text class="label" x="754.00" y="149.78">razorpay_default</text>
+<text class="sublabel" x="754.00" y="163.78">net ₹23.24M</text>
+<line x1="735.00" y1="163.54" x2="750.00" y2="186.78" class="axis" stroke-width="1"/>
+<text class="label" x="754.00" y="183.78">aggressive_8x</text>
+<text class="sublabel" x="754.00" y="197.78">net ₹22.10M</text>
+<circle cx="728.00" cy="127.91" r="5" class="surface"/>
+<circle cx="728.00" cy="127.91" r="3" fill="#2a78d6" opacity="0.85"/>
+<circle cx="728.00" cy="122.43" r="5" class="surface"/>
+<circle cx="728.00" cy="122.43" r="3" fill="#eb6834" opacity="0.85"/>
+<circle cx="728.00" cy="116.77" r="5" class="surface"/>
+<circle cx="728.00" cy="116.77" r="3" fill="#1baf7a" opacity="0.85"/>
+<line class="axis" x1="714.0" y1="163.54" x2="714.0" y2="142.02" stroke-width="1.5"/>
+<line class="axis" x1="710.0" y1="163.54" x2="714.0" y2="163.54" stroke-width="1.5"/>
+<line class="axis" x1="710.0" y1="142.02" x2="714.0" y2="142.02" stroke-width="1.5"/>
+<text class="annot" x="706.00" y="156.78" text-anchor="end">₹1.48M behind on net</text>
+<text class="annot" x="70.00" y="506.00"></text>
+<text class="annot" x="78.00" y="430.41">aggressive_8x trails on net from cycle 1 --</text>
+<text class="annot" x="78.00" y="444.41">no crossover moment, gap widens every cycle</text>
+<circle cx="399.00" cy="265.95" r="3.5" fill="#898781"/>
+<text class="annot" x="407.00" y="257.95">razorpay_default's own gross</text>
+<text class="annot" x="407.00" y="271.95">overtakes aggressive_8x's here</text>
+<line x1="538" y1="44" x2="566" y2="44" stroke="#898781" stroke-width="2.5" stroke-linecap="round"/>
+<text class="legend-text" x="572" y="48">Net LTV</text>
+<line x1="658" y1="44" x2="686" y2="44" stroke="#898781" stroke-width="2" stroke-dasharray="6 4" stroke-linecap="round" opacity="0.85"/>
+<text class="legend-text" x="692" y="48">Gross</text>
+</svg>

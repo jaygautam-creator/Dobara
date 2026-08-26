@@ -1260,3 +1260,79 @@ short) is more useful than a smoothed-over win. The break-even statement (sensit
 sweep across `revocation.hazard_per_failure_notification`'s declared range, the value
 below which `aggressive_8x` would beat `dobara`) remains unbuilt — not run this session,
 stated as outstanding in the README rather than implied to exist.
+
+## [2026-08-26] Money chart built — not the crossover the spec assumed, reported as observed
+
+Per the user's explicit ask, after the three reporting fixes above. The batch harness
+(`eval/runner.py::MandateResult`) only stores final per-mandate totals, no per-cycle
+timeline, so `docs/07-EVAL-SPEC.md`'s money chart ("X-axis: time horizon in cycles")
+needed new instrumentation. Built as a diagnostic-style replay (not committed to the
+harness, matching this session's earlier Step 1 decomposition pattern) reusing
+`eval/runner.py`'s exact private helpers, checkpointing cumulative gross/net LTV after
+every cycle. Single seed (301, held out from training seed 42 and the eval harness's
+seeds 101-130), n=5,000 mandates, three arms (`aggressive_8x`/`razorpay_default`/`dobara`
+— `do_nothing`/`oracle` omitted from this specific chart, already covered by the main
+metrics table).
+
+**Not the shape `docs/07-EVAL-SPEC.md` assumed.** The spec expected `aggressive_8x` to
+lead gross the whole horizon and cross below on net partway through. The actual replay:
+`aggressive_8x` trails **both** other arms on net LTV from **cycle 1** — no mid-horizon
+crossover moment, a gap that opens immediately and widens every cycle (₹1.14M behind
+`razorpay_default`, ₹1.48M behind `dobara` by cycle 8). Its own gross lead doesn't hold
+up against `razorpay_default` either: ahead through cycle 4, overtaken from cycle 5 —
+revoked mandates stop contributing future gross too, so the early gross lead erodes on
+its own terms. It does stay ahead of `dobara` on gross the whole horizon (fewer attempts,
+by design). Reported as observed in the README, not forced into the assumed shape.
+
+Rendered as a static, dependency-free SVG (`artifacts/money_chart.svg`) rather than adding
+`matplotlib` — `docs/03-TECH-STACK.md` already commits to Recharts for the eventual
+Phase 6 frontend, and a throwaway plotting dependency for one README image would
+contradict a stated tech choice. Built per the `dataviz` skill's procedure: one shared
+₹ y-axis (gross and net are the same unit, never a dual-axis chart), color = arm identity
+(fixed categorical slots: `dobara` blue, `aggressive_8x` orange, `razorpay_default` aqua),
+line style = measure (solid net LTV, dashed gross), light/dark adaptive via
+`prefers-color-scheme` in an embedded `<style>` block (renders correctly on GitHub in
+both themes). The three arms' net-LTV end-of-horizon values converge within ~22px
+vertically (`dobara`/`razorpay_default` only 5px apart) — stacking two-line label blocks
+there would have overlapped, so end labels are spaced with a minimum gap and connected to
+their real data points with leader lines, per the skill's guidance for converging series.
+Verified programmatically (all coordinates in-canvas, valid XML) rather than visually —
+the browser tool was unresponsive after three attempts this session; flagged, not silently
+worked around by skipping verification entirely.
+
+## [2026-08-26] Full sensitivity sweep + break-even: the finding that matters more than the one asked for by name
+
+`eval/sensitivity.py` already existed (built earlier in Phase 4) but only compared
+`dobara` vs `razorpay_default`, not `aggressive_8x` — extended to run all three arms per
+swept point, plus `break_even_vs_aggressive_8x`/`break_even_vs_razorpay_default` (linear
+interpolation between the two adjacent swept points where the sign flips; reported
+honestly as "not found, X wins at every tested point" when no crossing exists in range,
+never extrapolated past what was run). Run: single seed 301 (same as the money chart),
+n=5,000 mandates, 5 points evenly spaced across the declared `sensitivity_range` [0.05,
+0.15] of `revocation.hazard_per_failure_notification`.
+
+**Against `aggressive_8x` — the comparison `docs/07-EVAL-SPEC.md` names — no break-even
+found anywhere in the declared range.** `dobara` beats `aggressive_8x` at every tested
+point, 0.05 through 0.15. Robust.
+
+**Against `razorpay_default` — not named by the spec, but the more load-bearing
+question, since it's `dobara`'s own headline claim, not `aggressive_8x`'s collapse, that
+this number can undo — a real break-even exists.** `dobara` loses to `razorpay_default` at
+the bottom of the tested range (hazard=0.05: `dobara` ₹4,876.16 vs `razorpay_default`
+₹4,976.36/mandate) and wins from 0.075 upward. Interpolated crossing: **hazard ≈ 0.0738**.
+The calibrated value is **0.098** — above break-even by ~0.024 (~33% relative margin),
+comfortably on the winning side, and the one point on this whole range anchored to a real
+published figure (`sim/params.yaml`'s own note: recalibrated to hit the
+20M-revocations/808M-executions ≈ 2.5% ratio from NPCI's published numbers). The
+range's low end (0.05) carries no equivalent independent anchor — a symmetric-ish declared
+uncertainty band around the calibrated point, not itself sourced. **Published in the
+README's "Break-even reporting" section under its own heading, stated plainly**: if the
+true hazard sits meaningfully below the calibrated, NPCI-anchored value — roughly the
+bottom half of the declared assumption range — `dobara` does not beat `razorpay_default`.
+This is a genuinely different, more consequential finding than the one the spec asked for
+by name, and is reported with equal weight, not buried under the `aggressive_8x` result
+that happened to be robust. `artifacts/sensitivity.json` holds both break-even objects and
+all 5 swept points with per-arm CIs. `make check` green (ruff/mypy clean on
+`eval/sensitivity.py`; a pre-flight `import eval.sensitivity` + ruff/mypy pass caught a
+`NameError` — missing `load_policy` import inside `main()` — before the first ~10-minute
+sweep run, not after).

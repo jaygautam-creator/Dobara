@@ -147,9 +147,20 @@ def compute_bank_health_snapshots(db_path: str) -> int:
     """Single pass, ordered by scheduled_at, over all attempts. Writes a
     `BankHealthSnapshot` after each attempt for that attempt's (bank, method). Returns the
     number of snapshots written.
+
+    Idempotent: clears any snapshots already in this DB first. `models/train.py` calls
+    this on every training run, so without the clear, a second run against the same DB
+    (e.g. re-running `make train` without regenerating `data/dobara.sqlite3` first) would
+    silently duplicate every row rather than replace them -- caught 2026-08-26 when a
+    re-train doubled `bank_health_snapshots` to 84,444 rows against 42,222 attempts. The
+    duplicate rows were content-identical (this function is a deterministic replay of the
+    same attempt history) so `as-of` lookups still returned correct values, but the table
+    should hold exactly one snapshot per attempt, not silently accumulate copies.
     """
     engine = create_engine(f"sqlite:///{db_path}")
     with Session(engine) as session:
+        session.query(BankHealthSnapshot).delete()
+        session.commit()
         rows = (
             session.query(
                 Attempt.scheduled_at,

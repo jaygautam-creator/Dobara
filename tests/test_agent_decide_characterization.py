@@ -78,9 +78,13 @@ def _life_table() -> LifeTable:
 
 
 def _bundle(
-    slice_n: int = 500, slice_brier: float = 0.12, changepoint: bool = False
+    slice_n: int = 500, slice_brier: float = 0.12, slice_bss: float = 0.4, changepoint: bool = False
 ) -> ModelBundle:
-    slice_block = {"n": slice_n, "brier_score": {"point": slice_brier}}
+    slice_block = {
+        "n": slice_n,
+        "brier_score": {"point": slice_brier},
+        "brier_skill_score": slice_bss,
+    }
     return ModelBundle(
         recovery=_VaryingRecoveryModel(),  # type: ignore[arg-type]
         hazard=_VaryingHazardModel(),  # type: ignore[arg-type]
@@ -196,8 +200,8 @@ def _cases() -> list[tuple[str, DecisionContext, ModelBundle, Params]]:
         (
             "abstain_slice_calibration_error",
             _base_ctx(),
-            _bundle(slice_n=5000, slice_brier=0.3),
-            _policy_config(max_slice_brier=0.15),
+            _bundle(slice_n=5000, slice_bss=-0.1),
+            _policy_config(),
         )
     )
     cases.append(
@@ -205,7 +209,7 @@ def _cases() -> list[tuple[str, DecisionContext, ModelBundle, Params]]:
             "abstain_ci_straddles_zero",
             _base_ctx(),
             _bundle(slice_n=30, slice_brier=0.1),
-            _policy_config(min_slice_n=30, max_slice_brier=0.5),
+            _policy_config(min_slice_n=30),
         )
     )
     cases.append(

@@ -83,13 +83,17 @@ gated" language from the brief, made literal.
 
 - The `(bank, method)` slice has fewer than `config.min_slice_n` observations
 - Bank health shows a detected change-point (our model's assumptions no longer hold)
-- Calibration error on the hazard method-slice exceeds `config.max_slice_brier` (corrected
-  2026-08-25: this used to also check the recovery model's per-bank Brier score, a single
-  number fixed at training time — for the regime-shift bank, whose test-window Brier was
-  bad by design, that fired on every decision for the bank's whole mandate life, not just
-  the cycles actually affected. The change-point detector above already covers "this bank
-  is behaving differently than training" with real temporal granularity; the static
-  per-bank check only added false positives it had no way to know were false. See
+- Calibration error on the hazard method-slice: a Brier Skill Score `<= 0` against the
+  slice's own held-out climatology baseline (re-derived 2026-08-26 from
+  `models/metrics.py::metric_block`'s `brier_climatology`/`brier_skill_score` fields,
+  replacing a hand-picked `config.max_slice_brier` constant — see docs/DECISIONS.md
+  [2026-08-26] "Step 2"). Corrected 2026-08-25: this used to also check the recovery
+  model's per-bank Brier score, a single number fixed at training time — for the
+  regime-shift bank, whose test-window Brier was bad by design, that fired on every
+  decision for the bank's whole mandate life, not just the cycles actually affected. The
+  change-point detector above already covers "this bank is behaving differently than
+  training" with real temporal granularity; the static per-bank check only added false
+  positives it had no way to know were false. See
   `docs/DECISIONS.md` [2026-08-25].)
 - The CI on `E[net]` for the best action straddles zero
 
@@ -145,5 +149,7 @@ That block is a slide in the pitch video.
 
 Everything tunable lives in `config/policy.yaml` with a stated rationale per value — no
 magic numbers in code. Includes: `max_attempts_per_cycle`, `max_notifications_per_cycle`,
-`cost_cap_inr`, `human_signoff_threshold_inr`, `min_slice_n`, `max_slice_brier`,
-`holdout_fraction`, `retry_requires_fresh_pdn`, `converge_min_cycles_between_date_changes`.
+`cost_cap_inr`, `human_signoff_threshold_inr`, `min_slice_n`, `holdout_fraction`,
+`retry_requires_fresh_pdn`, `converge_min_cycles_between_date_changes`. (`max_slice_brier`
+removed 2026-08-26 — the slice-calibration-error trigger it fed is now derived from
+held-out data at train time, not a policy-file constant; see docs/DECISIONS.md.)

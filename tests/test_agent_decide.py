@@ -77,7 +77,6 @@ def _policy_config(**overrides: object) -> Params:
         "cost_cap_inr": {"value": 5.0},
         "human_signoff_threshold_inr": {"value": 15000},
         "min_slice_n": {"value": 30},
-        "max_slice_brier": {"value": 0.15},
         "holdout_fraction": {"value": 0.1},
         "retry_requires_fresh_pdn": {"value": True},
         "converge_min_cycles_between_date_changes": {"value": 4},
@@ -113,9 +112,14 @@ def _fake_bundle(
     p_revoke: float = 0.02,
     slice_n: int = 500,
     slice_brier: float = 0.12,
+    slice_bss: float = 0.4,
     changepoint: bool = False,
 ) -> ModelBundle:
-    slice_block = {"n": slice_n, "brier_score": {"point": slice_brier}}
+    slice_block = {
+        "n": slice_n,
+        "brier_score": {"point": slice_brier},
+        "brier_skill_score": slice_bss,
+    }
     return ModelBundle(
         recovery=_FakeRecoveryModel(p_success),  # type: ignore[arg-type]
         hazard=_FakeHazardModel(p_revoke),  # type: ignore[arg-type]
@@ -244,8 +248,8 @@ def test_abstains_on_bank_health_changepoint() -> None:
 
 def test_abstains_on_slice_calibration_error() -> None:
     ctx = _base_ctx()
-    models = _fake_bundle(p_success=0.9, p_revoke=0.01, slice_n=5000, slice_brier=0.3)
-    d = decide(ctx, models, _policy_config(max_slice_brier=0.15))
+    models = _fake_bundle(p_success=0.9, p_revoke=0.01, slice_n=5000, slice_bss=-0.1)
+    d = decide(ctx, models, _policy_config())
     assert isinstance(d.chosen, Abstain)
     assert d.chosen.reason.value == "slice_calibration_error"
 
@@ -256,7 +260,7 @@ def test_abstains_when_ci_straddles_zero() -> None:
     # goes negative while the point estimate stays positive.
     ctx = _base_ctx()
     models = _fake_bundle(p_success=0.3, p_revoke=0.1, slice_n=30, slice_brier=0.1)
-    d = decide(ctx, models, _policy_config(min_slice_n=30, max_slice_brier=0.5))
+    d = decide(ctx, models, _policy_config(min_slice_n=30))
     assert isinstance(d.chosen, Abstain)
     assert d.chosen.reason.value == "expected_value_ci_straddles_zero"
 

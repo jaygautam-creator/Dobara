@@ -23,7 +23,6 @@ def _policy_config(**overrides: object) -> Params:
         "cost_cap_inr": {"value": 5.0},
         "human_signoff_threshold_inr": {"value": 15000},
         "min_slice_n": {"value": 30},
-        "max_slice_brier": {"value": 0.15},
         "holdout_fraction": {"value": 0.1},
         "retry_requires_fresh_pdn": {"value": True},
         "converge_min_cycles_between_date_changes": {"value": 4},

@@ -25,12 +25,6 @@ min_slice_n:
   value: 30
   source: "models/metrics.py MIN_SLICE_N — same threshold used everywhere else in the project for 'a slice metric is reported as insufficient rather than guessed'"
 
-max_slice_brier:
-  value: 0.15
-  assumption: true
-  sensitivity_range: [0.12, 0.20]
-  note: "chosen so the regime-shift-bank slice (Brier ~0.179, see PROGRESS.md Phase 2 slice metrics) triggers ABSTAIN while in-distribution slices (~0.113-0.122) pass — this is exactly the graceful-failure case docs/06-AGENT-SPEC.md's Abstention section calls for"
-
 holdout_fraction:
   value: 0.1
   assumption: true

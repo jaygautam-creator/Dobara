@@ -65,7 +65,7 @@ flat placeholder score, which still costs a notification for no realized recover
 
 Separately, **`hazard_per_failure_notification` is a declared assumption in
 `sim/params.yaml`, recalibrated 2026-08-25; the hazard model's prediction here is only as
-trustworthy as that assumption, which is exactly why `min_slice_n`/`max_slice_brier`/
+trustworthy as that assumption, which is exactly why `min_slice_n`/slice-Brier-skill/
 change-point abstention exists below rather than trusting every prediction blindly** (see
 `docs/DECISIONS.md` [2026-08-25] "Corrected: the hazard headline number does not confirm
 the thesis"). `LTV_remaining` comes from `models.life_table` (`models/ltv.py`, a
@@ -105,8 +105,11 @@ even be allowed to win the argmax:
   `models/hazard.py::_slice_metrics`, so bank-level thinness is the binding constraint).
 - A detected bank-health change-point at `ctx.now` (`ModelBundle.bank_health`, the same
   EWMA change-point flag `features/recovery.py` joins as-of for `bank_health_changepoint`).
-- Slice calibration error (`brier_score.point`) exceeding `config.max_slice_brier`, on
-  the hazard method-slice only. **The recovery model's per-bank Brier score is
+- Slice calibration error: a Brier Skill Score `<= 0` (no better than predicting the
+  slice's own held-out marginal rate) against the hazard method-slice only, re-derived
+  2026-08-26 from `models/metrics.py::metric_block`'s `brier_climatology` (see
+  docs/DECISIONS.md [2026-08-26] "Step 2" — was a hand-picked `config.max_slice_brier`
+  constant before this). **The recovery model's per-bank Brier score is
   deliberately NOT checked here anymore** (removed 2026-08-25) — it is a single number
   measured once at training time on the test-split cycles (6-8), so for a bank whose
   test-window calibration happened to be bad (the regime-shift bank, by design), the
@@ -586,11 +589,15 @@ def _abstention_reason(
     # No static per-bank recovery-slice Brier check here (removed 2026-08-25) — see the
     # module docstring's "## Abstention" section for why a training-time-static number is
     # the wrong tool and the change-point detector above already covers this concern with
-    # real temporal granularity.
-    max_brier = float(config.get("max_slice_brier"))
+    # real temporal granularity. The hazard method-slice check below was itself a
+    # hand-picked constant (`config.max_slice_brier`) until 2026-08-26 — re-derived per
+    # docs/DECISIONS.md [2026-08-26] "Step 2" as a Brier Skill Score against the slice's
+    # own held-out climatology baseline (`models/metrics.py::metric_block`), so "poorly
+    # calibrated" means "worse than predicting this slice's own marginal rate," not an
+    # arbitrary number nobody re-derives when the model changes.
     method_slice = models.hazard_slices_by_method.get(ctx.method, {})
-    method_brier = method_slice.get("brier_score", {}).get("point")
-    if method_brier is not None and method_brier > max_brier:
+    method_bss = method_slice.get("brier_skill_score")
+    if method_bss is not None and method_bss <= 0:
         return AbstentionReason.SLICE_CALIBRATION_ERROR
 
     if best.band_lo < 0 < best.band_hi:

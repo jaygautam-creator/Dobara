@@ -52,9 +52,26 @@ def metric_block(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str, Any]:
         reliability = {"prob_true": prob_true.tolist(), "prob_pred": prob_pred.tolist()}
     except ValueError:
         reliability = {"prob_true": [], "prob_pred": []}
+    # Climatology baseline -- always predict this slice's own marginal event rate,
+    # never a hand-picked constant -- and the Brier Skill Score against it (1 -
+    # brier_model/brier_climatology): the model provides zero calibration value at
+    # BSS <= 0. Added 2026-08-26 so agent/decide.py's SLICE_CALIBRATION_ERROR trigger can
+    # be re-derived from held-out data per slice instead of a static config threshold
+    # (docs/06-AGENT-SPEC.md, docs/DECISIONS.md [2026-08-26] "Step 2"). `nan` when the
+    # slice's own marginal rate is degenerate (0 or 1 -- climatology brier is 0, division
+    # undefined).
+    marginal_rate = float(np.mean(y_true))
+    brier_climatology = float(
+        brier_score_loss(y_true, np.full_like(y_true, marginal_rate, dtype=float))
+    )
+    brier_skill_score = (
+        1.0 - brier[0] / brier_climatology if brier_climatology > 0 else float("nan")
+    )
     return {
         "n": int(len(y_true)),
         "brier_score": {"point": brier[0], "ci_lo": brier[1], "ci_hi": brier[2]},
+        "brier_climatology": brier_climatology,
+        "brier_skill_score": brier_skill_score,
         "reliability_diagram": reliability,
         "roc_auc": {"point": auc[0], "ci_lo": auc[1], "ci_hi": auc[2]},
         "pr_auc": {"point": pr_auc[0], "ci_lo": pr_auc[1], "ci_hi": pr_auc[2]},

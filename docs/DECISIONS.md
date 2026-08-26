@@ -1143,3 +1143,37 @@ sits inside, ~0.2-0.9% depending how `AXIS` counts, is still far below the pre-r
 code change (e.g. regenerating snapshots from a different/multiple training seeds,
 requiring several consecutive flagged snapshots before persisting the flag, or accepting
 it as documented residual risk) before Step 3's rerun.
+
+**User's call:** accept the `AXIS` episode as documented residual risk — `models/bank_health.py`
+stays untouched. Confirmed above by hard evidence to be a single-realization, single-bank
+artifact, not a systematic detector defect; recorded here rather than silently fixed.
+
+## [2026-08-26] Step 2 fix implemented: `max_slice_brier` re-derived as a Brier Skill Score
+
+Per this file's own pre-registered rule (two entries above): replaced the hand-picked
+`config.max_slice_brier = 0.15` constant with a Brier Skill Score against each slice's own
+held-out climatology baseline. `models/metrics.py::metric_block` now computes
+`brier_climatology` (Brier of always-predicting the slice's own marginal event rate) and
+`brier_skill_score` (`1 - brier_model/brier_climatology`) for every metric block it
+produces — recovery and hazard, overall and every slice — not just the one call site that
+needed it, since it is the same held-out data already being scored and a second call site
+computing it differently later would be a second source of truth. `agent/decide.py`'s
+`SLICE_CALIBRATION_ERROR` trigger now fires on `brier_skill_score <= 0` (model provides no
+calibration value over climatology) instead of comparing to a policy-file constant;
+`config/policy.yaml`'s `max_slice_brier` entry removed (no longer read anywhere).
+`docs/06-AGENT-SPEC.md`'s Abstention section and tunables list updated to match.
+
+Regenerated `artifacts/hazard_model_report.json` via `python -m models.train` against
+`data/dobara.sqlite3` to pick up the new fields (the live `decide()` path reads this file,
+not a live computation) — confirmed by inspection: `by_method.upi_autopay` shows
+`brier_score=0.1154`, `brier_climatology=0.1181`, `brier_skill_score=0.0226`. **Positive,
+barely** — the model provides marginal skill over climatology on this single method-slice,
+so the trigger stays dormant, exactly the outcome this file's own pre-registration
+anticipated as acceptable given `METHOD` is hardcoded to one value everywhere in this
+simulator (no second slice to have ever made this check discriminative). Test fixtures
+(`tests/test_agent_decide.py`, `tests/test_agent_decide_characterization.py`,
+`tests/test_agent_compliance.py`) updated to construct `brier_skill_score` directly rather
+than a raw Brier point + external threshold; characterization fixture regenerated via
+`write_fixture()`, byte-identical to before (the two abstain-trigger cases were rewritten
+to hit the same trigger through the new mechanism, not a behavior change for any case).
+`make check` green: 79 tests, ruff, mypy all clean.

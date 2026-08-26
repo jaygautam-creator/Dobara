@@ -238,13 +238,22 @@ same seed and population, `artifacts/sensitivity.json`'s `other_axes`):
 - **`ltv.margin_factor` [0.4, 0.9]** (swept in place of `ltv.horizon_cycles`, which
   `sim/params.yaml` declares with a fixed source, not a `sensitivity_range` — this is the
   actual LTV-dollar-conversion assumption docs/05-ML-SPEC.md's own note flags for this
-  analysis): **a second break-even exists here too.** `razorpay_default` beats `dobara` at
-  the range's low end (0.40); `dobara` wins from ≈0.48 upward (interpolated the same way
-  as the hazard break-even). The calibrated value, **0.7**, sits comfortably above it
-  (~46% relative margin) — a wider margin than the hazard axis's, and unlike the hazard
-  parameter, `margin_factor` has no equivalent external anchor to strengthen the judgment
-  further; it is, by its own declared note, "not observed anywhere in the simulator, a
-  pure assumption." Reported as-is.
+  analysis): **a second break-even exists here too, and it's the softest joint in this
+  whole argument.** `razorpay_default` beats `dobara` at the range's low end (0.40);
+  `dobara` wins from ≈0.48 upward (interpolated the same way as the hazard break-even).
+  The calibrated value, **0.7**, sits above it by ~46% relative margin — wider than the
+  hazard axis's, but unlike hazard, `margin_factor` has no external anchor: it's a bare,
+  unsourced assumption ("not observed anywhere in the simulator," per its own declared
+  note), not a figure calibrated against a published benchmark. Stated plainly, not
+  softened by what follows.
+
+  **This is scope of applicability, not just a caveat: `dobara`'s advantage requires
+  roughly 48%+ gross margin on subscription revenue.** Below that, mandate lifetime value
+  is low enough that the economics genuinely favour retrying harder — and a merchant in
+  that position should. This is a tool for subscription businesses — OTT, SaaS, insurance,
+  memberships — where 70%+ gross margins are typical, not for thin-margin recurring
+  billing. A merchant reading this section learns whether the tool is built for them, not
+  just that one number has no citation.
 
 **Calibration is reported before AUC.** These probabilities get multiplied by rupees, so
 being right about the number matters more than ranking. Brier scores and reliability

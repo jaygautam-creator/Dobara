@@ -1414,3 +1414,98 @@ the "Graceful failure" row still said `Abstain` "falls back to Razorpay's docume
 default" — stale since the 2026-08-25 fix that made `Abstain` actually stop (per
 CLAUDE.md's "when in doubt, the agent stops"); corrected to match current behavior rather
 than left as a second, smaller factual error in a doc already being edited for accuracy.
+Same stale claim found and fixed in `docs/02-ARCHITECTURE.md`'s bounded-action-set table
+and "`ABSTAIN` is the graceful-failure requirement" paragraph while reading it to scope
+Phase 5 — three independent places had drifted from the same 2026-08-25 code change.
+
+## [2026-08-26] Phase 5: the Control Room + evidence API, per docs/02-ARCHITECTURE.md's `api/` contract
+
+Per the user's "shift the centre of gravity" instruction: Phase 4 is done, the
+presentation layer (Phase 5 API, Phase 6 frontend, the video) is a third of the
+submission and none of it existed yet.
+
+**Built**: `api/main.py` (13 routes), `api/schemas.py` (Pydantic response contracts —
+`agent/` dataclasses never carry `fastapi`/`pydantic` imports themselves, kept that way
+deliberately), `api/converters.py` (the single mapping from `agent/` output to those
+contracts), `api/demo.py` (a small cached demo population, `DEMO_N_CUSTOMERS=150`, seed
+9001 — held out from training and every eval-harness seed), `api/razorpay_client.py`.
+
+**`/evidence/summary` and `/evidence/sensitivity` serve `artifacts/*.json` verbatim** —
+the same files the README quotes, so the API and the README can never silently disagree.
+**`/queue`, `/counters`, `/audit/{mandate_id}`, `/approvals`, `/batch/stream` (SSE),
+`/batch/poll`** all serve genuine live `agent.decide()` output computed by
+`api/demo.py::get_demo_batch()`, which calls `eval.runner.run_arm()` for both `dobara`
+and `aggressive_8x` (the comparison-toggle data) on the same demo population — never a
+second, hand-rolled decision loop. Verified by hand against a running server (not just
+unit tests): `/queue`'s first item carries real `expected_net`/rejected-alternatives/audit
+text from actual model inference; `/counters`' `dobara` (₹759,790 net LTV) vs
+`aggressive_8x` (₹714,512) on the n=150 demo population is directionally consistent with
+the Phase 4 headline (`dobara` ahead) at a completely different, much smaller scale.
+
+**A small, additive change to `eval/runner.py`** makes this possible without duplicating
+the tested `_run_dobara_arm`/`run_arm` decision loop: both gained an optional
+`audit_trail: AuditTrail | None = None` parameter (default `None`, so every existing
+caller — the Phase 4 batch harness — is byte-for-byte unaffected); when supplied, every
+live `decide()` call also appends its `(ctx, decision)` pair to it. Verified: reran
+`tests/test_eval_invariants.py` + `tests/test_agent_decide_characterization.py`
+immediately after this change, before writing any `api/` code, to catch a regression in
+already-shipped Phase 4 numbers as early as possible — both still passed unchanged.
+
+**`api/razorpay_client.py` is honest about what it automates vs. what it doesn't.**
+Customer/plan/subscription CRUD and HMAC-SHA256 webhook signature verification
+(`hmac.compare_digest`, constant-time) are real, implemented against Razorpay's
+documented REST conventions. **`success@razorpay`/`failure@razorpay` outcome forcing is
+NOT a server-side REST call this client fabricates** — it is Razorpay's own
+Checkout/payment-page mechanism, which happens client-side; `test_mode_vpa_for()` returns
+the correct VPA constant for constructing a real Checkout session rather than pretending
+to trigger a subscription charge via an endpoint Razorpay's API doesn't expose that way.
+Stated in the module docstring and `TEST_MODE_NOTE`, not left implicit. Every write
+method raises `RazorpayNotConfigured` (a clear 503 at the route level) rather than
+faking a response when `RAZORPAY_KEY_ID`/`SECRET`/`RAZORPAY_WEBHOOK_SECRET` are unset —
+including recognizing `.env.example`'s own committed placeholders (`rzp_test_xxxx...`) as
+"not configured," not as real credentials that would merely fail auth. Verified live
+against a running server: unconfigured `POST /razorpay/subscriptions` and
+`POST /razorpay/webhook` both correctly return 503; once a real webhook secret is set
+(via `monkeypatch.setenv` in the test), a valid HMAC signature is accepted and an invalid
+one correctly rejected with 400.
+
+**"Actions execute as proposals, never direct rail calls" is now enforced structurally,
+not just by convention** (docs/02-ARCHITECTURE.md's own words) —
+`tests/test_no_llm_in_money_path.py::test_agent_package_never_calls_the_rail_directly`
+(new, alongside the existing LLM-import-boundary tests in the same file) asserts `agent/`
+never imports `httpx`/`fastapi`/`razorpay`/`requests`/`aiohttp`/`urllib3`, or `api`/`api.*`
+itself. `agent/decide.py` choosing an action and `api/razorpay_client.py` proposing it to
+the test rail stay two separate steps by construction, not just by nobody having wired
+them together yet.
+
+**Streaming is honestly paced, not honestly slow**: `/batch/stream`'s SSE handler adds an
+0.08s delay between decision events purely for the Control Room's "counters climbing"
+visual — the computation itself is already complete (the cached demo batch) by the time
+any client connects; only the delivery is artificial, stated in `api/demo.py`'s module
+docstring so this is never mistaken for the batch genuinely computing slowly.
+
+**Not built, deliberately, and stated as such rather than silently skipped**: the `llm/`
+narrative layer (root-cause narrative, Hinglish nudges, the audit "ask why" box) —
+`docs/03-TECH-STACK.md` frames it as decorative polish, not evaluative; PROGRESS.md's
+Phase 5 checklist never named it; and it's out of scope given the explicit instruction to
+prioritize the presentation layer's core surfaces first.
+
+**Tests**: `tests/test_api.py`, 13 tests, using the real demo batch (no mocked
+`agent.decide()` calls — the point of this API layer is that it serves genuine model
+output, so mocking the decision layer would not verify the actual contract) plus the
+extended import-boundary test. Along the way, `make check`'s mypy invocation gained the
+new `api` package (`Makefile`), and every new file passed a full ruff/mypy pass before
+any live server test, not after — caught several `dict`-without-type-args /
+`no-any-return` strictness issues immediately, at zero runtime cost.
+
+**Also fixed, incidentally, while running the full suite to confirm no Phase 5
+regression**: `tests/test_ltv.py`'s recurring flake (first seen earlier this session as
+an isolated-pass/full-suite-fail mystery, documented but not chased then) was root-caused
+this time — `ltv_high_amount == ltv_low_amount * 10` used exact float equality across two
+different multiplication orders (`amount*r*m` vs `(amount*r*m)*10`), which IEEE 754 does
+not guarantee bit-identical, combined with the test's nondeterministic category selection
+(`next(iter({...}))` over a set, whose iteration order depends on each fresh process'
+hash seed). Fixed with `pytest.approx`, the correct tool for a mathematical-property
+assertion; verified stable across 5 different `PYTHONHASHSEED` values, not just re-run
+once. `make check` green: 93 tests, ruff/mypy clean across the whole checked codebase
+including the new `api` package.

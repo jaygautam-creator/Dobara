@@ -195,6 +195,50 @@ than the shape assumed when those docs were written — "never bend a finding to
 spec written before the data existed." Full account in `docs/DECISIONS.md` [2026-08-26]
 (four entries this session). `make check` green throughout.
 
+**Phase 5 done (this session): the FastAPI Control Room + evidence API, `docs/02-ARCHITECTURE.md`'s
+`api/` contract.** 13 routes across `api/main.py`, `api/schemas.py` (Pydantic views),
+`api/converters.py` (the one place `agent/` dataclasses become API responses), `api/demo.py`
+(a small cached demo population run through the real `dobara` + `aggressive_8x` arms via
+`eval.runner.run_arm`, never a second hand-rolled decision loop), and
+`api/razorpay_client.py` (a real, credential-optional Razorpay test-mode REST client).
+`/evidence/summary` and `/evidence/sensitivity` serve `artifacts/*.json` verbatim; `/queue`,
+`/counters`, `/audit/{mandate_id}`, `/approvals`, `/batch/stream` (SSE), `/batch/poll` all
+serve genuine live `agent.decide()` output — verified by hand against a running server, not
+just unit tests (`/queue`'s first item's `expected_net`/rejected-alternatives/audit text are
+real model inference, `/counters`' `dobara` vs `aggressive_8x` net LTV figures on the same
+demo population are directionally consistent with the Phase 4 headline). A small, additive,
+non-behavior-changing change to `eval/runner.py::_run_dobara_arm`/`run_arm` (an optional
+`audit_trail` parameter, `None` by default) lets the API reuse the exact tested decision
+loop instead of re-deriving `DecisionContext`-building logic a second time. Razorpay
+endpoints are honest about what they automate: customer/plan/subscription CRUD and HMAC
+webhook signature verification are real; `success@razorpay`/`failure@razorpay` outcome
+forcing is documented as a Checkout-step (client-side) mechanism, not a fabricated
+server-side "trigger charge now" call Razorpay's API doesn't expose that way — every write
+endpoint raises a clear 503 (`RazorpayNotConfigured`) rather than faking success when
+`RAZORPAY_KEY_ID`/`SECRET` are unset, matching `docs/03-TECH-STACK.md`'s "no API key"
+reproducibility requirement (verified live: unconfigured `POST /razorpay/subscriptions` and
+`POST /razorpay/webhook` both correctly 503, webhook signature verification correctly
+accepts a valid HMAC and rejects an invalid one once a real secret is set). "Actions
+execute as proposals, never direct rail calls" is enforced structurally, not just by
+convention: `agent/` importing `httpx`/`fastapi`/`razorpay`/`api` now fails a dedicated
+test (`tests/test_no_llm_in_money_path.py::test_agent_package_never_calls_the_rail_directly`).
+13 new API tests (`tests/test_api.py`, real demo batch, no mocked `decide()` calls) + the
+extended import-boundary test. `make check` green: 93 tests. **The recurring
+`test_ltv.py` flake (first seen earlier this session as isolated-pass/full-suite-fail)
+was root-caused and fixed, not just documented as a mystery this time**: it asserted
+`ltv_high_amount == ltv_low_amount * 10` with exact `==` on floats computed via two
+different multiplication orders (`amount*r*m` vs `(amount*r*m)*10`), which IEEE 754 does
+not guarantee bit-identical — combined with `cat`'s nondeterministic set-iteration
+selection (a fresh Python process' hash seed varies run to run), some runs landed on a
+category whose numbers happened to round differently in the last bit. Fixed with
+`pytest.approx` (the correct tool for a mathematical-property assertion, not exact
+equality) and verified stable across 5 different `PYTHONHASHSEED` values. Ruff/mypy clean
+including the
+new `api` package (added to `make check`'s mypy invocation). Not built, deliberately: the
+`llm/` narrative layer (root-cause narrative, Hinglish nudges, audit Q&A) — decorative per
+`docs/03-TECH-STACK.md`'s own framing, not required by this session's Phase 5 checklist,
+and out of scope given the "shift centre of gravity to the presentation layer" instruction.
+
 **Phase 3 done (this session), on top of Phase 0-2:**
 - Closed `Action` type (`agent/actions.py`): `ScheduleDebit`/`SendPreDebitNotice`/
   `OfferDateChange`/`EscalateToHuman`/`Stop`/`Abstain` as frozen dataclasses. A bare
@@ -352,9 +396,14 @@ spec written before the data existed." Full account in `docs/DECISIONS.md` [2026
 actual observed shape, not the assumed one), and the break-even statement — all four
 declared sensitivity axes swept, hazard's break-even strengthened with the NPCI ratio
 anchor — are all built and published in README/`docs/07-EVAL-SPEC.md`/`docs/09-DEMO-SCRIPT.md`,
-per `## CURRENT STATE` above. Open, non-blocking design question for a future session:
-the `SBI`-specific restraint cost (abstention *response*, not detection quality, is the
-next lever). Next: Phase 5 (API + Razorpay test mode) or Phase 6 (frontend) — user's call.
+per `## CURRENT STATE` above. Phase 5 (API + Razorpay test mode) is also now complete —
+see the Phase 5 summary above. **Next: Phase 6 (frontend), per the user's explicit
+"shift the centre of gravity" instruction — bank the schedule lead entirely on the
+presentation layer (`/`, `/control-room`, `/evidence`, `/audit`, `/mandate`) and the video,
+not further evidence work.** The `SBI`-specific restraint cost (abstention *response*, not
+detection quality) stays deliberately unrevisited per the same instruction — it's a
+stronger story as designed restraint with a measured price than a marginally better
+number would be.
 
 **Blockers:** none.
 
@@ -456,12 +505,12 @@ fully superseded by the 2026-08-26 Step 3 rerun (see `## CURRENT STATE` above an
 
 ## Phase 5 — API + Razorpay (Day 7) · spec: `docs/02-ARCHITECTURE.md`
 
-- [ ] FastAPI app, Pydantic contracts, OpenAPI schema
-- [ ] SSE streaming batch endpoint (+ polling fallback)
-- [ ] Audit record endpoints
-- [ ] Razorpay test-mode client: create subscriptions, trigger charges, receive webhooks
-- [ ] `success@razorpay` / `failure@razorpay` outcome forcing wired into the demo
-- [ ] Actions emitted as **proposals**, never direct rail calls
+- [x] FastAPI app, Pydantic contracts, OpenAPI schema (`api/main.py`, `api/schemas.py`, `api/converters.py` — 13 routes, auto-generated `/docs`/`/openapi.json`)
+- [x] SSE streaming batch endpoint (+ polling fallback) (`GET /batch/stream`, `GET /batch/poll`)
+- [x] Audit record endpoints (`GET /audit/{mandate_id}`, `GET /approvals`)
+- [x] Razorpay test-mode client: create subscriptions, trigger charges, receive webhooks (`api/razorpay_client.py` — customer/plan/subscription CRUD, HMAC webhook verification; credential-optional, raises `RazorpayNotConfigured` rather than faking success when unset)
+- [x] `success@razorpay` / `failure@razorpay` outcome forcing wired into the demo (`test_mode_vpa_for()`, echoed via `POST /razorpay/subscriptions`'s `force_outcome` — documented honestly as a Checkout-step mechanism, not a fabricated server-side "trigger charge" call)
+- [x] Actions emitted as **proposals**, never direct rail calls (`agent/` never imports `api`/`httpx`/`razorpay` — locked in structurally, `tests/test_no_llm_in_money_path.py::test_agent_package_never_calls_the_rail_directly`)
 
 ## Phase 6 — Frontend (Day 8) · spec: `docs/08-FRONTEND-SPEC.md`
 

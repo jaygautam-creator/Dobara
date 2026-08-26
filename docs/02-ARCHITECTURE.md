@@ -125,11 +125,13 @@ A closed enum. The agent cannot express anything else.
 | `OFFER_DATE_CHANGE(t_new)` | Ask once to move the recurring date permanently | Converge rule; fatigue cap |
 | `ESCALATE_TO_HUMAN(reason)` | Hand to a person with a written reason | — |
 | `STOP(reason)` | Cease recovery on this cycle | One of the seven named reasons |
-| `ABSTAIN(reason)` | Model lacks evidence; fall back to documented baseline policy | Logged as low-confidence |
+| `ABSTAIN(reason)` | Model lacks evidence; **stops, does not attempt this cycle** | Logged as low-confidence |
 
 **`ABSTAIN` is the graceful-failure requirement.** When a bank, method or decline reason
 has insufficient history, or the calibrated confidence interval on `E[net]` straddles zero,
-the agent does not guess — it falls back to Razorpay's documented default and says so.
+the agent does not guess — it **stops** and says so (`CLAUDE.md`: "when in doubt, the
+agent stops"; overrules this doc's original fall-back-to-default design, see
+`docs/DECISIONS.md` [2026-08-25] "Abstain must stop, not fall back to an attempt").
 
 ## The decision, formally
 

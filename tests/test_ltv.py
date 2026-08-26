@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from models.ltv import build_life_table, expected_remaining_cycles, ltv_remaining
 from sim.engine import run_simulation
 from sim.params import load_params
@@ -52,4 +54,11 @@ def test_ltv_remaining_scales_with_amount_and_margin(tmp_path: Path) -> None:
     ltv_low_amount = ltv_remaining(100.0, table, cat, 1, params)
     ltv_high_amount = ltv_remaining(1000.0, table, cat, 1, params)
     assert ltv_high_amount > ltv_low_amount
-    assert ltv_high_amount == ltv_low_amount * 10  # linear in amount by construction
+    # Linear in amount by construction (models/ltv.py: amount * remaining_cycles *
+    # margin_factor) -- but 1000*r*m and (100*r*m)*10 are two different multiplication
+    # orders, which IEEE 754 does not guarantee bit-identical. This was a real,
+    # reproducible flake (isolated-run pass, full-suite fail) caused by `cat`'s
+    # nondeterministic set-iteration selection landing on a remaining_cycles value where
+    # the two orders round differently in the last bit -- not test-order pollution.
+    # pytest.approx, not ==, is the correct tool for a mathematical-property assertion.
+    assert ltv_high_amount == pytest.approx(ltv_low_amount * 10)

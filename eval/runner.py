@@ -60,6 +60,7 @@ from datetime import datetime, timedelta
 import numpy as np
 
 from agent.actions import Abstain, EscalateToHuman, OfferDateChange, ScheduleDebit, Stop
+from agent.audit import AuditTrail
 from agent.context import DecisionContext
 from agent.decide import decide
 from agent.models import ModelBundle
@@ -436,6 +437,7 @@ def _run_dobara_arm(
     model_bundle: ModelBundle,
     life_table: LifeTable,
     holdout_fraction: float,
+    audit_trail: AuditTrail | None = None,
 ) -> list[MandateResult]:
     """Calls `agent.decide()` live once per attempt decision point. Mandates routed to
     the permanent holdout slice (`config/policy.yaml`'s `holdout_fraction`, per
@@ -443,6 +445,13 @@ def _run_dobara_arm(
     `razorpay_default`'s fixed cadence instead and flagged `routed_to_holdout=True`, so
     the caller can report recovery lift on the served population against this control
     slice — never silently folded into the aggregate.
+
+    `audit_trail`, added 2026-08-26 for the Phase 5 API (`api/live.py`): when supplied,
+    every live `decide()` call also appends its `(ctx, decision)` pair to it — purely
+    additive, `None` by default, so every existing caller (the Phase 4 batch harness) is
+    byte-for-byte unaffected. Lets the API reuse this exact, already-tested decision loop
+    for the Control Room's audit trail instead of re-deriving the context-building logic
+    a second time.
     """
     n_cycles = int(params.get("population.n_cycles"))
     fatigue_cap = int(params.get("notification.fatigue_cap_per_cycle"))
@@ -541,6 +550,8 @@ def _run_dobara_arm(
                     mandate_revoked=state.revoked,
                 )
                 decision = decide(ctx, model_bundle, policy)
+                if audit_trail is not None:
+                    audit_trail.append(ctx, decision)
                 action = decision.chosen
 
                 if isinstance(action, Stop):
@@ -837,10 +848,11 @@ def run_arm(
     policy: PolicyConfig | None = None,
     model_bundle: ModelBundle | None = None,
     holdout_fraction: float = 0.0,
+    audit_trail: AuditTrail | None = None,
 ) -> list[MandateResult]:
     """Dispatch by arm name. `policy`/`model_bundle` are required for `dobara` only;
-    `holdout_fraction` is consumed only by `dobara` (docs/07-EVAL-SPEC.md's permanent
-    holdout arm)."""
+    `holdout_fraction` and `audit_trail` are consumed only by `dobara`
+    (docs/07-EVAL-SPEC.md's permanent holdout arm; `audit_trail` for the Phase 5 API)."""
     if arm is Arm.DO_NOTHING:
         return _run_cadence_arm(world, DO_NOTHING_CADENCE, params, life_table)
     if arm is Arm.RAZORPAY_DEFAULT:
@@ -852,5 +864,7 @@ def run_arm(
     if arm is Arm.DOBARA:
         if policy is None or model_bundle is None:
             raise ValueError("dobara arm requires policy and model_bundle")
-        return _run_dobara_arm(world, params, policy, model_bundle, life_table, holdout_fraction)
+        return _run_dobara_arm(
+            world, params, policy, model_bundle, life_table, holdout_fraction, audit_trail
+        )
     raise ValueError(f"unknown arm {arm}")  # pragma: no cover

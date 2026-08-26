@@ -48,13 +48,27 @@ worth more than a fabricated win.
 
 ## The money chart
 
-A single figure. X-axis: time horizon in cycles. Two lines per arm:
+**Updated 2026-08-26 after the chart was actually built (`artifacts/money_chart.svg`,
+`docs/DECISIONS.md` [2026-08-26]) — this section originally predicted a shape the data
+did not produce. Per CLAUDE.md's discipline, the spec is corrected to match what was
+found, not the other way around.**
 
-- **Gross recovered** — `aggressive_8x` on top
-- **Net LTV** — `aggressive_8x` crosses below `razorpay_default`, and below `dobara`
+A single figure. X-axis: time horizon in cycles (1-8). Two lines per arm (`aggressive_8x`,
+`razorpay_default`, `dobara` — `do_nothing`/`oracle` omitted, already covered by the main
+metrics table), sharing one ₹ y-axis:
 
-The crossover point is annotated. This is the twenty seconds the pitch video is built
-around: *the obvious agent wins the month and loses the year.*
+- **Gross recovered** — `aggressive_8x` leads only through cycle 4; `razorpay_default`'s
+  own gross overtakes it from cycle 5 onward. `aggressive_8x` does stay ahead of `dobara`
+  on gross the whole horizon (fewer attempts, by design).
+- **Net LTV** — `aggressive_8x` trails **both** other arms from **cycle 1**. There is no
+  mid-horizon crossover to annotate: the gap opens immediately and widens every cycle.
+
+**The finding, not the one originally assumed here:** *there is no honeymoon.* Aggressive
+retrying loses on net LTV from cycle 1, because in India the cost lands immediately —
+every retry is a legally mandated pre-debit notification, not a free extra attempt. And
+past cycle 4 it loses on **gross** recovery too — it burns mandates faster than it
+collects from them, underperforming even the metric it exists to maximise. This is the
+twenty seconds the pitch video is built around now.
 
 ## Sensitivity analysis
 

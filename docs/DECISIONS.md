@@ -1336,3 +1336,81 @@ all 5 swept points with per-arm CIs. `make check` green (ruff/mypy clean on
 `eval/sensitivity.py`; a pre-flight `import eval.sensitivity` + ruff/mypy pass caught a
 `NameError` — missing `load_policy` import inside `main()` — before the first ~10-minute
 sweep run, not after).
+
+## [2026-08-26] Break-even strengthened with the NPCI anchor; remaining three sensitivity axes swept
+
+Per the user's explicit instruction: judging the hazard break-even (≈0.074) only against
+the declared `sensitivity_range` [0.05, 0.15] uses the weaker object to judge the
+stronger one — that range is an a priori guess written into `sim/params.yaml` before any
+data existed, while the calibrated value (0.098) is empirically anchored to the published
+20M-revocations/808M-executions ≈ 2.5% ratio from real NPCI figures.
+
+**Implemented**: `eval/sensitivity.py`'s `SweepPoint` now also records
+`razorpay_default_revocation_per_execution_ratio` at every swept hazard value
+(`sim.engine.SimSummary.revocation_per_execution_ratio`'s exact definition,
+`n_revocations / n_attempts`, matching `tests/test_calibration.py`'s own benchmark).
+`break_even_vs_razorpay_default` interpolates this ratio at the break-even hazard using
+the same interpolation fraction as the hazard crossing itself (refactored `_break_even`
+to share a typed `_Crossing` helper with the caller, rather than smuggling the bracket
+points through a `dict[str, object]`).
+
+**Result: the break-even hazard (≈0.074) corresponds to a revocation ratio of ≈1.91%,
+against NPCI's published ≈2.5% — a ~24% relative shortfall, not just a point below the
+calibrated value's own 0.098.** This is the stronger statement the user predicted: for
+`dobara` to actually lose to `razorpay_default`, real-world revocations would have to run
+meaningfully *below* what NPCI's own published data says they do — the losing region is
+inconsistent with the external benchmark the calibration itself was built to hit, not
+merely on the unlucky side of one guessed range. Published in the README's "Break-even
+reporting" section, alongside (not replacing) the raw 33% hazard-value margin, per the
+user's explicit "keep the raw margin regardless."
+
+**Then swept the remaining three declared axes** docs/07-EVAL-SPEC.md names besides the
+hazard, at the same seed/population, via a new generic `sweep_other_axes` (reuses
+`_with_override`/`run_arm`, no break-even machinery — the spec only requires break-even
+reporting for the hazard axis, "vary and re-rank the arms" for the other three):
+
+- `date_change_offer.response_rate` [0.0, 0.15], **0.0 forced into the swept points
+  explicitly** (not just an artifact of an evenly-spaced grid) per the spec's own words
+  ("a response_rate: 0.0 run is required in eval and must not break the policy"): `dobara`
+  wins at every tested point including exactly 0%. Robust.
+- `notification.cost_inr.whatsapp` [0.2, 0.6]: zero measurable effect on the ranking
+  anywhere in range — WhatsApp is too small a share of total notification spend.
+- `ltv.margin_factor` [0.4, 0.9], **swept in place of `ltv.horizon_cycles`** — the spec
+  names "LTV horizon / expected remaining cycles," but `sim/params.yaml`'s
+  `horizon_cycles` leaf has no declared `sensitivity_range` (fixed at 8, sourced from
+  docs/04-DATA-MODEL.md); `margin_factor` is the LTV-dollar-conversion assumption that
+  actually carries one, and is the one docs/05-ML-SPEC.md's own note says exists "for the
+  Phase 4 sensitivity analysis." The substitution is stated in-code (`OTHER_AXES`'s label)
+  and in the README, not silent. **A second break-even exists here too**:
+  `razorpay_default` beats `dobara` at the range's low end (0.40); `dobara` wins from
+  ≈0.48 upward (hand-interpolated the same way as the hazard crossing, between the tested
+  points 0.40/-25.82 and 0.525/+13.74). Calibrated value 0.7 sits ~46% above break-even —
+  a wider margin than the hazard axis's, but `margin_factor` has no external anchor to
+  strengthen the judgment the way the NPCI ratio does for hazard (`sim/params.yaml`'s own
+  note: "not observed anywhere in the simulator, a pure assumption"). Reported as-is, not
+  given the extra ratio treatment since no equivalent published benchmark exists for it.
+
+All four axes' full point-by-point data live in `artifacts/sensitivity.json`
+(`other_axes` key for the three new ones). `make check` green throughout (ruff/mypy clean
+on the refactored `eval/sensitivity.py`, including a `_leaf` helper extracted to remove
+duplicated dotted-path traversal between `_with_override` and the new axes' range lookup;
+79 tests unaffected — no test imports `eval.sensitivity`).
+
+## [2026-08-26] Money chart and money-chart-adjacent spec text corrected, not bent to fit
+
+Per the user's explicit instruction: `docs/07-EVAL-SPEC.md`'s "## The money chart" section
+and `docs/09-DEMO-SCRIPT.md`'s "The evidence" beat both described a crossover the actual
+chart (two entries above) did not produce — `aggressive_8x` trails on net LTV from cycle 1
+with no mid-horizon crossing, and loses its own gross lead to `razorpay_default` past
+cycle 4. Both docs rewritten to state the finding actually observed, not the one assumed
+when they were written before any data existed — `docs/07-EVAL-SPEC.md`'s section now
+opens with an explicit "updated after the chart was built" note rather than silently
+replacing the old text. `docs/09-DEMO-SCRIPT.md`'s "The evidence" beat rewritten with the
+user's own suggested framing ("there is no honeymoon... every retry is a legally mandated
+notification... it burns mandates faster than it collects from them") plus the two
+break-even values (vs. `aggressive_8x`: none in range; vs. `razorpay_default`: ≈0.074
+against calibrated 0.098). Also caught and fixed, while editing the same demo-script beat:
+the "Graceful failure" row still said `Abstain` "falls back to Razorpay's documented
+default" — stale since the 2026-08-25 fix that made `Abstain` actually stop (per
+CLAUDE.md's "when in doubt, the agent stops"); corrected to match current behavior rather
+than left as a second, smaller factual error in a doc already being edited for accuracy.

@@ -969,4 +969,129 @@ open question pending that run, not decided from two seeds. All four invariant t
 (`tests/test_eval_invariants.py`) still pass at this scale. Full 30-seed x 5-arm harness
 launched (`nohup ... &`, PID recorded in session notes, log at `/private/tmp/eval_run3.log`,
 ~2h projected) — not yet complete as of this entry; the next session/agent must pick up
-the result before quoting any final number.
+the result before quoting any final number. **That run was later killed unfinished** (9/30
+seed-tasks done after 7+ hours, far past the ~2h estimate, and the user needed the machine)
+— `artifacts/results.parquet`/`summary.json` were never written by it; the next entry below
+starts from a fresh diagnostic, not this run's output.
+
+## [2026-08-26] Step 1 decomposition: abstention is small now, and it is the whole gap
+
+**Investigated, not assumed**, per the user's explicit instruction to decompose before
+touching `models/bank_health.py` again. Built a diagnostic script
+(`scripts`-equivalent, run from scratch, not committed — see session notes) that replays
+`eval/runner.py`'s exact `dobara` and `razorpay_default` cycle loops side by side over the
+same `World`, using `eval.rng.event_rng`'s per-(mandate, cycle, attempt, kind) keying so
+both arms consume identical draws for identical cycles even though `dobara` sometimes makes
+zero attempts where `razorpay_default` makes several — this is what makes the "same subset
+of cycles" comparison paired rather than approximate. Smoke scale, n=600, seeds 101/102
+(same seeds as every entry in this file so far).
+
+**The split is no longer ~73/27.** The two fixes already on `main` (change-point
+recalibration, static-Brier removal) pushed real abstention down to **3.0-3.5%** of
+paired decision-cycles. A further 2.2% are a confident `Stop(NEGATIVE_EXPECTED_VALUE)` —
+not abstention, a different `AbstentionReason`-free code path — kept as a separate bucket
+rather than folded in, since the two mean different things (uncertain vs. confidently no).
+**94.3-94.8% of cycles, `dobara` acts.**
+
+**(a) On the acted subset, `dobara` beats `razorpay_default` on the identical cycles, both
+seeds:** seed 101 +Rs.107,682 total (Rs.681.28 vs Rs.654.89/cycle); seed 102 +Rs.21,712
+total (Rs.606.21 vs Rs.600.92/cycle). Per the user's own diagnostic framing: this means
+**the policy is sound, and abstention is the whole problem** — not a weak-policy finding.
+
+**(b) On the abstained subset, `razorpay_default` earns real money `dobara` forgoes:**
+seed 101 Rs.111,887.57 across 153 cycles (Rs.731.29/cycle); seed 102 Rs.70,807.16 across
+128 cycles (Rs.553.18/cycle) — both figures larger than what (a) gained, which is why the
+net headline stays near parity/negative even though the acted-subset comparison alone
+looks like a clean win.
+
+**(c) 100% of abstentions are `bank_health_changepoint`** in both seeds — `min_slice_n`,
+`max_slice_brier` (hazard method-slice), and the `E[net]` CI-straddle never fired at this
+population scale. This matches `agent/decide.py`'s abstention ordering (change-point is
+checked before the Brier/CI triggers, so once it fires nothing downstream is reached) and
+Step 1c's brief was specifically to attribute the 27% figure the user started from — the
+true figure is ~3.2% and it is entirely one trigger.
+
+**(c2), the finding that actually matters for Step 2:** checked firing location against
+the simulator's *known* injected regime (`SBI`, `cycle_index >= 6`, `sim/params.yaml`).
+Precision is decent — seed 101: 87.6% true-positive-window, 5.2% `SBI` but wrong window,
+7.2% wrong bank entirely (100% of that 7.2% on `AXIS` specifically, not spread across the
+other 6 banks); seed 102: 83.6% / 4.7% / 11.7% (again 100% on `AXIS`). But a genuinely odd
+signal survived: **mean net LTV per abstained cycle (Rs.731, Rs.553) is *higher* than mean
+net LTV per acted cycle (Rs.681, Rs.606) under `razorpay_default`** — the detector is
+firing disproportionately on cycles that, on realized draws, are *more* profitable than
+average, the opposite of what a correctly-targeted degradation signal should produce. This
+is precision-only (measured over the fired set); **recall was not measured in this pass**
+(what fraction of true `SBI, cycle>=6` decision points get flagged, in the live eval world
+specifically, not the training population) — that is Step 2's job, not this one's.
+Reported as-is, per the user's "report before proceeding," before any further change.
+
+## [2026-08-26] Step 2 — pre-registered acceptance criteria, committed BEFORE the fix or rerun
+
+Per the user's explicit instruction: these criteria are fixed in writing, in this commit,
+**before** `models/bank_health.py` is touched further and **before** the full 30-seed
+harness is rerun — so the git history shows the bar was set before the number was known,
+not adjusted to match it afterward. Both criteria are stated **without reference to net
+LTV or any eval-harness headline metric**, per the user's explicit constraint.
+
+### 1. Changepoint detector: precision/recall against the KNOWN injected regime
+
+Ground truth is definitional: `sim/params.yaml`'s `regime_shift.bank_id = "SBI"`,
+`applies_from_cycle_index = 6`. A live `decide()`-time bank-health check is a true-positive
+window iff `bank_id == "SBI" and cycle_index >= 6`.
+
+- **Recall** (of all true-positive-window decision points, fraction where
+  `changepoint_flag` fires): target **>= 50%** — a floor matching the 55-70% already
+  measured on the training population (`data/dobara.sqlite3`, seed 42, prior session),
+  not a new bar; the eval world is a different seed/population, so this is stated as a
+  floor to not regress, not an assumption it will hold exactly.
+- **Precision** (of all firings, fraction landing in the true-positive window): target
+  **>= 75%** — below the 83.6-87.6% already observed in Step 1's diagnostic, since two
+  smoke seeds are noisy and the bar should not be set at exactly what was already seen.
+- **Uniform-firing / concentrated-false-positive check:** firing evenly across all 8 banks
+  is zero discriminative power and fails this criterion outright, regardless of aggregate
+  precision. Separately, false positives concentrating on one *specific* wrong bank (>50%
+  of all false positives landing on a single non-`SBI` bank) also fails it and must be
+  explained — Step 1 found 100% of both seeds' wrong-bank firings on `AXIS` specifically,
+  which is either a real, second, undiagnosed defect (something about `AXIS`'s simulated
+  profile resembles a shift) or a false-positive-count too small to read (11 and 15 events)
+  to distinguish from noise. Whichever it is must be stated in the write-up, not silently
+  passed because aggregate precision cleared the bar.
+- Measured on **live eval-world `decide()` calls** (the same paired-cycle instrumentation
+  Step 1 used), not only re-checked against the training population — the two are
+  different populations/seeds and this gate is about eval-world behavior specifically.
+
+### 2. Abstention thresholds re-derived from held-out slice-level Brier, not chosen a priori
+
+- **`min_slice_n`**: unchanged at 30. Already tied to `models/metrics.py::MIN_SLICE_N`,
+  the same constant used everywhere else in this project to decide "a slice metric is
+  reported as insufficient rather than guessed" — this already *is* the calibration-derived
+  floor the user is asking for; there is nothing to re-derive.
+- **`max_slice_brier`** (feeds `SLICE_CALIBRATION_ERROR`, currently checked only against
+  the hazard model's `by_method` slice in `agent/decide.py::_abstention_reason`):
+  re-derive as a **Brier Skill Score against the climatological baseline on the same
+  held-out slice**, not a hand-picked constant — abstain when
+  `BSS = 1 - brier_model / brier_climatology <= 0` (the model provides no calibration value
+  over predicting the slice's own marginal event rate), computed from
+  `models/hazard.py::_slice_metrics`'s already-existing held-out Brier per slice at every
+  `make train` run, never hand-typed into `config/policy.yaml` again.
+- **Known limitation, stated honestly rather than hidden:** `METHOD` is hardcoded to a
+  single value (`"upi_autopay"`) everywhere in this simulator (`eval/runner.py`'s own
+  module docstring), so the hazard model's `by_method` slicing produces exactly **one**
+  slice — there is no second slice to compare a percentile-style rule against, and Step 1
+  already found this trigger fired 0% of the time in both seeds. If BSS-vs-climatology on
+  that single slice also produces zero firings, that is an **acceptable, reported outcome**
+  — "this trigger structurally cannot discriminate in a single-method simulator," not a
+  bug to fix by inventing slices that do not exist. `models/hazard.py::_slice_metrics`
+  already separately computes a `by_regime_shift_bank` pair (two real slices, each with a
+  held-out Brier) — noted here as the fallback reference for a future session if
+  `by_method`'s permanent dormancy needs a second look, **not implemented in this pass**
+  (out of Step 2's scope, which is re-deriving the existing threshold's *value*, not
+  changing which slice dimension it's checked against).
+
+### What a miss means
+
+If the recalibrated detector still misses recall, precision, or the concentrated-false-
+positive check after implementation, that is reported as a miss in Step 3's write-up and
+the harness is rerun anyway, per the user's explicit "do not retune, do not narrow the
+reported range" — this entry exists so a miss is legible as a pre-stated miss, not
+silently re-targeted to match whatever the fix actually produced.

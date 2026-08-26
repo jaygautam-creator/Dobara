@@ -9,7 +9,6 @@ from __future__ import annotations
 from agent.actions import Abstain, EscalateToHuman, OfferDateChange, ScheduleDebit, Stop
 from agent.audit import AuditRecord, render
 from agent.context import Decision
-from api.demo import DemoBatch
 from api.schemas import (
     ActionOut,
     ClauseRefOut,
@@ -19,6 +18,7 @@ from api.schemas import (
     RejectedAlternativeOut,
     RupeeMathOut,
 )
+from eval.runner import MandateResult
 from eval.world import World
 
 
@@ -119,13 +119,18 @@ def queue_items(records: list[AuditRecord], world: World) -> list[QueueItemOut]:
     return items
 
 
-def compute_counters(batch: DemoBatch) -> CounterOut:
-    """`api/demo.py::DemoBatch` -> `CounterOut`. Header-tile numbers, per
-    docs/08-FRONTEND-SPEC.md: "₹ at risk → ₹ recovered → ₹ net LTV → notifications sent →
-    revocations avoided → attempts *not* made" plus the comparison-toggle's
-    `aggressive_8x` figures on the same population."""
-    dobara = batch.dobara_results
-    agg = batch.aggressive_8x_results
+def compute_counters(
+    dobara_results: list[MandateResult], aggressive_8x_results: list[MandateResult]
+) -> CounterOut:
+    """Two `MandateResult` lists (one per arm, same population) -> `CounterOut`.
+    Header-tile numbers, per docs/08-FRONTEND-SPEC.md: "₹ at risk → ₹ recovered → ₹ net
+    LTV → notifications sent → revocations avoided → attempts *not* made" plus the
+    comparison-toggle's `aggressive_8x` figures on the same population. Takes the two
+    result lists directly rather than `api/demo.py::DemoBatch` so this module never needs
+    to import `api.demo` (which itself imports this module) -- keeps the dependency
+    one-directional."""
+    dobara = dobara_results
+    agg = aggressive_8x_results
     return CounterOut(
         n_mandates=len(dobara),
         amount_at_risk_inr=sum(r.amount for r in dobara),

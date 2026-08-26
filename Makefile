@@ -1,4 +1,4 @@
-.PHONY: setup sim train eval api web check demo clean
+.PHONY: setup sim train eval api web check demo demo-fixture clean
 
 setup:
 	uv sync --extra dev
@@ -27,6 +27,9 @@ check:
 
 demo: sim train eval
 	@echo "Run 'make api' and 'make web' in separate terminals."
+
+demo-fixture:
+	uv run python -m scripts.build_demo_fixture
 
 clean:
 	rm -rf data/*.sqlite3 artifacts/*.parquet artifacts/*.json .pytest_cache .mypy_cache .ruff_cache

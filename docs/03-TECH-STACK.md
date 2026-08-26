@@ -61,51 +61,67 @@ Node backend (would put a serialisation boundary between the agent and its model
 
 ---
 
-## Hosting: **Vercel** — chosen. **Cloudflare rejected, and the reason is decisive.**
+## Hosting: **Vercel, static only — REVISED 2026-08-26, before Phase 6.** The Python API
+does not get deployed. It stays a documented local mode (`make api`).
 
-You asked which is better for us. The answer is settled by one technical fact:
+**This reverses this section's original plan** (Vercel Fluid Compute running the Python
+API live, Neon Postgres backing it — kept below, struck through in spirit, for the
+record). The original reasoning — Cloudflare Workers' Pyodide runtime cannot load
+`lightgbm`/`scipy` native wheels, so Cloudflare was never viable for the model stack —
+still stands and is not what changed. What changed is the deploy target for that Python
+process, decided the same session Phase 5 shipped, before any frontend fetch call was
+written:
 
-> **Cloudflare Workers cannot run our models.** Python on Workers is Pyodide-based and
-> cannot load native wheels — `lightgbm`, `xgboost` and `scipy` will not run there.
-> Vercel Fluid Compute runs **real CPython 3.13 with native dependencies and up to 5 GB
-> package size**, which comfortably fits our model stack.
+> Vercel's Python runtime plus `lightgbm`/`scikit-learn`/`pandas` sits at or near the
+> unzipped function size limit. The free alternatives that *do* fit (Render, Fly) sleep
+> when idle — a judge opening the submission link at 11pm and watching a 30-60s
+> cold-start spinner before anything renders is a materially worse outcome than any
+> amount of architectural purity gained by serving the live agent from the deployed site.
 
-Everything else follows:
+**So: the deployed frontend is a static Vercel site reading `artifacts/*.json` — the
+same committed evidence files `git clone` gets — never calling a deployed Python
+backend.** `/evidence`, `/control-room`'s demo data, and `/mandate` all read committed
+JSON (`artifacts/summary.json`, `sensitivity.json`, and the `make demo-fixture` output
+`artifacts/demo_batch.json` — see `docs/DECISIONS.md` [2026-08-26], "data-shipping
+architecture"). The **live** Python API (`make api`, real `agent.decide()` calls,
+Razorpay test-mode proposal endpoints) is a **local-only, documented mode** — the README
+says so — not something a judge's browser ever talks to. Postgres/Neon accordingly drops
+out entirely: there is no deployed Python process that would need a database, ephemeral
+filesystem or not.
 
-| | Vercel | Cloudflare |
-|---|---|---|
-| Real Python + native ML wheels | ✅ Fluid Compute | ❌ Pyodide, no native wheels |
-| Next.js frontend | ✅ First-class | ⚠️ Workable |
-| Function duration (free) | 300 s | 30 s CPU (paid tiers differ) |
-| Mumbai region | ✅ `bom1` | ✅ |
-| Cost for us | ₹0 (Hobby) | ₹0 |
+Everything else about the frontend hosting choice is unaffected: Vercel remains chosen
+for Next.js hosting, `bom1` (Mumbai) region, ₹0 Hobby tier, Hobby-is-non-commercial
+caveat stated honestly for a hackathon submission.
 
-- **Region pinned to `bom1` (Mumbai)** — correct data-residency posture given RBI's
-  localisation directive, and a detail worth one line in the README.
-- **Honest caveat for the README:** Vercel Hobby is non-commercial. A hackathon submission
-  is within that; a real product would move to a paid plan or in-house infra.
-- **Cloudflare is not dismissed** — if we later need a pure-static mirror or an edge cron,
-  it is the right tool. It simply cannot host the part that matters.
+- **Cloudflare is not dismissed** for a pure-static mirror or an edge cron — it simply
+  never could have hosted the Python model stack, which is now moot for the deploy
+  target anyway since that stack isn't deployed at all.
 
 ---
 
-## Database: **SQLite locally, Postgres (Neon free tier) for the deployed demo**
+## Database: **SQLite only. No deployed database.**
 
-One SQLAlchemy schema, two backends selected by `DATABASE_URL`.
+One SQLAlchemy schema, SQLite always — the Postgres/Neon plan below is superseded by the
+2026-08-26 hosting revision above (no deployed Python process, so nothing needs a
+deployed database).
 
 - **SQLite is the primary choice, and it is a deliberate one.** A judge runs
   `git clone && make demo` and everything works with zero infrastructure. The database
   file is a build artifact, reproducible from `make sim`. For a submission judged by
   reading and running a repo, that is worth more than any hosted feature.
-- **Neon (free tier, via Vercel Marketplace)** only for the deployed demo, because Vercel
-  functions have an ephemeral filesystem. Nearest region is Singapore, not Mumbai —
-  documented honestly as a thing production would change.
-- **Scope-cut fallback:** if Neon becomes a time sink, the deployed demo serves
-  pre-computed run artifacts committed to the repo and holds live demo batches in memory.
-  Nothing about the judged evidence depends on it.
+- **Superseded: Neon (free tier, via Vercel Marketplace) for a deployed demo API.** The
+  original plan assumed the Python API itself would be deployed to Vercel; the
+  2026-08-26 hosting revision above rules that out entirely (unzipped function size,
+  cold-start risk on the sleep-prone free alternatives), so there is no deployed backend
+  process left that would need Neon or any other hosted database. The **scope-cut
+  fallback this section originally described as a fallback — the deployed demo serving
+  precomputed run artifacts committed to the repo — is now simply the design**, not a
+  contingency: see `docs/DECISIONS.md` [2026-08-26] and `make demo-fixture`
+  (`artifacts/demo_batch.json`).
 
 **Rejected:** Supabase (more product than we need), Cloudflare D1 (backend is not on CF),
-MongoDB (we have a relational audit trail; foreign keys are the point).
+MongoDB (we have a relational audit trail; foreign keys are the point), and — as of this
+revision — any deployed database at all, for the deploy target described above.
 
 ---
 

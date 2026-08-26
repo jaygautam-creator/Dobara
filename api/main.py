@@ -21,8 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from api import converters
-from api.demo import get_demo_batch
+from api.demo import get_demo_data
 from api.razorpay_client import (
     TEST_MODE_NOTE,
     RazorpayClient,
@@ -89,21 +88,42 @@ def evidence_sensitivity() -> dict[str, Any]:
     return _read_artifact_json("sensitivity.json")
 
 
+@app.get("/demo/meta")
+def demo_meta() -> dict[str, Any]:
+    """Which data source `/queue`, `/counters`, `/audit`, `/approvals`, and `/batch/*`
+    are currently serving -- `"live"` (real `agent.decide()` calls made by this running
+    process, `data/dobara.sqlite3` present) or `"fixture"` (the committed
+    `artifacts/demo_batch.json`, real `agent.decide()` output precomputed by
+    `make demo-fixture` against a trained DB). The Control Room UI footer must render
+    this label plainly, per PROGRESS.md's data-shipping decision -- see `api/demo.py`'s
+    module docstring for why the fixture path is not a lesser stand-in."""
+    data = get_demo_data()
+    return {
+        "source": data.source,
+        "note": (
+            "Live: agent.decide() run just now by this API process."
+            if data.source == "live"
+            else "Precomputed: real agent.decide() output, serialised by `make demo-fixture` "
+            "against a trained DB. Run `make api` with `data/dobara.sqlite3` present to "
+            "regenerate live."
+        ),
+    }
+
+
 @app.get("/queue", response_model=list[QueueItemOut])
 def queue() -> list[QueueItemOut]:
     """The Control Room's case queue: one row per demo mandate (its first live decision),
     ranked by ₹ at risk descending, per docs/08-FRONTEND-SPEC.md."""
-    batch = get_demo_batch()
-    return converters.queue_items(batch.audit_records, batch.world)
+    return get_demo_data().queue
 
 
 @app.get("/counters", response_model=CounterOut)
 def counters() -> CounterOut:
     """Header-tile numbers for the Control Room, plus the `aggressive_8x` comparison
-    figures the comparison toggle needs — computed once from the cached demo batch, not
+    figures the comparison toggle needs — computed once from the cached demo data, not
     from the client's own streamed-event bookkeeping (so a client that misses SSE events
     still gets a correct final total via `/counters` or `/batch/poll`)."""
-    return converters.compute_counters(get_demo_batch())
+    return get_demo_data().counters
 
 
 @app.get("/audit/{mandate_id}", response_model=list[DecisionOut])
@@ -112,19 +132,17 @@ def audit_for_mandate(mandate_id: int) -> list[DecisionOut]:
     source (docs/08-FRONTEND-SPEC.md). `decision_id` here is the mandate id plus its
     position in this list; there's no separate decision-id namespace, one mandate's
     decisions are already totally ordered by `(cycle_index, attempt_index)`."""
-    batch = get_demo_batch()
-    records = [r for r in batch.audit_records if r.ctx.mandate_id == mandate_id]
+    records = get_demo_data().audit_by_mandate.get(mandate_id)
     if not records:
         raise HTTPException(status_code=404, detail=f"no decisions found for mandate {mandate_id}")
-    return [converters.decision_out(r) for r in records]
+    return records
 
 
 @app.get("/approvals", response_model=list[DecisionOut])
 def approvals() -> list[DecisionOut]:
     """Decisions above the human sign-off threshold (`Decision.requires_signoff`) —
     docs/08-FRONTEND-SPEC.md's "Approval queue"."""
-    batch = get_demo_batch()
-    return [converters.decision_out(r) for r in batch.audit_records if r.decision.requires_signoff]
+    return get_demo_data().approvals
 
 
 # --- SSE streaming + polling fallback, per docs/08-FRONTEND-SPEC.md "SSE for the live
@@ -146,9 +164,9 @@ async def batch_stream(request: Request) -> StreamingResponse:
     disconnects mid-stream (checked via `request.is_disconnected()`) stops the generator
     early rather than continuing to compute events nobody will see.
     """
-    batch = get_demo_batch()
-    items = converters.queue_items(batch.audit_records, batch.world)
-    counter_snapshot = converters.compute_counters(batch)
+    data = get_demo_data()
+    items = data.queue
+    counter_snapshot = data.counters
 
     async def event_source() -> AsyncIterator[str]:
         for item in items:
@@ -166,13 +184,10 @@ async def batch_stream(request: Request) -> StreamingResponse:
 def batch_poll() -> dict[str, Any]:
     """Polling fallback for clients that can't hold an SSE connection open — returns the
     same data `/batch/stream` would eventually deliver, all at once."""
-    batch = get_demo_batch()
+    data = get_demo_data()
     return {
-        "decisions": [
-            item.model_dump(mode="json")
-            for item in converters.queue_items(batch.audit_records, batch.world)
-        ],
-        "counters": converters.compute_counters(batch).model_dump(mode="json"),
+        "decisions": [item.model_dump(mode="json") for item in data.queue],
+        "counters": data.counters.model_dump(mode="json"),
     }
 
 

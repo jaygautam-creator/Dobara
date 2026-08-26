@@ -1,0 +1,339 @@
+{
+  "seed": 301,
+  "n_customers": 5000,
+  "swept_parameter": "revocation.hazard_per_failure_notification",
+  "sensitivity_range": [
+    0.05,
+    0.15
+  ],
+  "calibrated_value": 0.098,
+  "points": [
+    {
+      "hazard_per_failure_notification": 0.05,
+      "dobara_mean_net_ltv": 4876.162338846895,
+      "dobara_ci": [
+        4723.855419612986,
+        5018.07283978309
+      ],
+      "razorpay_default_mean_net_ltv": 4976.363016553782,
+      "razorpay_default_ci": [
+        4806.558047699409,
+        5116.748623587161
+      ],
+      "aggressive_8x_mean_net_ltv": 4803.727725592312,
+      "aggressive_8x_ci": [
+        4629.418724251177,
+        4937.348518017174
+      ],
+      "dobara_minus_razorpay_default": -100.20067770688638,
+      "dobara_wins_vs_razorpay_default": false,
+      "dobara_minus_aggressive_8x": 72.43461325458338,
+      "dobara_beats_aggressive_8x": true,
+      "razorpay_default_revocation_per_execution_ratio": 0.015162224400921133
+    },
+    {
+      "hazard_per_failure_notification": 0.075,
+      "dobara_mean_net_ltv": 4807.663006868925,
+      "dobara_ci": [
+        4654.722318298372,
+        4950.2574225178405
+      ],
+      "razorpay_default_mean_net_ltv": 4802.61979326418,
+      "razorpay_default_ci": [
+        4648.381350516517,
+        4935.797285433069
+      ],
+      "aggressive_8x_mean_net_ltv": 4594.226627453181,
+      "aggressive_8x_ci": [
+        4436.5347175906745,
+        4731.571220560479
+      ],
+      "dobara_minus_razorpay_default": 5.043213604744778,
+      "dobara_wins_vs_razorpay_default": true,
+      "dobara_minus_aggressive_8x": 213.43637941574343,
+      "dobara_beats_aggressive_8x": true,
+      "razorpay_default_revocation_per_execution_ratio": 0.019260293091416608
+    },
+    {
+      "hazard_per_failure_notification": 0.1,
+      "dobara_mean_net_ltv": 4712.945431151645,
+      "dobara_ci": [
+        4563.342422229073,
+        4855.39693214049
+      ],
+      "razorpay_default_mean_net_ltv": 4636.0788577883595,
+      "razorpay_default_ci": [
+        4481.453118343657,
+        4780.528841359695
+      ],
+      "aggressive_8x_mean_net_ltv": 4398.445603340083,
+      "aggressive_8x_ci": [
+        4253.944778138137,
+        4549.2165645686855
+      ],
+      "dobara_minus_razorpay_default": 76.86657336328517,
+      "dobara_wins_vs_razorpay_default": true,
+      "dobara_minus_aggressive_8x": 314.4998278115618,
+      "dobara_beats_aggressive_8x": true,
+      "razorpay_default_revocation_per_execution_ratio": 0.024062009605782492
+    },
+    {
+      "hazard_per_failure_notification": 0.125,
+      "dobara_mean_net_ltv": 4633.980312617522,
+      "dobara_ci": [
+        4470.812222015789,
+        4779.418829231684
+      ],
+      "razorpay_default_mean_net_ltv": 4489.036885037573,
+      "razorpay_default_ci": [
+        4339.438736591631,
+        4634.81060552394
+      ],
+      "aggressive_8x_mean_net_ltv": 4269.042554581733,
+      "aggressive_8x_ci": [
+        4120.220132163067,
+        4419.459098956859
+      ],
+      "dobara_minus_razorpay_default": 144.94342757994946,
+      "dobara_wins_vs_razorpay_default": true,
+      "dobara_minus_aggressive_8x": 364.93775803578865,
+      "dobara_beats_aggressive_8x": true,
+      "razorpay_default_revocation_per_execution_ratio": 0.02845913094111653
+    },
+    {
+      "hazard_per_failure_notification": 0.15,
+      "dobara_mean_net_ltv": 4538.958382243347,
+      "dobara_ci": [
+        4389.0934244697455,
+        4676.457757145545
+      ],
+      "razorpay_default_mean_net_ltv": 4324.805795574901,
+      "razorpay_default_ci": [
+        4170.390129703495,
+        4466.280036062801
+      ],
+      "aggressive_8x_mean_net_ltv": 4114.333862884905,
+      "aggressive_8x_ci": [
+        3962.637753525422,
+        4273.977352224479
+      ],
+      "dobara_minus_razorpay_default": 214.15258666844602,
+      "dobara_wins_vs_razorpay_default": true,
+      "dobara_minus_aggressive_8x": 424.62451935844183,
+      "dobara_beats_aggressive_8x": true,
+      "razorpay_default_revocation_per_execution_ratio": 0.03219430237442245
+    }
+  ],
+  "break_even_vs_aggressive_8x": {
+    "found": false,
+    "dobara_beats_aggressive_8x_at_every_tested_point": true,
+    "note": "dobara beats aggressive_8x at every tested point in [0.05, 0.15]"
+  },
+  "break_even_vs_razorpay_default": {
+    "found": true,
+    "hazard_per_failure_notification": 0.07380201749909368,
+    "between_points": [
+      0.05,
+      0.075
+    ],
+    "note": "linear interpolation between the two nearest swept points (0.0500, 0.0750); not itself a re-run value",
+    "razorpay_default_revocation_per_execution_ratio_at_break_even": 0.019063916508267584
+  },
+  "other_axes": {
+    "ltv.margin_factor": {
+      "output_key": "ltv_margin_factor (substituted for ltv.horizon_cycles, which has no declared sensitivity_range)",
+      "sensitivity_range": [
+        0.4,
+        0.9
+      ],
+      "points": [
+        {
+          "value": 0.4,
+          "dobara_mean_net_ltv": 4800.364421596177,
+          "razorpay_default_mean_net_ltv": 4826.183423863882,
+          "aggressive_8x_mean_net_ltv": 4662.607069615304,
+          "ranking": [
+            "razorpay_default",
+            "dobara",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.525,
+          "dobara_mean_net_ltv": 4765.605666707658,
+          "razorpay_default_mean_net_ltv": 4751.872511201851,
+          "aggressive_8x_mean_net_ltv": 4561.588194206471,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.65,
+          "dobara_mean_net_ltv": 4730.846911819139,
+          "razorpay_default_mean_net_ltv": 4677.56159853982,
+          "aggressive_8x_mean_net_ltv": 4460.569318797636,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.775,
+          "dobara_mean_net_ltv": 4696.088156930619,
+          "razorpay_default_mean_net_ltv": 4603.250685877791,
+          "aggressive_8x_mean_net_ltv": 4359.550443388802,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.9,
+          "dobara_mean_net_ltv": 4661.329402042101,
+          "razorpay_default_mean_net_ltv": 4528.93977321576,
+          "aggressive_8x_mean_net_ltv": 4258.531567979969,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        }
+      ],
+      "ranking_ever_changes": true
+    },
+    "notification.cost_inr.whatsapp": {
+      "output_key": "notification_channel_cost_whatsapp",
+      "sensitivity_range": [
+        0.2,
+        0.6
+      ],
+      "points": [
+        {
+          "value": 0.2,
+          "dobara_mean_net_ltv": 4716.943409863731,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.3,
+          "dobara_mean_net_ltv": 4716.943409863731,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.4,
+          "dobara_mean_net_ltv": 4716.943409863731,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.5,
+          "dobara_mean_net_ltv": 4716.943409863731,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.6,
+          "dobara_mean_net_ltv": 4716.943409863731,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        }
+      ],
+      "ranking_ever_changes": false
+    },
+    "date_change_offer.response_rate": {
+      "output_key": "date_change_offer_response_rate",
+      "sensitivity_range": [
+        0.0,
+        0.15
+      ],
+      "points": [
+        {
+          "value": 0.0,
+          "dobara_mean_net_ltv": 4716.8901027533275,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.0375,
+          "dobara_mean_net_ltv": 4716.943409863731,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.075,
+          "dobara_mean_net_ltv": 4716.943409863731,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.11249999999999999,
+          "dobara_mean_net_ltv": 4716.663719875984,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        },
+        {
+          "value": 0.15,
+          "dobara_mean_net_ltv": 4716.6635798759835,
+          "razorpay_default_mean_net_ltv": 4647.837233475008,
+          "aggressive_8x_mean_net_ltv": 4420.161768634103,
+          "ranking": [
+            "dobara",
+            "razorpay_default",
+            "aggressive_8x"
+          ]
+        }
+      ],
+      "ranking_ever_changes": false
+    }
+  }
+}

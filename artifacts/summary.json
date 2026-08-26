@@ -1,0 +1,633 @@
+{
+  "n_seeds": 30,
+  "seeds": [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130
+  ],
+  "n_customers_per_seed": 5000,
+  "elapsed_seconds": 6061.9,
+  "headline_comparison": "dobara vs razorpay_default",
+  "arms": {
+    "do_nothing": {
+      "gross_recovered_inr": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "recovery_rate_of_failed_cycles": {
+        "point": NaN,
+        "ci_lo": NaN,
+        "ci_hi": NaN,
+        "n_seeds": 0
+      },
+      "mandate_ever_recovered_rate": {
+        "point": NaN,
+        "ci_lo": NaN,
+        "ci_hi": NaN,
+        "n_seeds": 0
+      },
+      "attempts_mean": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "attempts_mean_in_failed_cycles": {
+        "point": NaN,
+        "ci_lo": NaN,
+        "ci_hi": NaN,
+        "n_seeds": 0
+      },
+      "notifications_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "revocations_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "net_ltv_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "human_escalations_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "abstentions_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "recovered_per_notification": {
+        "point": NaN,
+        "ci_lo": NaN,
+        "ci_hi": NaN,
+        "n_seeds": 0
+      }
+    },
+    "razorpay_default": {
+      "gross_recovered_inr": {
+        "point": 25072657.842582267,
+        "ci_lo": 24941494.46336416,
+        "ci_hi": 25218567.254571244,
+        "n_seeds": 30
+      },
+      "recovery_rate_of_failed_cycles": {
+        "point": 0.411549182238859,
+        "ci_lo": 0.4087598430519509,
+        "ci_hi": 0.41462397932487566,
+        "n_seeds": 30
+      },
+      "mandate_ever_recovered_rate": {
+        "point": 0.9810169947471135,
+        "ci_lo": 0.9803080707613385,
+        "ci_hi": 0.9817067057446048,
+        "n_seeds": 30
+      },
+      "attempts_mean": {
+        "point": 8.416426666666666,
+        "ci_lo": 8.4035015,
+        "ci_hi": 8.427613333333335,
+        "n_seeds": 30
+      },
+      "attempts_mean_in_failed_cycles": {
+        "point": 2.3375808750139244,
+        "ci_lo": 2.334649285277668,
+        "ci_hi": 2.3405843572328484,
+        "n_seeds": 30
+      },
+      "notifications_total": {
+        "point": 42110.5,
+        "ci_lo": 42047.08166666667,
+        "ci_hi": 42167.71583333333,
+        "n_seeds": 30
+      },
+      "revocations_total": {
+        "point": 1049.3666666666666,
+        "ci_lo": 1040.4666666666667,
+        "ci_hi": 1057.0058333333334,
+        "n_seeds": 30
+      },
+      "net_ltv_total": {
+        "point": 22658149.63982022,
+        "ci_lo": 22514344.70906152,
+        "ci_hi": 22815206.07110485,
+        "n_seeds": 30
+      },
+      "human_escalations_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "abstentions_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "recovered_per_notification": {
+        "point": 595.4177505644101,
+        "ci_lo": 591.8622854878349,
+        "ci_hi": 599.1920051972876,
+        "n_seeds": 30
+      }
+    },
+    "aggressive_8x": {
+      "gross_recovered_inr": {
+        "point": 24674227.954177268,
+        "ci_lo": 24541036.810902014,
+        "ci_hi": 24802163.60839714,
+        "n_seeds": 30
+      },
+      "recovery_rate_of_failed_cycles": {
+        "point": 0.5571015676943072,
+        "ci_lo": 0.5540841295808617,
+        "ci_hi": 0.5605957612799926,
+        "n_seeds": 30
+      },
+      "mandate_ever_recovered_rate": {
+        "point": 0.9718075435837882,
+        "ci_lo": 0.9710248029003273,
+        "ci_hi": 0.9726101343013842,
+        "n_seeds": 30
+      },
+      "attempts_mean": {
+        "point": 8.517426666666667,
+        "ci_lo": 8.501427666666666,
+        "ci_hi": 8.533553333333334,
+        "n_seeds": 30
+      },
+      "attempts_mean_in_failed_cycles": {
+        "point": 2.810670999158685,
+        "ci_lo": 2.8030928553310477,
+        "ci_hi": 2.817480010207687,
+        "n_seeds": 30
+      },
+      "notifications_total": {
+        "point": 42587.13333333333,
+        "ci_lo": 42507.13833333333,
+        "ci_hi": 42667.76666666666,
+        "n_seeds": 30
+      },
+      "revocations_total": {
+        "point": 1352.9666666666667,
+        "ci_lo": 1341.3191666666667,
+        "ci_hi": 1363.1108333333332,
+        "n_seeds": 30
+      },
+      "net_ltv_total": {
+        "point": 21510624.657784157,
+        "ci_lo": 21354397.477877915,
+        "ci_hi": 21661268.0274829,
+        "n_seeds": 30
+      },
+      "human_escalations_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "abstentions_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "recovered_per_notification": {
+        "point": 579.3973499395905,
+        "ci_lo": 575.7949198203825,
+        "ci_hi": 582.915022997637,
+        "n_seeds": 30
+      }
+    },
+    "dobara": {
+      "gross_recovered_inr": {
+        "point": 24330297.195104733,
+        "ci_lo": 24201839.339241117,
+        "ci_hi": 24462968.763931893,
+        "n_seeds": 30
+      },
+      "recovery_rate_of_failed_cycles": {
+        "point": 0.187771275398236,
+        "ci_lo": 0.18516077224284033,
+        "ci_hi": 0.18975493532316756,
+        "n_seeds": 30
+      },
+      "mandate_ever_recovered_rate": {
+        "point": 0.9949874209702902,
+        "ci_lo": 0.9946833102823576,
+        "ci_hi": 0.9952575718977964,
+        "n_seeds": 30
+      },
+      "attempts_mean": {
+        "point": 7.774153333333333,
+        "ci_lo": 7.765878833333333,
+        "ci_hi": 7.783812666666666,
+        "n_seeds": 30
+      },
+      "attempts_mean_in_failed_cycles": {
+        "point": 1.6113428729379777,
+        "ci_lo": 1.6073016401757694,
+        "ci_hi": 1.614754035850515,
+        "n_seeds": 30
+      },
+      "notifications_total": {
+        "point": 39081.46666666667,
+        "ci_lo": 39041.4125,
+        "ci_hi": 39130.67,
+        "n_seeds": 30
+      },
+      "revocations_total": {
+        "point": 637.7,
+        "ci_lo": 628.9283333333333,
+        "ci_hi": 645.9483333333333,
+        "n_seeds": 30
+      },
+      "net_ltv_total": {
+        "point": 22988090.196845334,
+        "ci_lo": 22855971.446020626,
+        "ci_hi": 23124832.508353613,
+        "n_seeds": 30
+      },
+      "human_escalations_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "abstentions_total": {
+        "point": 1952.6,
+        "ci_lo": 1933.7216666666666,
+        "ci_hi": 1966.64,
+        "n_seeds": 30
+      },
+      "recovered_per_notification": {
+        "point": 622.5645120957743,
+        "ci_lo": 619.1136548717966,
+        "ci_hi": 626.2013310848258,
+        "n_seeds": 30
+      }
+    },
+    "oracle": {
+      "gross_recovered_inr": {
+        "point": 26093075.909364276,
+        "ci_lo": 25940986.18400194,
+        "ci_hi": 26261183.15461651,
+        "n_seeds": 30
+      },
+      "recovery_rate_of_failed_cycles": {
+        "point": 0.2334157390164953,
+        "ci_lo": 0.23146966201452848,
+        "ci_hi": 0.23538870463445666,
+        "n_seeds": 30
+      },
+      "mandate_ever_recovered_rate": {
+        "point": 0.9971297281949862,
+        "ci_lo": 0.9968408090266241,
+        "ci_hi": 0.9974731867212308,
+        "n_seeds": 30
+      },
+      "attempts_mean": {
+        "point": 8.30682,
+        "ci_lo": 8.296934499999999,
+        "ci_hi": 8.317186666666666,
+        "n_seeds": 30
+      },
+      "attempts_mean_in_failed_cycles": {
+        "point": 1.759965849333791,
+        "ci_lo": 1.7554024628577287,
+        "ci_hi": 1.7650497550264301,
+        "n_seeds": 30
+      },
+      "notifications_total": {
+        "point": 41534.1,
+        "ci_lo": 41484.6725,
+        "ci_hi": 41585.933333333334,
+        "n_seeds": 30
+      },
+      "revocations_total": {
+        "point": 726.5666666666667,
+        "ci_lo": 718.16,
+        "ci_hi": 734.6041666666667,
+        "n_seeds": 30
+      },
+      "net_ltv_total": {
+        "point": 24864705.798168164,
+        "ci_lo": 24704210.861572523,
+        "ci_hi": 25045957.777808063,
+        "n_seeds": 30
+      },
+      "human_escalations_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "abstentions_total": {
+        "point": 0.0,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0,
+        "n_seeds": 30
+      },
+      "recovered_per_notification": {
+        "point": 628.2401885728716,
+        "ci_lo": 624.3619777500354,
+        "ci_hi": 632.4303597046443,
+        "n_seeds": 30
+      }
+    }
+  },
+  "paired_dobara_vs_razorpay_default": {
+    "metric": "net_ltv_total",
+    "arm_a": "dobara",
+    "arm_b": "razorpay_default",
+    "mean_diff": 329940.5570251096,
+    "ci_lo": 269095.76692118257,
+    "ci_hi": 403153.5571537222,
+    "significant": true,
+    "n_paired_seeds": 30
+  },
+  "paired_aggressive_8x_vs_razorpay_default": {
+    "metric": "net_ltv_total",
+    "arm_a": "aggressive_8x",
+    "arm_b": "razorpay_default",
+    "mean_diff": -1147524.9820360655,
+    "ci_lo": -1218063.7611027102,
+    "ci_hi": -1081666.980277526,
+    "significant": true,
+    "n_paired_seeds": 30
+  },
+  "paired_dobara_vs_do_nothing": {
+    "metric": "net_ltv_total",
+    "arm_a": "dobara",
+    "arm_b": "do_nothing",
+    "mean_diff": 22988090.196845334,
+    "ci_lo": 22855971.446020626,
+    "ci_hi": 23124832.508353613,
+    "significant": true,
+    "n_paired_seeds": 30
+  },
+  "robustness_slices": {
+    "note": "Pooled across all 30 seeds' mandate rows for dobara/razorpay_default, not independently seed-bootstrapped per slice -- see module docstring.",
+    "by_bank": {
+      "dobara": {
+        "AXIS": {
+          "n_mandates": 18743,
+          "mandate_recovered_rate": 0.9841540841914315,
+          "mean_net_ltv_inr": 4722.017740500404,
+          "revocations": 2181
+        },
+        "BOB": {
+          "n_mandates": 18758,
+          "mandate_recovered_rate": 0.976596652095106,
+          "mean_net_ltv_inr": 4522.813886248362,
+          "revocations": 2988
+        },
+        "HDFC": {
+          "n_mandates": 18940,
+          "mandate_recovered_rate": 0.9839493136219641,
+          "mean_net_ltv_inr": 4944.666070812639,
+          "revocations": 1987
+        },
+        "ICICI": {
+          "n_mandates": 18792,
+          "mandate_recovered_rate": 0.9863771817794806,
+          "mean_net_ltv_inr": 4959.161167322064,
+          "revocations": 1986
+        },
+        "KOTAK": {
+          "n_mandates": 18688,
+          "mandate_recovered_rate": 0.9872645547945206,
+          "mean_net_ltv_inr": 4856.625705816049,
+          "revocations": 2184
+        },
+        "PNB": {
+          "n_mandates": 18657,
+          "mandate_recovered_rate": 0.975129978024334,
+          "mean_net_ltv_inr": 4372.257934428935,
+          "revocations": 3299
+        },
+        "SBI": {
+          "n_mandates": 18618,
+          "mandate_recovered_rate": 0.9807712965946933,
+          "mean_net_ltv_inr": 3673.167090888865,
+          "revocations": 2052
+        },
+        "YES": {
+          "n_mandates": 18804,
+          "mandate_recovered_rate": 0.9814932992980216,
+          "mean_net_ltv_inr": 4718.867799846129,
+          "revocations": 2454
+        }
+      },
+      "razorpay_default": {
+        "AXIS": {
+          "n_mandates": 18743,
+          "mandate_recovered_rate": 0.975457504134877,
+          "mean_net_ltv_inr": 4679.360097855812,
+          "revocations": 3465
+        },
+        "BOB": {
+          "n_mandates": 18758,
+          "mandate_recovered_rate": 0.9655613604861926,
+          "mean_net_ltv_inr": 4291.338025980513,
+          "revocations": 4617
+        },
+        "HDFC": {
+          "n_mandates": 18940,
+          "mandate_recovered_rate": 0.9770327349524816,
+          "mean_net_ltv_inr": 4773.791876386848,
+          "revocations": 3058
+        },
+        "ICICI": {
+          "n_mandates": 18792,
+          "mandate_recovered_rate": 0.9786079182630907,
+          "mean_net_ltv_inr": 4799.424578196955,
+          "revocations": 3032
+        },
+        "KOTAK": {
+          "n_mandates": 18688,
+          "mandate_recovered_rate": 0.977900256849315,
+          "mean_net_ltv_inr": 4669.379291401979,
+          "revocations": 3354
+        },
+        "PNB": {
+          "n_mandates": 18657,
+          "mandate_recovered_rate": 0.9649461328187812,
+          "mean_net_ltv_inr": 4173.13409839854,
+          "revocations": 4922
+        },
+        "SBI": {
+          "n_mandates": 18618,
+          "mandate_recovered_rate": 0.971479213664196,
+          "mean_net_ltv_inr": 4318.1419422046465,
+          "revocations": 5219
+        },
+        "YES": {
+          "n_mandates": 18804,
+          "mandate_recovered_rate": 0.9723994894703255,
+          "mean_net_ltv_inr": 4542.7158915869395,
+          "revocations": 3814
+        }
+      }
+    },
+    "regime_shift_bank_flag": {
+      "dobara": {
+        "False": {
+          "n_mandates": 131382,
+          "mandate_recovered_rate": 0.9821436726492213,
+          "mean_net_ltv_inr": 4728.6209755308255,
+          "revocations": 17079
+        },
+        "True": {
+          "n_mandates": 18618,
+          "mandate_recovered_rate": 0.9807712965946933,
+          "mean_net_ltv_inr": 3673.167090888865,
+          "revocations": 2052
+        }
+      },
+      "razorpay_default": {
+        "False": {
+          "n_mandates": 131382,
+          "mandate_recovered_rate": 0.9731393950465056,
+          "mean_net_ltv_inr": 4561.883077701973,
+          "revocations": 26262
+        },
+        "True": {
+          "n_mandates": 18618,
+          "mandate_recovered_rate": 0.971479213664196,
+          "mean_net_ltv_inr": 4318.1419422046465,
+          "revocations": 5219
+        }
+      }
+    },
+    "by_method": {
+      "dobara": {
+        "upi_autopay": {
+          "n_mandates": 150000,
+          "mandate_recovered_rate": 0.9819733333333334,
+          "mean_net_ltv_inr": 4597.6180393690665,
+          "revocations": 19131
+        }
+      }
+    },
+    "by_first_success_attempt_index": {
+      "dobara": {
+        "1": 146579,
+        "2": 477,
+        "3": 240
+      },
+      "razorpay_default": {
+        "1": 138572,
+        "2": 4697,
+        "3": 2671
+      }
+    },
+    "cold_start": {
+      "dobara": {
+        "False": {
+          "n_mandates": 135000,
+          "mandate_recovered_rate": 0.9820296296296296,
+          "mean_net_ltv_inr": 4604.097928710946,
+          "revocations": 17122
+        },
+        "True": {
+          "n_mandates": 15000,
+          "mandate_recovered_rate": 0.9814666666666667,
+          "mean_net_ltv_inr": 4539.29903529215,
+          "revocations": 2009
+        }
+      },
+      "razorpay_default": {
+        "False": {
+          "n_mandates": 135000,
+          "mandate_recovered_rate": 0.9729629629629629,
+          "mean_net_ltv_inr": 4536.767620330157,
+          "revocations": 28265
+        },
+        "True": {
+          "n_mandates": 15000,
+          "mandate_recovered_rate": 0.9726666666666667,
+          "mean_net_ltv_inr": 4485.3906966690365,
+          "revocations": 3216
+        }
+      }
+    },
+    "outage_windows": {
+      "dobara": {
+        "attempts_touched_an_outage_window": {
+          "n_mandates": 0,
+          "mandate_recovered_rate": NaN
+        },
+        "no_outage_window": {
+          "n_mandates": 150000,
+          "mandate_recovered_rate": 0.9819733333333334
+        }
+      },
+      "razorpay_default": {
+        "attempts_touched_an_outage_window": {
+          "n_mandates": 0,
+          "mandate_recovered_rate": NaN
+        },
+        "no_outage_window": {
+          "n_mandates": 150000,
+          "mandate_recovered_rate": 0.9729333333333333
+        }
+      }
+    }
+  },
+  "permanent_holdout_arm": {
+    "served_population": {
+      "n_mandates": 135299,
+      "mandate_recovered_rate": 0.9831040879829119,
+      "mean_net_ltv_inr": 4607.22658012316
+    },
+    "holdout_control_population": {
+      "n_mandates": 14701,
+      "mandate_recovered_rate": 0.9715665600979525,
+      "mean_net_ltv_inr": 4509.186915262671
+    },
+    "note": "holdout_control_population is routed through razorpay_default's cadence instead of dobara's live decide(), per docs/07-EVAL-SPEC.md's permanent holdout arm -- this is the control the served population's recovery lift is measured against, and is never folded into dobara's own aggregate above."
+  },
+  "credibility_anchor": "Razorpay's own production routing system reports a 4-6% success-rate lift (https://arxiv.org/abs/2111.00783) across millions of real transactions. If dobara's headline lift looks far larger than this, treat it as a bug to investigate, not a result to celebrate -- docs/07-EVAL-SPEC.md."
+}

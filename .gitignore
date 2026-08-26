@@ -13,8 +13,6 @@ build/
 *.sqlite3
 !data/sample.sqlite3
 artifacts/*.parquet
-artifacts/*.json
-artifacts/models/
 .DS_Store
 .mypy_cache/
 .ruff_cache/

@@ -1509,3 +1509,98 @@ hash seed). Fixed with `pytest.approx`, the correct tool for a mathematical-prop
 assertion; verified stable across 5 different `PYTHONHASHSEED` values, not just re-run
 once. `make check` green: 93 tests, ruff/mypy clean across the whole checked codebase
 including the new `api` package.
+
+## [2026-08-26] Data-shipping architecture, settled before any Phase 6 frontend fetch call
+
+**The problem, found by the user before Phase 6 started:** nothing the API needs was
+tracked in git. `data/dobara.sqlite3` (19 MB), `artifacts/*.json` (~72 KB — `summary.json`,
+`sensitivity.json`, `money_chart_data.json`, `ltv_life_table.json`,
+`hazard_model_report.json`, `recovery_model_report.json`), and `artifacts/models/*.joblib`
+(716 KB, 6 files) were all gitignored. A fresh clone would 503 on `/evidence/summary` —
+the single most important endpoint for a judge — and the README's own answer
+(`make demo`) means a ~101-minute `make eval` nobody evaluating a submission will run.
+
+**Fixed, in order:**
+
+1. **`README.md`'s stale pre-eval placeholder banner removed** (line 8: "Status: in
+   development... placeholders until `make eval` runs") — it directly contradicted the
+   "Honest metrics" section 65 lines below, which correctly states every figure is
+   quoted verbatim from a completed `make eval` run, and would be the first thing a judge
+   reads.
+
+2. **`artifacts/*.json` and `artifacts/models/*.joblib` un-ignored and committed.** These
+   ARE the evidence; the repo should contain the evidence, not a promise to regenerate
+   it. Kept ignored, deliberately: `artifacts/results.parquet` (16 MB — the full
+   750,000-row eval harness output, regenerable via `make eval`, nobody reads it
+   directly) and `*.sqlite3` (19 MB — the training DB, regenerable via `make sim && make
+   train`, also the only writable-by-nature artifact, unsuited to being a committed
+   file).
+
+3. **`make demo-fixture` added** (`scripts/build_demo_fixture.py`), producing
+   `artifacts/demo_batch.json`, committed. It calls `api/demo.py`'s existing
+   `get_demo_batch()` (the same live `dobara`/`aggressive_8x` run through
+   `eval/runner.py::run_arm` that Phase 5 already tested) exactly once and serialises its
+   **API-shaped view**, not the raw dataclasses: `queue: list[QueueItemOut]`,
+   `counters: CounterOut`, `audit_by_mandate: dict[mandate_id, list[DecisionOut]]`,
+   `approvals: list[DecisionOut]`. This was a deliberate choice over serialising
+   `DemoBatch`'s raw `World`/`ModelBundle`/`AuditRecord` objects: those aren't JSON-shaped
+   (SQLAlchemy rows, LightGBM models, pandas frames) and reconstructing them from JSON
+   would mean either a second parallel object model or losing fidelity; the Pydantic
+   response models Phase 5 already built are the natural serialization boundary, and
+   they're exactly what every route serves anyway.
+
+   `api/demo.py` refactored around this: `DemoBatch` (raw, live-only) and `DemoData`
+   (API-shaped, either source) are now separate dataclasses; `demo_data_from_batch()`
+   converts one to the other and is shared by the live path and `make demo-fixture`, so
+   the fixture is provably what a live process would have computed, never a hand-shaped
+   approximation. `get_demo_data()` is the new single entry point every route calls: live
+   (`Path("data/dobara.sqlite3").exists()`) or fixture
+   (`artifacts/demo_batch.json`) transparently. `api/converters.py::compute_counters`
+   changed signature from `(batch: DemoBatch) -> CounterOut` to
+   `(dobara_results, aggressive_8x_results) -> CounterOut` — not just a refactor
+   convenience, it removes a real circular-import risk (`api.demo` needs
+   `api.converters` to build a `DemoData`; `api.converters` no longer needs to import
+   `api.demo` for a type hint it can express directly).
+
+   **Fixture size, reported as instructed: 45.9 MB** (150-mandate demo population,
+   `DEMO_N_CUSTOMERS`, unchanged from Phase 5) — larger than expected, and larger than
+   either of the binary artifacts kept out of git for size. Root cause, checked rather
+   than assumed: 1,296 total audit records across 150 mandates, each carrying up to ~88
+   `rejected_alternatives` (one per (day, channel) candidate `agent/decide.py` actually
+   scored) plus an ~11.5 KB rendered `audit_text` block that restates them in prose —
+   real `agent.decide()` output, not padding or a bug, and out of this task's scope to
+   thin (that's Phase 3's candidate-generation design, already tested). Committed anyway,
+   deliberately: it's readable text (JSON), not an opaque binary the way the parquet/db
+   are, and 150 UI-scale demo mandates full audit trail is what the Control Room's
+   `/audit/{mandate_id}` actually needs to serve without a live DB. Flagged here rather
+   than silently shipped, so a future session can revisit `DEMO_N_CUSTOMERS` or the
+   fixture's audit-trail depth if repo size becomes a real problem.
+
+4. **Labeling, per the user's explicit "do not soften or omit" instruction:**
+   `api/demo.py`'s module docstring states plainly that the fixture path is "no less
+   real" than the live path for the same reason `/batch/stream`'s SSE pacing note already
+   gives — the decisions were genuinely made by `agent.decide()`, just earlier. A new
+   `GET /demo/meta` endpoint (`api/main.py`) exposes `{"source": "live"|"fixture",
+   "note": ...}` so Phase 6's Control Room footer has something concrete to render this
+   from — the footer itself is Phase 6 work, not built this session, but the data
+   contract for it now exists so that instruction isn't forgotten by the time frontend
+   code gets written.
+
+5. **Deploy target settled, reversing `docs/03-TECH-STACK.md`'s original Hosting/Database
+   sections (updated in place, struck through in spirit, reasoning kept for the
+   record):** the deployed frontend is a **static** Vercel site reading committed JSON —
+   `artifacts/summary.json`, `sensitivity.json`, and now `demo_batch.json` — never a
+   deployed Python backend. Reasoning: Vercel's Python runtime plus
+   `lightgbm`/`scikit-learn`/`pandas` sits at or near the unzipped function size limit;
+   the free alternatives that do fit (Render, Fly) sleep when idle, and a judge hitting a
+   30-60s cold-start spinner on a submission link is a worse first impression than any
+   amount of "the live API is technically deployed too." The live API (`make api`, real
+   `agent.decide()` calls, the Razorpay test-mode proposal endpoints) stays a documented
+   **local-only** mode. Neon/Postgres accordingly drops out of the plan entirely — there
+   is no deployed Python process left that would need a database. This was the right
+   moment to settle it: doing so *before* Phase 6 writes its first `fetch()` call means
+   the frontend data layer gets designed once, against committed JSON, rather than built
+   against a live API and re-plumbed later.
+
+`make check` green throughout (ruff, mypy on `agent models sim features eval api`,
+pytest) after this session's changes.

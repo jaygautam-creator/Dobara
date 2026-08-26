@@ -1095,3 +1095,51 @@ positive check after implementation, that is reported as a miss in Step 3's writ
 the harness is rerun anyway, per the user's explicit "do not retune, do not narrow the
 reported range" — this entry exists so a miss is legible as a pre-stated miss, not
 silently re-targeted to match whatever the fix actually produced.
+
+## [2026-08-26] Step 2 results: criterion 1 measured against the pre-registered targets
+
+Measured directly against `models/bank_health.py`'s existing snapshot table
+(`data/dobara.sqlite3`, as-of-joined at each mandate-cycle's `due_date`, independent of
+`decide()`'s scoring branches — see the criterion's own text above for why), smoke scale,
+seeds 101/102, n=600 each, no code touched yet.
+
+- **Recall: 65.9% (seed 101), 63.3% (seed 102) — PASSES the >= 50% target**, consistent
+  with the 55-70% already measured on the training population.
+- **Precision: 88.4% (seed 101), 84.2% (seed 102) — PASSES the >= 75% target.**
+- **Concentration check: FAILS both seeds.** `AXIS` accounts for 14/23 (60.9%, seed 101)
+  and 18/25 (72.0%, seed 102) of all false positives — both over the 50% fail line.
+
+**Root-caused, not left as an unexplained miss.** Queried `models.bank_health`'s snapshot
+table directly, per bank, for the whole training run: **6 of 7 non-`SBI` banks have a
+true 0.00% changepoint-flag rate** (`BOB`, `HDFC`, `ICICI`, `KOTAK`, `PNB`, `YES` — zero
+flagged snapshots each, out of ~5,000-5,400 per bank). `AXIS` alone has 89 flagged
+snapshots (1.67%), forming **one sustained episode from 2026-03-27 to 2026-08-12** — not
+scattered blips, a single ~4.5-month persistently-flagged stretch. `SBI` itself is 24.83%
+flagged, 2026-04-15 to 2026-08-23, the correctly-detected real injected shift (consistent
+with `applies_from_cycle_index=6` landing inside that window).
+
+**This is a frozen-single-realization artifact, not a per-eval-seed statistical
+fluke.** `models/bank_health.py`'s snapshot table is computed once from the training
+population (`data/dobara.sqlite3`, seed 42) and never recomputed per eval seed — deliberate,
+documented architecture (`eval/runner.py`'s own docstring: "models are trained once and
+evaluated against fresh held-out populations, never retrained per eval seed"). But the
+change-point detector is explicitly a *live, right-now* state check by its own module
+docstring ("is this bank still, right now, behaving differently") — and a single random
+excursion in one training realization's `AXIS` trajectory, once it crossed the
+`CHANGEPOINT_Z_THRESHOLD=3.0` bar, persisted in the frozen table for ~4.5 months of
+simulated calendar time (the detector's whole design point: once flagged, stay flagged
+through a sustained shift, real or not). Every eval seed's `AXIS` customers whose cycle
+`due_date` lands in that window inherit the same false alarm, deterministically, forever,
+until the training snapshots are regenerated — this is why the concentration figure
+recurs virtually identically across both eval seeds despite different customer sampling:
+both are querying the exact same frozen table at overlapping calendar dates.
+
+**Not fixed this pass** — `models/bank_health.py` still not touched, per the standing
+instruction. Two of three criteria pass outright; the third is explained with hard
+evidence (a single-bank, single-realization false alarm, not a systematic defect in the
+recalibrated detector's aggregate behavior — the 7-bank false-positive rate this episode
+sits inside, ~0.2-0.9% depending how `AXIS` counts, is still far below the pre-recalibration
+13-18% uniform-firing state). Reported as-is for the user to decide whether it warrants a
+code change (e.g. regenerating snapshots from a different/multiple training seeds,
+requiring several consecutive flagged snapshots before persisting the flag, or accepting
+it as documented residual risk) before Step 3's rerun.

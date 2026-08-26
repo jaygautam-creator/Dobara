@@ -1188,9 +1188,12 @@ seed-tasks; this one completed cleanly on the same machine, same code, run super
 the current, trustworthy artifacts — everything on disk before this entry (from the
 2026-08-25 retracted run) is superseded.
 
-**Headline: `dobara` beats `razorpay_default` by ₹329,940.56 net LTV [₹269,095.77,
-₹403,153.56], 95% CI excludes zero, significant** (`paired_dobara_vs_razorpay_default`).
-`≈₹66/mandate` over the full 150,000-mandate population. `aggressive_8x` loses to
+**Headline: `dobara` beats `razorpay_default` by ₹66 per mandate [95% CI ₹53.82,
+₹80.63], paired difference across 30 seeds of 5,000 mandates each, CI excludes zero,
+significant** (`paired_dobara_vs_razorpay_default`; the same figure stated as a
+₹329,940.56 [₹269,095.77, ₹403,153.56] *total* over one seed's 5,000-mandate population —
+do not divide the total by 150,000, the pooled 30-seed row count, that yields ₹2.20 and
+looks like an error). `aggressive_8x` loses to
 `razorpay_default` by ₹1,147,524.98, also significant (`paired_aggressive_8x_vs_razorpay_default`)
 — collapses as the thesis predicts, never the headline comparison. `dobara` beats
 `do_nothing` by ₹22,988,090.20, significant (`paired_dobara_vs_do_nothing`) — the
@@ -1198,32 +1201,56 @@ structural sanity invariant holds at full scale, no repeat of the pre-retraction
 impossibility. `oracle` weakly dominates every arm (net LTV ₹24,864,706, highest of all
 five) — the harness itself is sound.
 
-**Mechanism, visible in the arm-level table, not just the paired diff:** `dobara` recovers
-*less* gross (₹24,330,297) than `razorpay_default` (₹25,072,658) — fewer attempts (7.77
-vs 8.42 mean), fewer notifications (39,081 vs 42,110) — and wins on net anyway because it
-cuts revocations 39% (638 vs 1,049). `aggressive_8x` shows the inverse crossover: more
-gross (₹24,674,228, between `dobara` and `razorpay_default`) but the worst net LTV of any
-retrying arm, driven by the most revocations (1,353). This is the "Recover the payment.
-Keep the mandate." thesis showing up in the actual 30-seed numbers, not asserted.
+**Mechanism, decomposed from row-level `artifacts/results.parquet`, not just the arm
+table:** per 5,000-mandate seed, `dobara` gives up ₹742,361 of gross recovery (fewer
+attempts, 7.77 vs 8.42 mean; fewer notifications, 39,081 vs 42,110) and buys back
+₹1,072,301 of mandate value — ₹1,066,637 (99.5%) from avoided revocation loss (39% fewer
+revocations, 638 vs 1,049), ₹5,665 from avoided notification spend — netting the
+₹329,941 headline. `aggressive_8x` shows the inverse crossover: more gross (₹24,674,228,
+between `dobara` and `razorpay_default`) but the worst net LTV of any retrying arm, driven
+by the most revocations (1,353). This is the "Recover the payment. Keep the mandate."
+thesis showing up in the actual 30-seed numbers, not asserted. **Credibility check:**
+₹329,941 on `razorpay_default`'s ₹22.66M net-LTV base is a 1.46% lift — comfortably under
+the 4-6% Razorpay's own production routing system reports (docs/07-EVAL-SPEC.md's
+credibility anchor); a number near or above that range would be the bug to chase, not a
+result to celebrate.
+
+**Two lift estimates live in `summary.json`; only one is the headline, and they don't
+conflict.** `permanent_holdout_arm` reports `dobara`'s served population (n=135,299)
+averaging ₹4,607.23/mandate against its own same-world holdout control (n=14,701, routed
+through `razorpay_default`'s cadence) averaging ₹4,509.19/mandate — a ₹98.04/mandate gap,
+larger than the ₹66 headline. Reconciled, not left to collide on `/evidence`: the holdout
+figure is a cleaner served-vs-control design (no cross-arm dilution) but is pooled across
+all 30 seeds with **no seed-level bootstrap CI** — a point estimate, not a confidence
+interval. The paired headline's denominator includes the ~10% of `dobara`'s own mandates
+routed to the holdout control, which — using identical per-mandate RNG draws to the
+standalone `razorpay_default` arm — contribute ~0 to the paired numerator by construction,
+spreading the same underlying effect over a wider denominator. **The ₹66/mandate paired
+figure, CI-backed, is the number to quote; ₹98.04/mandate is a directionally consistent,
+uncertainty-unquantified second read of the same effect, not a competing estimate.**
+
+**Bank-level slices are directional, not a second headline** — `robustness_slices.note`
+in `summary.json` states plainly they're pooled across all 30 seeds' rows, not
+independently seed-bootstrapped; no valid CI exists at the slice level.
 
 **Not a uniform win, and the full-scale data confirms exactly what the smoke-scale
-decomposition (two entries above, same day) predicted it would show.** Sliced by
-`regime_shift_bank_flag` (`robustness_slices` in `summary.json`): on the 7 non-shifted
-banks, `dobara` beats `razorpay_default` on mean net LTV/mandate (₹4,728.62 vs
-₹4,561.88). **On `SBI`, the one bank with a real injected shift, `dobara` underperforms**
-(₹3,673.17 vs ₹4,318.14/mandate) despite cutting `SBI`-specific revocations by more than
-half (2,052 vs 5,219). This is the abstention-forgoes-more-than-it-saves pattern from the
-smoke-scale decomposition, now confirmed at full population scale on the real target bank,
-not just AXIS's false-positive noise: the change-point detector is *correctly* detecting
-`SBI`'s degradation (63-66% recall / 84-88% precision against the known injected regime,
-measured this session, see the pre-registration two entries above) and abstention there
-still costs more than it should, because zero-attempt is not necessarily the
-value-maximizing response to "degraded" as opposed to "worthless" — some forgone attempts
-on `SBI` would still have been positive-EV. **Not fixed this session** — this is a
-finding about the *abstention response* (scale back vs. stop entirely), not the detector,
-and is out of Step 2's pre-registered scope (which covered detection quality and threshold
-derivation, not the action taken once a detection fires). Flagged for a future session as
-the next concrete lever to grow `dobara`'s margin beyond ₹66/mandate.
+decomposition (two entries above, same day) predicted it would show — reported as designed
+restraint with a measured price, not apologised for as underperformance.** Sliced by
+`regime_shift_bank_flag` (directional, per the note above): on the 7 non-shifted banks,
+`dobara` beats `razorpay_default` on mean net LTV/mandate (₹4,728.62 vs ₹4,561.88). On
+`SBI`, the one bank carrying a real, *injected* shift, the change-point detector catches it
+(63-66% recall / 84-88% precision against the known injected regime, measured this
+session, see the pre-registration two entries above) and `dobara` correctly declines to
+trust its own model there, per `docs/06-AGENT-SPEC.md`'s graceful-failure design. That
+restraint has a real, measured price: `dobara`'s mean net LTV/mandate on `SBI` (₹3,673.17)
+runs below `razorpay_default`'s (₹4,318.14) even as `SBI`-specific revocations are cut by
+more than half (2,052 vs 5,219) — `dobara` is choosing to forgo some recoverable value on
+a bank it correctly no longer trusts, rather than guess. Whether the *response* to a
+correct detection should be zero-attempt abstention or a scaled-back attempt is the open
+question — not detection quality, already measured as working — flagged for a future
+session as the next lever to grow `dobara`'s margin beyond ₹66/mandate, out of Step 2's
+pre-registered scope (detection quality and threshold derivation, not the response to a
+detection).
 
 **Published in `README.md`'s "Honest metrics" table and surrounding prose, verbatim from
 `summary.json`, including the `SBI` underperformance** — per the user's explicit

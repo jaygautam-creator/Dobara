@@ -1177,3 +1177,59 @@ than a raw Brier point + external threshold; characterization fixture regenerate
 `write_fixture()`, byte-identical to before (the two abstain-trigger cases were rewritten
 to hit the same trigger through the new mechanism, not a behavior change for any case).
 `make check` green: 79 tests, ruff, mypy all clean.
+
+## [2026-08-26] Step 3: full 30-seed x 5-arm rerun — headline result, published as-is
+
+Per the user's explicit "run the full harness, publish whatever happens, do not retune."
+`nohup uv run python -m eval.run`, 30 seeds x 5,000 mandates/seed, 101.0 min (no repeat of
+the earlier unsupervised run's stall — that one was killed after 7+ hours for 9/30
+seed-tasks; this one completed cleanly on the same machine, same code, run supervised).
+`artifacts/results.parquet` (750,000 rows) and `artifacts/summary.json` written; both are
+the current, trustworthy artifacts — everything on disk before this entry (from the
+2026-08-25 retracted run) is superseded.
+
+**Headline: `dobara` beats `razorpay_default` by ₹329,940.56 net LTV [₹269,095.77,
+₹403,153.56], 95% CI excludes zero, significant** (`paired_dobara_vs_razorpay_default`).
+`≈₹66/mandate` over the full 150,000-mandate population. `aggressive_8x` loses to
+`razorpay_default` by ₹1,147,524.98, also significant (`paired_aggressive_8x_vs_razorpay_default`)
+— collapses as the thesis predicts, never the headline comparison. `dobara` beats
+`do_nothing` by ₹22,988,090.20, significant (`paired_dobara_vs_do_nothing`) — the
+structural sanity invariant holds at full scale, no repeat of the pre-retraction logical
+impossibility. `oracle` weakly dominates every arm (net LTV ₹24,864,706, highest of all
+five) — the harness itself is sound.
+
+**Mechanism, visible in the arm-level table, not just the paired diff:** `dobara` recovers
+*less* gross (₹24,330,297) than `razorpay_default` (₹25,072,658) — fewer attempts (7.77
+vs 8.42 mean), fewer notifications (39,081 vs 42,110) — and wins on net anyway because it
+cuts revocations 39% (638 vs 1,049). `aggressive_8x` shows the inverse crossover: more
+gross (₹24,674,228, between `dobara` and `razorpay_default`) but the worst net LTV of any
+retrying arm, driven by the most revocations (1,353). This is the "Recover the payment.
+Keep the mandate." thesis showing up in the actual 30-seed numbers, not asserted.
+
+**Not a uniform win, and the full-scale data confirms exactly what the smoke-scale
+decomposition (two entries above, same day) predicted it would show.** Sliced by
+`regime_shift_bank_flag` (`robustness_slices` in `summary.json`): on the 7 non-shifted
+banks, `dobara` beats `razorpay_default` on mean net LTV/mandate (₹4,728.62 vs
+₹4,561.88). **On `SBI`, the one bank with a real injected shift, `dobara` underperforms**
+(₹3,673.17 vs ₹4,318.14/mandate) despite cutting `SBI`-specific revocations by more than
+half (2,052 vs 5,219). This is the abstention-forgoes-more-than-it-saves pattern from the
+smoke-scale decomposition, now confirmed at full population scale on the real target bank,
+not just AXIS's false-positive noise: the change-point detector is *correctly* detecting
+`SBI`'s degradation (63-66% recall / 84-88% precision against the known injected regime,
+measured this session, see the pre-registration two entries above) and abstention there
+still costs more than it should, because zero-attempt is not necessarily the
+value-maximizing response to "degraded" as opposed to "worthless" — some forgone attempts
+on `SBI` would still have been positive-EV. **Not fixed this session** — this is a
+finding about the *abstention response* (scale back vs. stop entirely), not the detector,
+and is out of Step 2's pre-registered scope (which covered detection quality and threshold
+derivation, not the action taken once a detection fires). Flagged for a future session as
+the next concrete lever to grow `dobara`'s margin beyond ₹66/mandate.
+
+**Published in `README.md`'s "Honest metrics" table and surrounding prose, verbatim from
+`summary.json`, including the `SBI` underperformance** — per the user's explicit
+instruction, this result is reported as-is regardless of direction; the ₹66/mandate
+headline is real but modest, and the full account (including where it currently falls
+short) is more useful than a smoothed-over win. The break-even statement (sensitivity
+sweep across `revocation.hazard_per_failure_notification`'s declared range, the value
+below which `aggressive_8x` would beat `dobara`) remains unbuilt — not run this session,
+stated as outstanding in the README rather than implied to exist.

@@ -5,7 +5,6 @@
 An AI revenue-recovery agent for Indian recurring payments.
 Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 
-> ⚠️ **Status: in development.** Metrics below are placeholders until `make eval` runs.
 > No number appears in this README that is not read from `artifacts/summary.json`.
 
 ---

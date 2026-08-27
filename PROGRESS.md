@@ -61,10 +61,75 @@ contains bare `NaN` tokens (Python's `json.dump` default for `float('nan')`, e.g
 `JSON.parse` on `/evidence`; normalized to `null` before parsing.
 
 **Verified**: `tsc --noEmit` clean, `next lint` clean, `next build` succeeds (all 306
-pages generate). **Not yet verified**: actual visual rendering in a browser -- the
-Chrome extension was unresponsive (stuck on `tabs_context_mcp`, possibly a pending
-permission prompt) for the whole session; only HTML-content and build-output checks were
-possible. `npm run dev` was left running on `localhost:3000` for a human check.
+pages generate). **Chart-colour risk resolved (no code change needed)**: the user
+confirmed statically that `var(--arm-*)` custom properties inherit correctly into the
+SVG subtree as Recharts `stroke` props, and that the theme layering (`:root` light,
+`prefers-color-scheme` dark, `[data-theme="dark"]` toggle override) is correct. **Still
+not visually verified**: nobody has actually seen a page rendered in a browser this
+session or the last -- the Chrome extension was unresponsive (stuck on
+`tabs_context_mcp`) for both the model and the user. `npm run dev` is left running on
+`localhost:3000`; a real look is still the top open item.
+
+**2026-08-27, later same session: a static review of the committed fixture (no browser
+needed) found a real correctness bug in `agent/decide.py`, not just a data-shipping
+issue.** Fixed, in order (full diagnosis and reasoning in `docs/DECISIONS.md`
+[2026-08-27]):
+
+1. **76% of decisions had an exact tie at the argmax, resolved by candidate-generation
+   list order, not by the model — a real bug, now a tested, principled rule.** Root
+   cause, empirically diagnosed (not guessed): the recovery model's isotonic probability
+   calibrator has only 17 distinct output values across [0,1] (fit on `n_validate=4,653`
+   rows), so many genuinely-different raw predictions (the trained model does learn real
+   day-of-month/day-of-week signal, confirmed via nonzero `feature_importance`) collapse
+   to an identical calibrated `p_success`, hence an identical `E[net]`. Fixed:
+   `agent/decide.py::_tie_break_score`, a new explicit secondary sort key — prefer the
+   candidate date closest to the customer's declared preferred day when known, otherwise
+   the earliest legal date, for both `ScheduleDebit` and `OfferDateChange`. The audit
+   trail's `ALT` block (`_rejected_alternatives`) now collapses every run of
+   mutually-tied candidates (not just the top one -- ties cluster once per channel) into
+   one honest summary line naming the tie-break reason, instead of repeating "lower by
+   Rs.0.00" up to 88 times. Two new tests
+   (`test_tie_break_prefers_earliest_date_with_no_declared_preference`,
+   `test_tie_break_prefers_closest_to_declared_day`); one existing test
+   (`test_escalate_to_human_is_always_a_considered_candidate`) rewritten to check
+   candidate generation directly rather than audit-trail text, since collapsing can now
+   legitimately hide `EscalateToHuman`'s name inside a tied group with `Stop`.
+   `tests/fixtures/decide_characterization.json` regenerated deliberately (2/20 cases
+   changed, reviewed). `docs/06-AGENT-SPEC.md` gained a paragraph documenting this as
+   expected, common behavior.
+2. **`artifacts/demo_batch.json`: 45.9 MB -> 8.5 MB (~5.4x).** `audit_text` (11.7 KB
+   rendered prose per decision) is no longer serialized at all -- `agent/audit.py`
+   refactored around a `RenderFields` dataclass so the exact same render logic can run
+   from either a live `AuditRecord` or an API `DecisionOut`
+   (`api/converters.py::render_from_decision_out`, new); `api/schemas.py::DecisionOut`
+   gained five small scalar fields so nothing is lost in the round-trip.
+   `scripts/build_demo_fixture.py` excludes `audit_text` when writing;
+   `api/demo.py`'s fixture loader regenerates it at read time, every time. Combined with
+   item 1's tie-collapsing (mean `rejected_alternatives` length per decision: 79.4 -> 13.0),
+   this is the rest of the size drop. Checked, not assumed, that 8.5 MB is a real floor:
+   the remaining entries are mostly genuinely distinct candidates, not further collapsible
+   ties.
+3. **`artifacts/summary.json`'s `NaN` fixed at the producer, not the consumer.** The
+   previous session's frontend-side regex workaround (`web/lib/server-data.ts`) treated
+   the symptom in one consumer; `/evidence/summary` serves this file verbatim to *any*
+   client, so the bug needed fixing at `eval/run.py`'s `json.dumps` call. New
+   `eval/run.py::_json_safe()` recursively replaces `float("nan")` with `None` before
+   serialization (the internal `nan`-as-sentinel convention elsewhere is left alone);
+   `main()` now also passes `allow_nan=False` as a backstop against a future regression.
+   The already-committed `summary.json` was corrected in place (no eval rerun needed --
+   loaded with Python's permissive parser, sanitized, rewritten strictly). The frontend
+   workaround was reverted. Per the user's instruction, the previously-invisible gap this
+   surfaced is now a stated UI line: `/evidence`'s arm comparison table gained a
+   "Recovery rate (of failed cycles)" column (a metric `docs/07-EVAL-SPEC.md` already
+   names, missing from the first pass), rendering `do_nothing`'s genuinely-undefined rate
+   as `"n/a — no attempts made"`, never `0`.
+
+`make check` (ruff, mypy, pytest -- 95 tests) and the web app's `tsc --noEmit`/
+`next lint`/`next build` (306 pages, all static) all green after all three fixes,
+re-synced against the corrected `summary.json` and shrunk `demo_batch.json`. The
+fixture-loading (non-live) code path was specifically re-verified after the refactor by
+hiding `data/dobara.sqlite3` and confirming `get_demo_data()` still returns fully
+re-rendered `audit_text` with correctly-collapsed tie groups.
 
 **Not yet built**: the audit "ask why" LLM box (spec explicitly scope-cuts this before
 anything else if time is short), a visible theme toggle control (tokens exist, no UI
@@ -72,11 +137,10 @@ switch yet), and the demo video. Approval queue UI is built but currently render
 (the demo population has 0 sign-off-required decisions) -- untested against a
 non-empty case.
 
-**Next action**: get a real browser check (retry the Chrome extension, or ask the user
-to eyeball `localhost:3000` and report back) before calling any page done -- chart colors
-use `var(--arm-*)` CSS custom properties as SVG `stroke` attributes via Recharts, which is
-untested in an actual rendered SVG this session. Then: light/dark toggle control, the
-`/audit` "ask why" box if time allows, and the demo video.
+**Next action**: get an actual browser look at `localhost:3000` -- still the single open
+item blocking calling any page done, now that the chart-colour and NaN/tie-break
+correctness questions are resolved. Then: light/dark toggle control, the `/audit`
+"ask why" box if time allows, and the demo video.
 
 ---
 

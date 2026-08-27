@@ -1672,3 +1672,159 @@ actually rendered SVG this session and is the first thing to check visually. Als
 built: the `/audit` "ask why" LLM box (spec's own first scope-cut if time is short), a
 theme-toggle control, and the approval-queue UI's rendering with a non-empty case (the
 current demo population has zero sign-off-required decisions).
+
+## [2026-08-27] Three findings from a static review of the committed fixture, before more frontend work
+
+The user reviewed the committed `artifacts/demo_batch.json` and `summary.json` without a
+browser (the Chrome extension was unresponsive for both of us) and found a real
+correctness issue in `agent/decide.py`, not just a data-shipping one. Fixed in order.
+
+### 1. 76% of decisions tie exactly at the argmax — diagnosed, then fixed at the root
+
+**Measurement**: of 1,279 committed decisions with alternatives, 972 (76%) have an exact
+tie at the top of the argmax; 878 of those span different calendar dates, some a month
+apart. `agent/decide.py`'s sort was `scored.sort(key=lambda pair: pair[1].expected_net,
+reverse=True)` — Python's stable sort means a tie always resolved to whichever candidate
+`_generate_candidates` emitted first, an accident of loop order (day-then-channel), never
+examined or tested as a decision rule. The audit trail rendered every tied candidate
+individually as `"E[net] lower by Rs.0.00 than the chosen candidate"` — up to 88 per
+decision — which states a reason that does not exist.
+
+**Diagnosed before fixing, per the user's explicit instruction — the real mechanism is a
+third thing, not either of the two hypothesized:**
+- **Not "no date signal"**: the trained LightGBM recovery model has real, nonzero gain on
+  `day_of_month` (1248.89) and `bank_dow_profile` (479.37) — confirmed via
+  `booster.feature_importance(importance_type="gain")` — and `sim/engine.py:119`'s
+  `bank.dow_weights[at.weekday()]` genuinely varies technical/business decline rates by
+  weekday in the simulator itself, so this is real, not spurious.
+- **Not a plumbing bug**: reproduced by monkey-patching `TrainedRecoveryModel.predict_lgbm`
+  to capture both the raw booster output and the calibrated output for one live
+  `get_demo_batch()` run. Raw booster predictions for mandate 0's first decision, 9 days
+  spanning Aug 29 – Sep 18, ranged 0.836–0.862 — genuinely different per day, correctly
+  reaching the scorer.
+- **The actual mechanism: the isotonic probability calibrator is too coarse.**
+  `lgbm_calibrator` (`sklearn.isotonic.IsotonicRegression`, fit on `n_validate=4,653`
+  rows) has only 33 knots and **17 distinct output values across the full [0,1] domain**
+  — e.g. every raw probability in `[0.860746, 0.882259]` (a 0.0215-wide band) calibrates
+  to the identical `0.864548`. Confirmed directly: the same 9 raw predictions above
+  (0.836–0.862) calibrate to `0.85714286` for 8 of them and `0.86454849` for 1 — the
+  calibrator, not the model, erases the day signal the model correctly learned. Same
+  mechanism explains why `cost` never discriminates within a tied group: `push` is
+  assumption-priced at ₹0 (`sim/params.yaml`, "in-app push assumed free at our scale"),
+  so identical calibrated `p_success` at identical `push` cost is an identical `E[net]`
+  by construction, not a second bug.
+
+**Fixed, as an upgrade per the user's framing, not a patch:**
+- `agent/decide.py::_tie_break_score` — new, explicit, tested secondary sort key.
+  Restraint decides when the money model is indifferent: prefer the `ScheduleDebit`
+  candidate closest to the customer's declared preferred day when one exists
+  (`ctx.has_declared_preferred_day`), otherwise the earliest legal date (for
+  `ScheduleDebit` and `OfferDateChange` alike) — resolving sooner bounds how many further
+  attempts/notifications a mandate can still generate, the same
+  fewest-notifications/lowest-burden principle the motto already states, applied to the
+  one axis a single-decision tie-break can actually control. `Stop`/`EscalateToHuman`
+  (no `t`) are unaffected; their own tie (both scored `0.0`) still resolves by the
+  pre-existing, already-documented "`Stop` listed first, stable sort" convention.
+- `agent/decide.py::_rejected_alternatives` — collapses **every** run of mutually-tied
+  candidates in the sorted list into one summary `RejectedAlternative`, not just the ones
+  tied with the winner. First cut only collapsed the top tie (45.9 MB → still 45.9 MB
+  fixture, no visible change) because the calibrator's coarse steps produce **one tie
+  cluster per channel** (push/sms/whatsapp each land in their own plateau), not only at
+  the argmax — the second-place `sms` cluster was still repeating "lower by Rs.0.15" 17+
+  times. Fixed by walking the already-sorted `rest` list once and grouping every
+  contiguous run of equal `expected_net`, not just the prefix equal to `best`.
+- New tests: `test_tie_break_prefers_earliest_date_with_no_declared_preference`,
+  `test_tie_break_prefers_closest_to_declared_day` (`tests/test_agent_decide.py`) —
+  both use the existing constant-output fake model (which already ties every candidate
+  by construction) and assert the *specific* chosen date, not just that some
+  `ScheduleDebit` was chosen. `test_escalate_to_human_is_always_a_considered_candidate`
+  rewritten to check `_generate_candidates()` directly rather than the audit trail's
+  text, since collapsing can now legitimately fold `EscalateToHuman` into an unnamed tied
+  group with `Stop` — "always considered" is a candidate-generation invariant, not a
+  display one. `tests/fixtures/decide_characterization.json` regenerated deliberately
+  (2 of 20 cases changed: `at_max_attempts`/`at_cost_cap`, where `Stop` and
+  `EscalateToHuman` tie at the `0.0` baseline and are now collapsed into one entry).
+  `docs/06-AGENT-SPEC.md`'s "## Candidate generation" section gained a paragraph
+  documenting this as expected, common behavior, not an edge case.
+
+### 2. `artifacts/demo_batch.json` was 47 MB committed — audit_text was stored, not derived
+
+Root cause of the bulk of the size (separate from the tie bloat above, which item 1
+already fixes): `audit_text` (~11.7 KB of rendered prose per decision) was being computed
+once and serialized into the fixture, even though every field it's built from was
+*already* being serialized right next to it. Fixed by actually making it derivable rather
+than merely asserting it was derivable:
+
+- `agent/audit.py` refactored around a new `RenderFields` dataclass — exactly the scalars
+  `render_fields()` (renamed from the module-private renderer) needs, no more, no less.
+  `render(record: AuditRecord)` is now a thin adapter (`_fields_from_record` +
+  `render_fields`); nothing about `render()`'s own behavior or output changed.
+- `api/schemas.py::DecisionOut` gained five small scalar fields
+  (`prev_error_source`/`prev_error_step`/`prev_error_reason`/
+  `notifications_sent_this_cycle`/`consecutive_failed_cycles`) — the only `DecisionContext`
+  fields `render_fields()`'s `SAW` line needs that weren't already on `DecisionOut`.
+  Without these, `audit_text` would only have been *approximately* re-derivable, which
+  defeats the point.
+- `api/converters.py::render_from_decision_out()` — reconstructs a `RenderFields` (and,
+  via a new `_action_from_out()`, the original `agent/actions.py` `Action` dataclass) from
+  an already-flattened `DecisionOut`, then calls the same `render_fields()` the live path
+  uses. Two fields genuinely aren't on `ActionOut` (`ScheduleDebit.notice.template_id`,
+  `OfferDateChange.template_id`, `ScheduleDebit.afa_confirmed`) — the two template ids are
+  fixed module constants (`agent/compliance.py::TEMPLATE_PDN`/`TEMPLATE_DATE_CHANGE`,
+  never a per-decision value), so reproducing them is exact, not approximate;
+  `afa_confirmed` is compliance-gate-only and never read by the render path, so a fixed
+  placeholder there is genuinely harmless, not a silent inaccuracy.
+- `scripts/build_demo_fixture.py` now excludes `audit_text` from every serialized
+  `DecisionOut` (`model_dump(exclude=...)`, both top-level and nested inside
+  `QueueItemOut.decision`). `api/demo.py`'s fixture loader (`_decision_out_from_json`,
+  `_queue_item_from_json`) validates with an empty placeholder, then always overwrites
+  `audit_text` with `render_from_decision_out()` — regenerated at read time, every time,
+  never trusted from disk even if a stray key were present.
+- **Result, combining both fixes**: 45.9 MB → 8.5 MB (~5.4x, not quite the "order of
+  magnitude" hoped for). Checked why it stops there rather than going further: mean
+  `rejected_alternatives` length per decision dropped from 79.4 to 13.0, and the
+  remaining entries are mostly genuinely distinct candidates (different calibration
+  steps, different channels) — not further collapsible without hiding real information.
+  Judged as a legitimate floor, not a fix left half-done.
+
+### 3. `NaN` in `artifacts/summary.json` was fixed at the wrong layer, corrected
+
+The user caught that the previous session's fix (`web/lib/server-data.ts` regex-replacing
+bare `NaN` with `null` before `JSON.parse`) treated the symptom in the one consumer that
+happened to crash first, not the producer that emits invalid JSON for *every* consumer —
+`/evidence/summary` serves this file verbatim, so any strict JSON parser hitting it
+directly (not through this frontend's workaround) would still break. Fixed at the source:
+- `eval/run.py::_json_safe()` — new, recursively replaces `float("nan")` with `None`
+  before serialization. Several existing rate/mean calculations in `eval/run.py` and
+  `eval/metrics.py::bootstrap_mean_ci` already use `nan` as the internal
+  "genuinely-undefined" sentinel (e.g. `do_nothing`'s `recovery_rate_of_failed_cycles`,
+  undefined because it makes zero attempts, not zero) — left that internal convention
+  alone rather than threading `None` through every computation, and sanitize once at the
+  serialization boundary instead.
+- `main()`'s `json.dumps` call now also passes `allow_nan=False` — a backstop, not the
+  primary fix: any `NaN` the sanitizer's recursion doesn't reach now fails loudly with a
+  `ValueError` at write time instead of silently reproducing this exact bug again later.
+- The already-committed `artifacts/summary.json` was corrected in place by loading it
+  with Python's permissive `json.loads` (which tolerates the existing bare `NaN`),
+  running it through the same `_json_safe()`, and rewriting with `allow_nan=False` — no
+  30-minute `make eval` rerun needed; the underlying computed values are unchanged, only
+  the invalid-JSON encoding of "undefined" was.
+- `web/lib/server-data.ts`'s regex workaround reverted — a `NaN` reaching that parse now
+  is a real regression in the producer, not something to route around again.
+- Per the user's instruction, the previously-silent gap is now a stated line in the UI
+  rather than an absence: `web/components/ArmComparisonTable.tsx` gained a "Recovery rate
+  (of failed cycles)" column (the metric this exact `null` belongs to, and one
+  `docs/07-EVAL-SPEC.md` already names — an omission from the first `/evidence` pass, not
+  new scope), rendering `null` as `"n/a — no attempts made"` via a new
+  `formatCiPctOrNA()`/null-safe `formatCiInr()`/`formatCiCount()` in `lib/format.ts` —
+  never `0`, which would misrepresent "not measured" as "measured zero."
+  `lib/types.ts::CIValue`'s `point`/`ci_lo`/`ci_hi` are now typed `number | null` to match
+  reality, forcing every current and future consumer to handle the null case rather than
+  assuming a bare `number`.
+
+`make check` (ruff, mypy, pytest) and `web`'s `tsc --noEmit`/`next lint`/`next build`
+(306 pages, all static) all green after all three fixes, including a full fresh
+`npm run sync-data` picking up the corrected `summary.json` and the shrunk
+`demo_batch.json`. The fixture-loading (non-live) path was specifically re-verified after
+item 2's refactor by hiding `data/dobara.sqlite3` and confirming `get_demo_data()` still
+returns fully-rendered `audit_text` with correctly-collapsed tie groups.

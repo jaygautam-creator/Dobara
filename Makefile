@@ -1,4 +1,4 @@
-.PHONY: setup sim train eval sensitivity api web check demo demo-fixture clean
+.PHONY: setup sim train eval sensitivity api web check demo demo-fixture money-chart clean
 
 setup:
 	uv sync --extra dev
@@ -34,6 +34,9 @@ demo: sim train eval
 
 demo-fixture:
 	uv run python -m scripts.build_demo_fixture
+
+money-chart:
+	uv run python -m scripts.build_money_chart
 
 clean:
 	rm -rf data/*.sqlite3 artifacts/*.parquet artifacts/*.json .pytest_cache .mypy_cache .ruff_cache

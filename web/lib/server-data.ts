@@ -60,21 +60,26 @@ function getDemoBatch(): DemoBatchJson {
  * getMandateAudit(). */
 export function getQueueRows(): QueueRow[] {
   const batch = getDemoBatch();
-  return batch.queue.map((item) => ({
-    mandate_id: item.mandate_id,
-    bank_id: item.bank_id,
-    method: item.method,
-    merchant_category: item.merchant_category,
-    amount: item.amount,
-    is_cold_start: item.is_cold_start,
-    regime_shift_bank: item.regime_shift_bank,
-    action_type: item.decision.chosen.action_type,
-    expected_net: item.decision.expected_net,
-    confidence_band: item.decision.confidence_band,
-    stopping_reason: item.decision.stopping_reason,
-    requires_signoff: item.decision.requires_signoff,
-    abstain_reason: item.decision.chosen.abstain_reason,
-  }));
+  return batch.queue.map((item) => {
+    const trail = batch.audit_by_mandate[String(item.mandate_id)];
+    const terminal = trail && trail.length > 0 ? trail[trail.length - 1] : item.decision;
+    return {
+      mandate_id: item.mandate_id,
+      bank_id: item.bank_id,
+      method: item.method,
+      merchant_category: item.merchant_category,
+      amount: item.amount,
+      is_cold_start: item.is_cold_start,
+      regime_shift_bank: item.regime_shift_bank,
+      action_type: item.decision.chosen.action_type,
+      terminal_action_type: terminal.chosen.action_type,
+      expected_net: item.decision.expected_net,
+      confidence_band: item.decision.confidence_band,
+      stopping_reason: item.decision.stopping_reason,
+      requires_signoff: item.decision.requires_signoff,
+      abstain_reason: item.decision.chosen.abstain_reason,
+    };
+  });
 }
 
 export function getCounters() {

@@ -71,9 +71,15 @@ export function ReliabilityChart({ diagram }: { diagram: ReliabilityDiagram }) {
           dot={false}
           activeDot={false}
           legendType="none"
+          isAnimationActive={false}
           name="perfect calibration"
         />
-        <Scatter data={points} fill="var(--arm-dobara)" line={{ stroke: "var(--arm-dobara)", strokeWidth: 2 }} />
+        <Scatter
+          data={points}
+          fill="var(--arm-dobara)"
+          line={{ stroke: "var(--arm-dobara)", strokeWidth: 2 }}
+          isAnimationActive={false}
+        />
       </ComposedChart>
     </ResponsiveContainer>
   );

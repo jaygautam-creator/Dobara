@@ -22,6 +22,7 @@ ARTIFACTS = [
     Path("artifacts/summary.json"),
     Path("artifacts/sensitivity.json"),
     Path("artifacts/demo_batch.json"),
+    Path("artifacts/money_chart_data.json"),
 ]
 WATCHED_PATHS = ["agent/", "models/", "eval/", "sim/"]
 
@@ -72,8 +73,8 @@ def main() -> None:
     if not ok:
         print(
             "\nOne or more evidence artifacts are stale relative to agent/models/eval/sim. "
-            "Regenerate with `make eval`, `python -m eval.sensitivity`, and/or "
-            "`make demo-fixture` before committing."
+            "Regenerate with `make eval`, `python -m eval.sensitivity`, `make "
+            "demo-fixture`, and/or `make money-chart` before committing."
         )
     sys.exit(0 if ok else 1)
 

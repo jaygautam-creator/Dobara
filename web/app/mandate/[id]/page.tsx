@@ -60,8 +60,8 @@ export default async function MandateTimelinePage({
         </Card>
       )}
 
-      <div className="overflow-x-auto">
-        <div className="flex min-w-max gap-4 pb-4">
+      <div>
+        <div className="flex flex-wrap gap-4 pb-4">
           {cycles.map((cycle) => (
             <div key={cycle} className="w-40 shrink-0">
               <div className="mb-2 text-xs font-medium uppercase tracking-wide text-text-muted">
@@ -84,7 +84,7 @@ export default async function MandateTimelinePage({
                         {formatInr(r.expected_net)}
                       </div>
                       {r.chosen.notice_at && (
-                        <div className="mt-0.5 text-[10px] text-text-muted">
+                        <div className="mt-0.5 break-words text-[10px] text-text-muted">
                           notice {new Date(r.chosen.notice_at).toLocaleDateString("en-IN")}
                         </div>
                       )}

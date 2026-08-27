@@ -29,9 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-theme="dark"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-surface-0 text-text-primary">
+      <body className="bg-surface-0 text-text-primary">
         <header className="sticky top-0 z-40 border-b border-border bg-surface-0/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
             <Link href="/" className="flex items-baseline gap-2">
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </nav>
           </div>
         </header>
-        <main className="flex-1">{children}</main>
+        <main>{children}</main>
         <footer className="border-t border-border px-6 py-6 text-xs text-text-muted">
           <div className="mx-auto max-w-6xl">
             Razorpay AI Buildathon — Track 03: AI Revenue Recovery. Test mode only. Not

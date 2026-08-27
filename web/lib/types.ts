@@ -289,6 +289,11 @@ export interface QueueRow {
   is_cold_start: boolean;
   regime_shift_bank: boolean;
   action_type: ActionOut["action_type"];
+  /** The action_type of this mandate's LAST recorded decision across its whole audit
+   * trail (not just this row's first attempt) -- lets the queue surface trajectories
+   * that end in stop/abstain even though almost every mandate's first attempt is
+   * schedule_debit. See docs/DECISIONS.md [2026-08-27] visual-pass fixes. */
+  terminal_action_type: ActionOut["action_type"];
   expected_net: number;
   confidence_band: [number, number];
   stopping_reason: string | null;

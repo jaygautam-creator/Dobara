@@ -7,9 +7,60 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-27, later same day. **The headline evidence rerun is done,
-reconciled, and committed. Phase 6 continues next** (visual browser check still the top
-open item — see below).
+**Last updated:** 2026-08-27, later same day. **The visual browser pass (previously the
+top open item) is done: all five defects it found are fixed and re-verified by
+screenshot.** See `docs/DECISIONS.md` [2026-08-27] "Visual pass fixes" for full detail;
+summary below. Phase 6 continues next.
+
+**What happened, in order:** a headless-Chrome screenshot pass against `/evidence`,
+`/control-room`, and `/mandate/[id]` (recipe: `"Google Chrome" --headless --disable-gpu
+--hide-scrollbars --virtual-time-budget=15000 --window-size=1440,5200
+--screenshot=out.png http://localhost:3000/<page>` — run from outside the extension, not
+the claude-in-chrome tool) found five defects, all fixed:
+
+1. **Legend/x-axis collision** on `MoneyChart` and `SensitivityChart` (Recharts' default
+   bottom-aligned legend sat on top of the axis label). Moved both legends to
+   `verticalAlign="top"`.
+2. **A second bug found while re-screenshotting the legend fix**: both charts' lines (and
+   `ReliabilityChart`'s diagonal) rendered blank/barely-drawn under headless capture even
+   at `--virtual-time-budget=25000` — confirmed via `--dump-dom` that Recharts' mount
+   animation was frozen mid-draw (`stroke-dasharray="5px 966px"`), not a timing-budget
+   issue. Fixed with `isAnimationActive={false}` on every `Line`/`Scatter` across all
+   three chart components — also makes screenshot verification deterministic going
+   forward.
+3. **`/mandate/[id]`'s ~1,700px void + clipped cycle cards.** The void was
+   `app/layout.tsx`'s sticky-footer pattern (`h-full`/`min-h-full`/`flex-1`) stretching
+   short pages to fill an oversized capture viewport; removed those classes. The 8 cycle
+   cards were `overflow-x-auto` + `min-w-max` (clipped at n=8, ~1408px > ~976px content
+   width); changed to `flex-wrap` so they wrap onto a second row instead.
+4. **Control Room queue hid the thesis** — every row showed only its *first* decision
+   (schedule_debit, 150/150), never the STOP/ABSTAIN outcomes the header's "attempts not
+   made: 44" tile promised. Added `QueueRow.terminal_action_type` (each mandate's *last*
+   audit-trail action, computed server-side, no new client payload) with a `→ stop` /
+   `→ abstain` badge when it differs and is more restrained (12/150 mandates in the
+   current fixture). Queue is now a `max-h-[720px]` scroll region; Active Case panel is
+   `lg:sticky`.
+5. **`₹ at risk` vs `₹ recovered (gross)` scope mismatch** (recovered ≈7x at-risk,
+   reading as an arithmetic error). Confirmed it's a real scope difference (at-risk =
+   current cycle only; recovered = cumulative across all simulated cycles), relabeled
+   both tiles with an explicit `source` caption rather than changing the numbers.
+
+**The `artifacts/money_chart_data.json` gap flagged in the entry below is now closed as
+part of fix #2's re-verification requiring real chart data.** Added
+`MandateResult.per_cycle_gross_inr`/`per_cycle_net_inr` to `eval/runner.py` (purely
+additive cumulative-per-cycle snapshots; confirmed `razorpay_default`'s regenerated
+series is byte-identical to the prior artifact since that arm never calls `decide()`).
+New committed producer `scripts/build_money_chart.py` (seed 301, stamps provenance),
+wired into `Makefile` (`make money-chart`) and `check_artifact_freshness.py`'s
+`ARTIFACTS` list.
+
+`make check` (ruff, mypy, pytest — 95 passed, `check_artifact_freshness` — all 4
+artifacts fresh) and the web build (`tsc`, `eslint`, `next build`, 306 static pages) all
+green.
+
+---
+
+**2026-08-27, earlier same day — the headline evidence rerun, preserved verbatim below.**
 
 **What happened, in order:** a static review of the committed fixture (no browser needed)
 found that `artifacts/summary.json`'s headline (`dobara` beats `razorpay_default` by

@@ -58,14 +58,20 @@ export function MoneyChart({ data }: { data: MoneyChartData }) {
           </button>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={340}>
-        <LineChart data={rows} margin={{ top: 8, right: 24, bottom: 8, left: 8 }}>
+      <ResponsiveContainer width="100%" height={380}>
+        <LineChart data={rows} margin={{ top: 8, right: 24, bottom: 24, left: 8 }}>
           <CartesianGrid stroke="var(--gridline)" vertical={false} />
+          <Legend
+            verticalAlign="top"
+            align="center"
+            wrapperStyle={{ fontSize: 12, color: "var(--text-secondary)", paddingBottom: 12 }}
+            formatter={(value: string) => ARM_LABEL[value] ?? value}
+          />
           <XAxis
             dataKey="cycle"
             stroke="var(--baseline)"
             tick={{ fill: "var(--text-muted)", fontSize: 12 }}
-            label={{ value: "Cycle", position: "insideBottom", offset: -4, fill: "var(--text-muted)", fontSize: 12 }}
+            label={{ value: "Cycle", position: "insideBottom", offset: -14, fill: "var(--text-muted)", fontSize: 12 }}
           />
           <YAxis
             stroke="var(--baseline)"
@@ -87,10 +93,6 @@ export function MoneyChart({ data }: { data: MoneyChartData }) {
             ]}
             labelFormatter={(l) => `Cycle ${l}`}
           />
-          <Legend
-            wrapperStyle={{ fontSize: 12, color: "var(--text-secondary)" }}
-            formatter={(value: string) => ARM_LABEL[value] ?? value}
-          />
           {ARMS.map((arm) => (
             <Line
               key={arm}
@@ -99,6 +101,7 @@ export function MoneyChart({ data }: { data: MoneyChartData }) {
               stroke={armColor(arm)}
               strokeWidth={arm === "dobara" ? 3 : 2}
               dot={false}
+              isAnimationActive={false}
               name={arm}
             />
           ))}

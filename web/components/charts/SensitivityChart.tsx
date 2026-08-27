@@ -32,9 +32,15 @@ export function SensitivityChart({
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={rows} margin={{ top: 8, right: 24, bottom: 8, left: 8 }}>
+    <ResponsiveContainer width="100%" height={340}>
+      <LineChart data={rows} margin={{ top: 8, right: 24, bottom: 24, left: 8 }}>
         <CartesianGrid stroke="var(--gridline)" vertical={false} />
+        <Legend
+          verticalAlign="top"
+          align="center"
+          wrapperStyle={{ fontSize: 12, color: "var(--text-secondary)", paddingBottom: 12 }}
+          formatter={(value: string) => ARM_LABEL[value] ?? value}
+        />
         <XAxis
           dataKey="hazard"
           stroke="var(--baseline)"
@@ -43,7 +49,7 @@ export function SensitivityChart({
           label={{
             value: "revocation.hazard_per_failure_notification",
             position: "insideBottom",
-            offset: -4,
+            offset: -14,
             fill: "var(--text-muted)",
             fontSize: 11,
           }}
@@ -63,10 +69,6 @@ export function SensitivityChart({
           }}
           formatter={(value, name) => [formatInr(Number(value)), ARM_LABEL[String(name)] ?? String(name)]}
           labelFormatter={(l) => `hazard = ${Number(l).toFixed(3)}`}
-        />
-        <Legend
-          wrapperStyle={{ fontSize: 12, color: "var(--text-secondary)" }}
-          formatter={(value: string) => ARM_LABEL[value] ?? value}
         />
         <ReferenceLine
           x={calibratedValue}
@@ -90,6 +92,7 @@ export function SensitivityChart({
             stroke={armColor(arm)}
             strokeWidth={arm === "dobara" ? 3 : 2}
             dot={{ r: 3 }}
+            isAnimationActive={false}
             name={arm}
           />
         ))}

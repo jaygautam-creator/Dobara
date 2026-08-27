@@ -1958,3 +1958,88 @@ than a documented, conscious gap. Next session: either write and commit a
 `scripts/build_money_chart.py` (closing this gap properly, matching the discipline
 `build_demo_fixture.py` already set) or accept the chart as a qualitative/shape
 illustration only and say so on `/evidence` — but not leave it silently unstamped.
+
+---
+
+## 2026-08-27 — Visual pass fixes: legends, mandate page, queue restraint, tile scopes, money-chart script
+
+A headless-Chrome visual pass (`--headless --virtual-time-budget=15000
+--window-size=1440,5200 --screenshot=... http://localhost:3000/evidence`, run from outside
+the extension) found five defects, all fixed this session:
+
+**1. Legend/x-axis collision on `MoneyChart` and `SensitivityChart`.** Recharts'
+`<Legend>` defaults to `verticalAlign="bottom"`, which sat directly on top of the `Cycle`
+/ `revocation.hazard_per_failure_notification` axis labels and their tick numbers on both
+headline charts. Fixed by moving `<Legend verticalAlign="top" align="center" />` above the
+plot on both, with matching bottom margin/height bumps so nothing else shifted into its
+place.
+
+**2. A second, more serious bug found while verifying the legend fix**: with the legend
+fix alone, both charts' `<Line>`s and `ReliabilityChart`'s diagonal reference line still
+rendered as blank or barely-drawn paths under headless capture — confirmed via
+`--dump-dom`, not just the screenshot: the SVG `<path>`s existed but with
+`stroke-dasharray` values like `"5.17px 966px"`, i.e. Recharts' default mount animation
+frozen a few pixels into its draw, never completing. Increasing `--virtual-time-budget`
+to 25000 did not fix it — this was not the "8s renders blank" budget issue the visual-pass
+prompt warned about, but headless Chrome's rAF/compositor not reliably ticking Recharts'
+animation to completion. Fixed by setting `isAnimationActive={false}` on every `<Line>`
+and `<Scatter>` in `MoneyChart.tsx`, `SensitivityChart.tsx`, and `ReliabilityChart.tsx` —
+also makes screenshot-based verification (see below) deterministic instead of racing an
+animation.
+
+**3. `/mandate/[id]`'s ~1,700px void and clipped cycle cards.** The void was
+`app/layout.tsx`'s sticky-footer pattern (`html.h-full` + `body.min-h-full.flex-col` +
+`main.flex-1`): with the 5200px-tall capture window, `main` (and therefore the page)
+stretched to fill the full artificial viewport height regardless of actual content,
+making any short page look broken. Removed `h-full`/`min-h-full`/`flex-1` from
+`layout.tsx` — the footer now sits directly after content instead of being forced to the
+bottom of an oversized viewport. Separately, the mandate timeline's 8 cycle cards used
+`overflow-x-auto` + `flex min-w-max`, which at n=8 cards (~1408px) exceeded the ~976px
+content width and clipped mid-word with no visible scroll cue (compounded by
+`--hide-scrollbars` in the capture, but a thin/auto-hidden native scrollbar is easy for a
+real user to miss too). Changed to `flex flex-wrap` so cards wrap onto a second row
+instead of requiring horizontal scroll at all.
+
+**4. Control Room queue hid the thesis.** `getQueueRows()` (`lib/server-data.ts`) only
+ever surfaced each mandate's *first* decision, which is `schedule_debit` for effectively
+every row (150/150 in the current fixture) — the STOP/ABSTAIN behavior the product exists
+to demonstrate was invisible in the primary view even though the header tile already says
+"attempts not made: 44." Added `QueueRow.terminal_action_type` (the `action_type` of each
+mandate's *last* audit-trail record, computed server-side from `audit_by_mandate`, which
+was already loaded — no new data shipped to the client beyond one string per row) and a
+`→ stop`/`→ abstain`/`→ escalate_to_human` badge in `ControlRoomClient.tsx` whenever the
+terminal action differs from and is more restrained than the first. Confirmed against the
+committed fixture: 12/150 mandates actually end this way. Also made the queue a
+`max-h-[720px] overflow-y-auto` region with the Active Case panel `lg:sticky lg:top-20`,
+so a long queue no longer leaves a vast empty column beside a short detail card.
+
+**5. `₹ at risk` vs `₹ recovered (gross)` scope mismatch.** `amount_at_risk_inr` is each
+mandate's due amount for its *current* cycle only (`api/converters.py`); `gross_recovered_inr`
+sums each mandate's recovered amount across *every* cycle it was simulated through (up to
+8) — recovered is ~7x at-risk not because of an arithmetic error but because the two
+tiles have different denominators. Relabeled to `₹ at risk (this cycle)` / `₹ recovered
+(gross, all cycles)` and added a one-line `source` caption on each `StatTile` stating the
+scope explicitly, rather than changing the numbers.
+
+**`artifacts/money_chart_data.json` gap (flagged, not fixed, in the entry above) is now
+closed.** Added `MandateResult.per_cycle_gross_inr` / `per_cycle_net_inr` to
+`eval/runner.py` — a cumulative-to-date snapshot appended after every cycle actually run
+in each of the three arm-loop functions (`_run_cadence_arm`, `_run_dobara_arm`,
+`_run_oracle_arm`), padded to `n_cycles` by repeating the final value for a
+revoked/hard-declined mandate. Purely additive: no existing `MandateResult` field's value
+changes, so the 30-seed harness and sensitivity sweep are unaffected (confirmed:
+`razorpay_default`'s regenerated series is byte-identical to the pre-existing artifact,
+since that arm doesn't call `decide()`; `dobara`'s series shifted by the same
+rounding-level amount as the `summary.json` rerun above, for the same tie-break-fix
+reason). New `scripts/build_money_chart.py` is the one committed producer, seed 301 (same
+seed the old scratch script used), stamps `provenance` via `eval/provenance.py::stamp()`,
+and is registered in `Makefile` (`make money-chart`) and
+`scripts/check_artifact_freshness.py`'s `ARTIFACTS` list.
+
+All five fixes re-verified with the same headless-Chrome screenshot recipe after the
+change (not just reasoned about): legends clear of axes, `/mandate/33`'s 8 cycles wrap
+into two rows with its `stop` outcome visible, Control Room tiles show scope captions,
+queue is a fixed-height scroll region with a sticky detail panel. `make check` (ruff,
+mypy, pytest — 95 passed, `check_artifact_freshness` — all 4 artifacts fresh at
+`17762ec13c7d`/`3c38f314ef77`) and the web build (`tsc`, `eslint`, `next build`, 306
+static pages) all green.

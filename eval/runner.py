@@ -127,6 +127,15 @@ class MandateResult:
     # investigation" for why the mandate-lifetime attempts_mean cannot show this (~90% of
     # cycles never fail at all, diluting any cadence difference in the aggregate).
     attempts_in_failed_cycles: int = 0
+    # Cumulative-to-date (gross_recovered_inr / net_ltv_inr) snapshot at the end of each
+    # cycle actually run, in order -- purely additive bookkeeping for
+    # scripts/build_money_chart.py's per-cycle money-over-time chart. Never read by the
+    # 30-seed harness (eval/run.py) or the sensitivity sweep; adding it changes no
+    # existing field's value. Shorter than `population.n_cycles` for a mandate that
+    # revoked or hard-declined before the last cycle -- the caller pads by repeating the
+    # final value, since a revoked mandate's cumulative total simply stops moving.
+    per_cycle_gross_inr: list[float] = field(default_factory=list)
+    per_cycle_net_inr: list[float] = field(default_factory=list)
 
     @property
     def net_ltv_inr(self) -> float:
@@ -325,6 +334,24 @@ def _end_of_cycle(
         state.consecutive_failed_cycles = 0
 
 
+def _snapshot_cycle(res: MandateResult) -> None:
+    """Append this mandate's cumulative-to-date gross/net after a cycle actually ran.
+    See `MandateResult.per_cycle_gross_inr`'s docstring."""
+    res.per_cycle_gross_inr.append(res.gross_recovered_inr)
+    res.per_cycle_net_inr.append(res.net_ltv_inr)
+
+
+def _pad_cycle_history(res: MandateResult, n_cycles: int) -> None:
+    """Extend a mandate's per-cycle history to `n_cycles` entries by repeating its final
+    cumulative value -- a revoked/hard-declined mandate's totals simply stop moving."""
+    last_gross = res.per_cycle_gross_inr[-1] if res.per_cycle_gross_inr else 0.0
+    last_net = res.per_cycle_net_inr[-1] if res.per_cycle_net_inr else 0.0
+    while len(res.per_cycle_gross_inr) < n_cycles:
+        res.per_cycle_gross_inr.append(last_gross)
+    while len(res.per_cycle_net_inr) < n_cycles:
+        res.per_cycle_net_inr.append(last_net)
+
+
 def _run_cadence_arm(
     world: World, cadence: Cadence, params: Params, life_table: LifeTable
 ) -> list[MandateResult]:
@@ -423,9 +450,11 @@ def _run_cadence_arm(
                     break
 
             _end_of_cycle(state, res, cycle_succeeded, had_failure, attempts_this_cycle)
+            _snapshot_cycle(res)
             if state.revoked:
                 break
 
+        _pad_cycle_history(res, n_cycles)
         results.append(res)
     return results
 
@@ -648,9 +677,11 @@ def _run_dobara_arm(
                 raise TypeError(f"unhandled action {type(action).__name__}")  # pragma: no cover
 
             _end_of_cycle(state, res, cycle_succeeded, had_failure, attempts_this_cycle)
+            _snapshot_cycle(res)
             if state.revoked:
                 break
 
+        _pad_cycle_history(res, n_cycles)
         results.append(res)
     return results
 
@@ -833,9 +864,11 @@ def _run_oracle_arm(world: World, params: Params, life_table: LifeTable) -> list
                     break
 
             _end_of_cycle(state, res, cycle_succeeded, had_failure, attempts_this_cycle)
+            _snapshot_cycle(res)
             if state.revoked:
                 break
 
+        _pad_cycle_history(res, n_cycles)
         results.append(res)
     return results
 

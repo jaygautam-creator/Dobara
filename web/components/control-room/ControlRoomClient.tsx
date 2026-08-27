@@ -15,6 +15,8 @@ const ACTION_BADGE_COLOR: Record<string, "good" | "warning" | "critical" | "neut
   escalate_to_human: "critical",
 };
 
+const RESTRAINED_ACTIONS = new Set(["stop", "abstain", "escalate_to_human"]);
+
 const REVEAL_INTERVAL_MS = 45;
 
 export function ControlRoomClient({
@@ -78,15 +80,17 @@ export function ControlRoomClient({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatTile
-          label="₹ at risk"
+          label="₹ at risk (this cycle)"
           value={formatInr(counters.amount_at_risk_inr, { compact: true })}
+          source="sum of each mandate's due amount for its current billing cycle only"
         />
         <StatTile
-          label="₹ recovered (gross)"
+          label="₹ recovered (gross, all cycles)"
           value={formatInr(
             comparing ? counters.comparison_aggressive_8x_gross_recovered_inr : counters.gross_recovered_inr,
             { compact: true },
           )}
+          source="cumulative across every cycle simulated per mandate -- not comparable to at-risk"
         />
         <StatTile
           label="₹ net LTV"
@@ -127,7 +131,7 @@ export function ControlRoomClient({
           <h3 className="mb-3 text-sm font-semibold text-text-primary">
             Case queue, ranked by ₹ at risk
           </h3>
-          <div className="overflow-hidden rounded-lg border border-border">
+          <div className="max-h-[720px] overflow-y-auto rounded-lg border border-border">
             <table className="w-full border-collapse text-sm">
               <tbody>
                 {visibleRows.map((row) => (
@@ -148,6 +152,14 @@ export function ControlRoomClient({
                       <Badge color={ACTION_BADGE_COLOR[row.action_type] ?? "neutral"}>
                         {row.action_type}
                       </Badge>
+                      {row.terminal_action_type !== row.action_type &&
+                        RESTRAINED_ACTIONS.has(row.terminal_action_type) && (
+                          <span className="ml-1.5 inline-block">
+                            <Badge color={ACTION_BADGE_COLOR[row.terminal_action_type] ?? "neutral"}>
+                              → {row.terminal_action_type}
+                            </Badge>
+                          </span>
+                        )}
                       {row.regime_shift_bank && (
                         <span className="ml-1.5 text-[10px] text-status-warning">shift</span>
                       )}
@@ -171,7 +183,7 @@ export function ControlRoomClient({
           </div>
         </div>
 
-        <div>
+        <div className="lg:sticky lg:top-20 lg:self-start">
           <h3 className="mb-3 text-sm font-semibold text-text-primary">Active case</h3>
           {activeDecision ? (
             <DecisionCard decision={activeDecision} />

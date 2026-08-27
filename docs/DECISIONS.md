@@ -1604,3 +1604,71 @@ the single most important endpoint for a judge — and the README's own answer
 
 `make check` green throughout (ruff, mypy on `agent models sim features eval api`,
 pytest) after this session's changes.
+
+## [2026-08-27] Phase 6 frontend, started: architecture, /evidence, /control-room, /audit, /mandate
+
+**Scaffolded `web/`**: Next.js 16 App Router, TypeScript strict, Tailwind v4, Recharts.
+`npx shadcn@latest init` hung indefinitely with no stdin available (non-interactive
+harness) and made zero changes (no `components.json`, no new deps) -- killed after
+several minutes, not re-attempted. Hand-built Tailwind components
+(`web/components/ui.tsx`) instead; same dense operations-console register the spec asks
+for, without the CLI dependency. Worth retrying interactively in a future session if the
+component surface grows enough to want shadcn's primitives, but not blocking.
+
+**Data layer, settled to match the 2026-08-26 static-deploy decision**:
+`web/scripts/sync-data.mjs` copies `../artifacts/*.json` into gitignored `web/data/`
+before every `dev`/`build` (npm `predev`/`prebuild` hooks) -- keeps `web/` self-buildable
+in a Vercel "Root Directory: web" monorepo checkout without a second committed copy of
+already-committed files. `web/lib/server-data.ts` is the only module that touches this
+directory, marked `import "server-only"` so a client component importing it is a build
+error, not a silent bundle-size leak. Verified after a full `npm run build`: the largest
+client JS chunk is 392 KB -- the 45.9 MB `demo_batch.json` never reaches the browser.
+
+**Every dynamic route is static-generated at build time, not server-rendered per
+request**: `/audit/[id]` and `/mandate/[id]` call `generateStaticParams()` off
+`demo_batch.json`'s own mandate ids (150 of each, 306 pages total including `/`,
+`/evidence`, `/control-room`). `next build` confirms all of them prerender as static
+HTML (`●` in the build's route table). This is a stronger reading of "static Vercel
+deploy reading committed JSON" than merely "no Python backend" -- after build, the
+Control Room's audit trail and mandate timelines need no runtime compute at all, Node
+included. The Control Room's live-feeling "streaming reveal" of the case queue
+(`components/control-room/ControlRoomClient.tsx`) is therefore an honestly-labeled
+client-side replay of already-computed data, the same framing `api/demo.py` already
+committed to for its own SSE pacing -- stated in the page footer, not left implicit.
+
+**Caught live, not in review**: `artifacts/summary.json` contains bare `NaN` tokens --
+Python's `json.dump` default serialization for `float('nan')` (e.g. `do_nothing`'s
+`recovery_rate_of_failed_cycles`, undefined because zero attempts happened, by
+construction). Valid for Python's own `json.load`, not standard JSON --
+`JSON.parse` threw immediately, crashing `/evidence` with a 500 the first time the page
+was requested. Fixed in `server-data.ts`'s `readJson()`: regex-normalize bare `NaN` to
+`null` before parsing (the metric truly has no value at `n_seeds: 0`, so `null` is
+correct, not a `0` that would misrepresent it as measured).
+
+**Design tokens** (`web/app/globals.css`) instantiate the `dataviz` skill's reference
+palette (`references/palette.md`) verbatim, dark-first per
+`docs/08-FRONTEND-SPEC.md`'s "Dark, dense, precise. Operations-console register.":
+`data-theme="dark"` stamped on `<html>` by default in `layout.tsx`, light values still
+fully defined on bare `:root` for `prefers-color-scheme` and an eventual toggle (no
+toggle UI built yet -- the CSS supports one). Categorical arm colors assigned by
+narrative role, not palette order: `dobara` gets slot 1 blue (the star), `oracle` gets
+slot 3 aqua (the ceiling, deliberately not styled as a competitor), `do_nothing` gets
+muted gray (the null arm, not a categorical series). The money chart
+(`components/charts/MoneyChart.tsx`) toggles between net LTV and gross recovered rather
+than plotting both at once -- five arms × two measures on one chart was the dataviz
+skill's "too many series, plus a dual-axis temptation" anti-pattern; a toggle keeps one
+axis, one measure, five direct-labeled lines.
+
+**Not yet done, explicitly flagged rather than silently skipped**: the Chrome extension
+was unresponsive for the entire session (stuck on `tabs_context_mcp`, three retries,
+never a screenshot). Correctness was verified by `tsc --noEmit`, `next lint`, a full
+`next build` (all 306 pages generate), and HTML-content assertions via `fetch()` against
+the dev server -- **no page has been visually confirmed to render correctly in a
+browser**. `npm run dev` was left running on `localhost:3000` for a human check. The
+money/sensitivity/reliability charts pass CSS custom properties (`var(--arm-dobara)`
+etc.) as Recharts' `stroke`/`fill` props, which become SVG presentation attributes --
+this is a common, generally-supported pattern in modern browsers, but is untested in an
+actually rendered SVG this session and is the first thing to check visually. Also not
+built: the `/audit` "ask why" LLM box (spec's own first scope-cut if time is short), a
+theme-toggle control, and the approval-queue UI's rendering with a non-empty case (the
+current demo population has zero sign-off-required decisions).

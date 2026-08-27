@@ -1,0 +1,196 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import type { CounterOut, DecisionOut, QueueRow } from "@/lib/types";
+import { formatInr, formatNumber } from "@/lib/format";
+import { Badge, Card, StatTile } from "@/components/ui";
+import { DecisionCard } from "@/components/DecisionCard";
+
+const ACTION_BADGE_COLOR: Record<string, "good" | "warning" | "critical" | "neutral"> = {
+  schedule_debit: "good",
+  offer_date_change: "neutral",
+  stop: "neutral",
+  abstain: "warning",
+  escalate_to_human: "critical",
+};
+
+const REVEAL_INTERVAL_MS = 45;
+
+export function ControlRoomClient({
+  rows,
+  counters,
+  topCaseDecision,
+  approvals,
+}: {
+  rows: QueueRow[];
+  counters: CounterOut;
+  topCaseDecision: DecisionOut;
+  approvals: DecisionOut[];
+}) {
+  const [revealed, setRevealed] = useState(0);
+  const [comparing, setComparing] = useState(false);
+  const [selectedId, setSelectedId] = useState<number>(topCaseDecision.mandate_id);
+
+  useEffect(() => {
+    if (revealed >= rows.length) return;
+    const t = setTimeout(() => setRevealed((n) => n + 1), REVEAL_INTERVAL_MS);
+    return () => clearTimeout(t);
+  }, [revealed, rows.length]);
+
+  const visibleRows = rows.slice(0, revealed);
+  const streaming = revealed < rows.length;
+  const progress = revealed / Math.max(rows.length, 1);
+
+  const selectedRow = useMemo(
+    () => rows.find((r) => r.mandate_id === selectedId) ?? rows[0],
+    [rows, selectedId],
+  );
+  const activeDecision = selectedId === topCaseDecision.mandate_id ? topCaseDecision : null;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-xs text-text-muted">
+            {streaming
+              ? `Streaming batch — ${revealed}/${rows.length} cases`
+              : `Batch complete — ${rows.length} cases`}
+          </div>
+          <button
+            onClick={() => setComparing((c) => !c)}
+            className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${
+              comparing
+                ? "border-arm-aggressive-8x bg-arm-aggressive-8x/15 text-arm-aggressive-8x"
+                : "border-border bg-surface-1 text-text-secondary hover:bg-surface-2"
+            }`}
+          >
+            {comparing ? "Showing: aggressive_8x would have..." : "Show what aggressive_8x would have done"}
+          </button>
+        </div>
+        <div className="h-1 w-full overflow-hidden rounded-full bg-surface-2">
+          <div
+            className="h-full bg-arm-dobara transition-all"
+            style={{ width: `${progress * 100}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <StatTile
+          label="₹ at risk"
+          value={formatInr(counters.amount_at_risk_inr, { compact: true })}
+        />
+        <StatTile
+          label="₹ recovered (gross)"
+          value={formatInr(
+            comparing ? counters.comparison_aggressive_8x_gross_recovered_inr : counters.gross_recovered_inr,
+            { compact: true },
+          )}
+        />
+        <StatTile
+          label="₹ net LTV"
+          tone="good"
+          value={formatInr(
+            comparing ? counters.comparison_aggressive_8x_net_ltv_inr : counters.net_ltv_inr,
+            { compact: true },
+          )}
+        />
+        <StatTile label="Notifications sent" value={formatNumber(counters.notifications_sent)} />
+        <StatTile
+          label="Revocations"
+          tone={comparing ? "critical" : "good"}
+          value={formatNumber(comparing ? counters.comparison_aggressive_8x_revocations : counters.revocations)}
+        />
+        <StatTile
+          label="Attempts not made"
+          tone="good"
+          value={formatNumber(counters.attempts_not_made)}
+          source="the whole thesis in one tile"
+        />
+      </div>
+
+      {approvals.length > 0 && (
+        <Card>
+          <h3 className="mb-2 text-sm font-semibold text-text-primary">
+            Approval queue ({approvals.length})
+          </h3>
+          <p className="text-xs text-text-secondary">
+            Decisions above the human sign-off threshold — nothing above it runs
+            autonomously.
+          </p>
+        </Card>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <div>
+          <h3 className="mb-3 text-sm font-semibold text-text-primary">
+            Case queue, ranked by ₹ at risk
+          </h3>
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="w-full border-collapse text-sm">
+              <tbody>
+                {visibleRows.map((row) => (
+                  <tr
+                    key={row.mandate_id}
+                    onClick={() => setSelectedId(row.mandate_id)}
+                    className={`cursor-pointer border-b border-border last:border-0 transition-colors hover:bg-surface-2 ${
+                      selectedRow?.mandate_id === row.mandate_id ? "bg-arm-dobara/[0.08]" : "bg-surface-1"
+                    }`}
+                  >
+                    <td className="px-3 py-2">
+                      <div className="font-medium text-text-primary">#{row.mandate_id}</div>
+                      <div className="text-[11px] text-text-muted">
+                        {row.bank_id} · {row.merchant_category}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge color={ACTION_BADGE_COLOR[row.action_type] ?? "neutral"}>
+                        {row.action_type}
+                      </Badge>
+                      {row.regime_shift_bank && (
+                        <span className="ml-1.5 text-[10px] text-status-warning">shift</span>
+                      )}
+                    </td>
+                    <td className="tabular-nums px-3 py-2 text-right font-medium text-text-primary">
+                      {formatInr(row.amount)}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <Link
+                        href={`/audit/${row.mandate_id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] text-arm-dobara hover:underline"
+                      >
+                        full audit →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-sm font-semibold text-text-primary">Active case</h3>
+          {activeDecision ? (
+            <DecisionCard decision={activeDecision} />
+          ) : (
+            <Card>
+              <p className="text-sm text-text-secondary">
+                Full decision detail for mandate #{selectedId} is on its own page (kept out
+                of the Control Room bundle — see <code>/audit/{selectedId}</code>).
+              </p>
+              <Link
+                href={`/audit/${selectedId}`}
+                className="mt-3 inline-block text-sm font-medium text-arm-dobara hover:underline"
+              >
+                Open full audit →
+              </Link>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

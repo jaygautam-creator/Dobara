@@ -37,10 +37,46 @@
    twice (full `make check` pytest run hung at the identical test both times), fixed with
    `threading.RLock()`, confirmed clean: 93 tests pass in ~4 min. Commit `0965d6d`.
 
-**Next: Phase 6 (frontend)**, per `docs/08-FRONTEND-SPEC.md`'s own priority order —
-`/evidence` + the comparison toggle first (never cut), then the Control Room, then the
-rest. Load the `dataviz` skill before writing any chart code. Every number rendered must
-carry its confidence interval and its source, per CLAUDE.md.
+**Phase 6 (frontend), in progress.** `web/` scaffolded: Next.js 16 App Router + TypeScript
+strict + Tailwind v4, Recharts (shadcn's interactive CLI init hung with no stdin and made
+no changes -- skipped; hand-built Tailwind components instead, same visual register).
+Dark-first design tokens in `app/globals.css` per the `dataviz` skill's reference palette
+(`references/palette.md`), theme-aware (`prefers-color-scheme` + `data-theme` toggle
+point, not yet wired to a UI control). Data layer: `web/scripts/sync-data.mjs` copies
+`../artifacts/*.json` into gitignored `web/data/`; `lib/server-data.ts` (server-only, never
+imported by a client component) reads it via `fs` -- the 45.9 MB `demo_batch.json` never
+reaches a client bundle (confirmed: largest `.next/static/chunks/*.js` after a full build
+is 392 KB). Built and verified with a full `npm run build`: `/` (thesis), `/evidence`
+(five-arm table with CIs, money chart via Recharts with a gross/net toggle -- one axis,
+never dual -- calibration reliability diagrams for both models led by Brier before AUC,
+sensitivity chart with both break-even reference lines, robustness slices, permanent
+holdout, honesty panel), `/control-room` (header counters, client-side streaming reveal
+of the case queue, the aggressive_8x comparison toggle, active-case decision card,
+abstention banner, approval queue), `/audit/[id]` and `/mandate/[id]` statically
+generated for all 150 demo mandates (`generateStaticParams` off `demo_batch.json`) --
+300+ pages, zero runtime Python or Node needed after build, matching the static-deploy
+decision in `docs/DECISIONS.md` [2026-08-26]. Caught and fixed live: `summary.json`
+contains bare `NaN` tokens (Python's `json.dump` default for `float('nan')`, e.g.
+`do_nothing`'s undefined-when-zero-attempts metrics) -- not valid JSON, crashed
+`JSON.parse` on `/evidence`; normalized to `null` before parsing.
+
+**Verified**: `tsc --noEmit` clean, `next lint` clean, `next build` succeeds (all 306
+pages generate). **Not yet verified**: actual visual rendering in a browser -- the
+Chrome extension was unresponsive (stuck on `tabs_context_mcp`, possibly a pending
+permission prompt) for the whole session; only HTML-content and build-output checks were
+possible. `npm run dev` was left running on `localhost:3000` for a human check.
+
+**Not yet built**: the audit "ask why" LLM box (spec explicitly scope-cuts this before
+anything else if time is short), a visible theme toggle control (tokens exist, no UI
+switch yet), and the demo video. Approval queue UI is built but currently renders nothing
+(the demo population has 0 sign-off-required decisions) -- untested against a
+non-empty case.
+
+**Next action**: get a real browser check (retry the Chrome extension, or ask the user
+to eyeball `localhost:3000` and report back) before calling any page done -- chart colors
+use `var(--arm-*)` CSS custom properties as SVG `stroke` attributes via Recharts, which is
+untested in an actual rendered SVG this session. Then: light/dark toggle control, the
+`/audit` "ask why" box if time allows, and the demo video.
 
 ---
 

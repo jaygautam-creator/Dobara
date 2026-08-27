@@ -75,6 +75,14 @@ class DecisionOut(BaseModel):
     model_versions: dict[str, str]
     stopping_reason: str | None
     requires_signoff: bool
+    # The small extra DecisionContext scalars agent/audit.py's SAW line needs beyond
+    # what's already above -- carried here so audit_text is losslessly re-derivable from
+    # this model alone (api/converters.py::render_from_decision_out), never re-fetched.
+    prev_error_source: str | None
+    prev_error_step: str | None
+    prev_error_reason: str | None
+    notifications_sent_this_cycle: int
+    consecutive_failed_cycles: int
     audit_text: str = Field(
         description="agent/audit.py::render()'s SAW/THOUGHT/ALT/GATE/DID/WHY block"
     )

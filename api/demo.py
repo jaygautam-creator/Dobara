@@ -159,16 +159,32 @@ def demo_data_from_batch(batch: DemoBatch, source: str = "live") -> DemoData:
     )
 
 
+def _decision_out_from_json(raw: dict[str, object]) -> DecisionOut:
+    """`raw` never has an `audit_text` key -- `make demo-fixture` deliberately never
+    writes one (see this module's docstring and `docs/DECISIONS.md` [2026-08-27]).
+    Validates with a placeholder so the required field is satisfiable, then always
+    overwrites it with the real regenerated text via
+    `converters.render_from_decision_out`, which is the single source of truth for this
+    string regardless of source."""
+    decision = DecisionOut.model_validate({**raw, "audit_text": ""})
+    return decision.model_copy(update={"audit_text": converters.render_from_decision_out(decision)})
+
+
+def _queue_item_from_json(raw: dict[str, object]) -> QueueItemOut:
+    decision = _decision_out_from_json(raw["decision"])  # type: ignore[arg-type]
+    return QueueItemOut.model_validate({**raw, "decision": decision})
+
+
 def _demo_data_from_fixture() -> DemoData:
     raw = json.loads(DEMO_FIXTURE_PATH.read_text())
     return DemoData(
-        queue=[QueueItemOut.model_validate(x) for x in raw["queue"]],
+        queue=[_queue_item_from_json(x) for x in raw["queue"]],
         counters=CounterOut.model_validate(raw["counters"]),
         audit_by_mandate={
-            int(mandate_id): [DecisionOut.model_validate(d) for d in decisions]
+            int(mandate_id): [_decision_out_from_json(d) for d in decisions]
             for mandate_id, decisions in raw["audit_by_mandate"].items()
         },
-        approvals=[DecisionOut.model_validate(x) for x in raw["approvals"]],
+        approvals=[_decision_out_from_json(x) for x in raw["approvals"]],
         source="fixture",
     )
 

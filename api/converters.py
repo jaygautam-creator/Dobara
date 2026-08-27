@@ -6,9 +6,21 @@ changes.
 
 from __future__ import annotations
 
-from agent.actions import Abstain, EscalateToHuman, OfferDateChange, ScheduleDebit, Stop
-from agent.audit import AuditRecord, render
-from agent.context import Decision
+from agent.actions import (
+    Abstain,
+    AbstentionReason,
+    Action,
+    Channel,
+    EscalateToHuman,
+    OfferDateChange,
+    ScheduleDebit,
+    SendPreDebitNotice,
+    Stop,
+)
+from agent.audit import AuditRecord, RenderFields, render, render_fields
+from agent.compliance import TEMPLATE_DATE_CHANGE, TEMPLATE_PDN
+from agent.context import ClauseRef, Decision, RejectedAlternative, RupeeMath
+from agent.stopping import StoppingReason
 from api.schemas import (
     ActionOut,
     ClauseRefOut,
@@ -84,8 +96,101 @@ def decision_out(record: AuditRecord) -> DecisionOut:
         model_versions=decision.model_versions,
         stopping_reason=decision.stopping_reason.value if decision.stopping_reason else None,
         requires_signoff=decision.requires_signoff,
+        prev_error_source=ctx.prev_error_source,
+        prev_error_step=ctx.prev_error_step,
+        prev_error_reason=ctx.prev_error_reason,
+        notifications_sent_this_cycle=ctx.notifications_sent_this_cycle,
+        consecutive_failed_cycles=ctx.consecutive_failed_cycles,
         audit_text=render(record),
     )
+
+
+def _action_from_out(a: ActionOut) -> Action:
+    """Reverses `action_out()` -- reconstructs the `agent/actions.py` dataclass a
+    `DecisionOut` was flattened from, for `render_from_decision_out()`. `notice`'s
+    `template_id` (`ScheduleDebit`) and `OfferDateChange.template_id` aren't carried by
+    `ActionOut` at all -- `agent/decide.py` only ever uses the two fixed module constants
+    below (`TEMPLATE_PDN`/`TEMPLATE_DATE_CHANGE`), never a per-decision value, so
+    reproducing them here is exact, not a guess. `afa_confirmed` similarly isn't in
+    `ActionOut` -- unlike the template ids it *can* vary per decision, but nothing in the
+    render path reads it (compliance-gate-only), so a fixed placeholder is harmless for
+    this reconstruction specifically.
+    """
+    if a.action_type == "schedule_debit":
+        assert a.scheduled_at is not None and a.channel is not None and a.notice_at is not None
+        return ScheduleDebit(
+            t=a.scheduled_at,
+            notice=SendPreDebitNotice(
+                t=a.notice_at, channel=Channel(a.channel), template_id=TEMPLATE_PDN
+            ),
+            afa_confirmed=False,
+        )
+    if a.action_type == "offer_date_change":
+        assert (
+            a.scheduled_at is not None and a.channel is not None and a.new_preferred_day is not None
+        )
+        return OfferDateChange(
+            t=a.scheduled_at,
+            channel=Channel(a.channel),
+            template_id=TEMPLATE_DATE_CHANGE,
+            new_preferred_day=a.new_preferred_day,
+        )
+    if a.action_type == "stop":
+        assert a.stop_reason is not None
+        return Stop(reason=StoppingReason(a.stop_reason))
+    if a.action_type == "abstain":
+        assert a.abstain_reason is not None
+        return Abstain(reason=AbstentionReason(a.abstain_reason))
+    if a.action_type == "escalate_to_human":
+        assert a.escalate_reason is not None
+        return EscalateToHuman(reason=a.escalate_reason)
+    raise ValueError(
+        f"no Action reconstruction for action_type={a.action_type!r}"
+    )  # pragma: no cover
+
+
+def render_from_decision_out(d: DecisionOut) -> str:
+    """Regenerates `agent/audit.py`'s SAW/THOUGHT/ALT/GATE/DID/WHY block from an
+    already-flattened `DecisionOut`, without a live `AuditRecord` -- the read path for
+    `artifacts/demo_batch.json`'s fixture, which never serializes `audit_text` itself
+    (per `docs/DECISIONS.md` [2026-08-27]). `decision_out()` above and this function
+    must agree on every field `RenderFields` needs; `api/demo.py`'s round-trip test
+    covers that they do.
+    """
+    rm = d.rupee_math
+    fields = RenderFields(
+        now=d.now,
+        mandate_id=d.mandate_id,
+        cycle_index=d.cycle_index,
+        attempt_index=d.attempt_index,
+        method=d.method,
+        bank_id=d.bank_id,
+        amount=d.amount,
+        prev_error_source=d.prev_error_source,
+        prev_error_step=d.prev_error_step,
+        prev_error_reason=d.prev_error_reason,
+        notifications_sent_this_cycle=d.notifications_sent_this_cycle,
+        consecutive_failed_cycles=d.consecutive_failed_cycles,
+        rupee_math=RupeeMath(
+            p_success=rm.p_success,
+            amount=rm.amount,
+            p_revoke=rm.p_revoke,
+            ltv_remaining=rm.ltv_remaining,
+            cost=rm.cost,
+            expected_net=rm.expected_net,
+        ),
+        confidence_band=d.confidence_band,
+        rejected_alternatives=[
+            RejectedAlternative(
+                description=a.description, expected_net=a.expected_net, reason=a.reason
+            )
+            for a in d.rejected_alternatives
+        ],
+        clauses_satisfied=[ClauseRef(id=c.id, citation=c.citation) for c in d.clauses_satisfied],
+        clauses_blocked=[ClauseRef(id=c.id, citation=c.citation) for c in d.clauses_blocked],
+        chosen=_action_from_out(d.chosen),
+    )
+    return render_fields(fields)
 
 
 def queue_items(records: list[AuditRecord], world: World) -> list[QueueItemOut]:

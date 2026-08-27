@@ -2043,3 +2043,21 @@ queue is a fixed-height scroll region with a sticky detail panel. `make check` (
 mypy, pytest — 95 passed, `check_artifact_freshness` — all 4 artifacts fresh at
 `17762ec13c7d`/`3c38f314ef77`) and the web build (`tsc`, `eslint`, `next build`, 306
 static pages) all green.
+
+**Vercel CLI's default per-file upload can hang/loop on this repo** (seen on both
+54.9.1 and after upgrading to 59.7.0 — not version-specific). Symptom: `vercel --prod`
+spins issuing hundreds of identical `GET /teams/{id}` requests within milliseconds and
+eventually fails with `Error: Upload aborted`. Workaround that reliably works:
+`vercel --prod --yes --archive=tgz`, which uploads the build as one tarball instead of
+per-file. Use `--archive=tgz` as the default invocation for this project going forward,
+not just as a fallback after a failure.
+
+**Light mode (`ThemeToggle`) verified against `/evidence`, `/control-room`, and
+`/audit/144`'s abstain banner** — the palette was designed dark-first
+(`docs/08-FRONTEND-SPEC.md`) and had never actually been rendered in light until this
+check. Held up with no fixes needed: five-arm table's highlighted `dobara` row, the
+money chart's five arm-colored lines, both calibration scatter plots, red/green
+callout numbers, and the warning-toned abstain banner all stayed legible and
+distinguishable against the light surface. The `dobara`/`razorpay_default` lines
+render very close together on the money chart in both themes — that's the headline's
+real (small) margin, not a color-contrast defect.

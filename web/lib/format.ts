@@ -16,7 +16,14 @@ export function formatInrPrecise(value: number): string {
   return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
-export function formatCiInr(point: number, lo: number, hi: number, compact = true): string {
+/** Null-safe: a genuinely undefined CIValue (n_seeds: 0) renders as "n/a", never as 0. */
+export function formatCiInr(
+  point: number | null,
+  lo: number | null,
+  hi: number | null,
+  compact = true,
+): string {
+  if (point === null || lo === null || hi === null) return "n/a — no attempts made";
   return `${formatInr(point, { compact })} [${formatInr(lo, { compact })}, ${formatInr(hi, { compact })}]`;
 }
 
@@ -28,7 +35,21 @@ export function formatCiPct(point: number, lo: number, hi: number, digits = 1): 
   return `${formatPct(point, digits)} [${formatPct(lo, digits)}, ${formatPct(hi, digits)}]`;
 }
 
-export function formatCiCount(point: number, lo: number, hi: number): string {
+/** Null-safe: a genuinely undefined CIValue (n_seeds: 0, e.g. an arm that made zero
+ * attempts) renders as "n/a", never as 0 -- rendering 0 would claim a measured rate that
+ * doesn't exist. */
+export function formatCiPctOrNA(
+  point: number | null,
+  lo: number | null,
+  hi: number | null,
+  digits = 1,
+): string {
+  if (point === null || lo === null || hi === null) return "n/a — no attempts made";
+  return formatCiPct(point, lo, hi, digits);
+}
+
+export function formatCiCount(point: number | null, lo: number | null, hi: number | null): string {
+  if (point === null || lo === null || hi === null) return "n/a — no attempts made";
   return `${formatNumber(point)} [${formatNumber(lo)}, ${formatNumber(hi)}]`;
 }
 

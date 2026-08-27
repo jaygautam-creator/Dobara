@@ -5,9 +5,12 @@
 // that read it.
 
 export interface CIValue {
-  point: number;
-  ci_lo: number;
-  ci_hi: number;
+  // null when genuinely undefined (n_seeds: 0) -- e.g. do_nothing's
+  // recovery_rate_of_failed_cycles, undefined because it makes zero attempts, not zero.
+  // Never render null as 0; that would misrepresent "no data" as "measured zero".
+  point: number | null;
+  ci_lo: number | null;
+  ci_hi: number | null;
   n_seeds: number;
 }
 

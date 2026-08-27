@@ -20,13 +20,11 @@ const DATA_DIR = path.join(process.cwd(), "data");
 
 function readJson<T>(name: string): T {
   const raw = readFileSync(path.join(DATA_DIR, name), "utf-8");
-  // Python's json.dump writes bare NaN for float('nan') (e.g. do_nothing's
-  // recovery_rate_of_failed_cycles, undefined when n_seeds=0 attempts happened) --
-  // valid for Python's own json.load, not standard JSON. JSON.parse rejects it outright,
-  // so normalize to null before parsing; every consumer must already handle a missing
-  // metric (n_seeds: 0 is the real signal), so null is the correct value here, not 0.
-  const normalized = raw.replace(/\bNaN\b/g, "null");
-  return JSON.parse(normalized) as T;
+  // artifacts/summary.json used to contain bare NaN tokens (invalid JSON) -- fixed at
+  // the producer (eval/run.py::_json_safe, NaN -> null before json.dumps(allow_nan=False))
+  // per docs/DECISIONS.md [2026-08-27], not tolerated here. A NaN reaching this parse
+  // now is a real regression in the producer, not something to work around again.
+  return JSON.parse(raw) as T;
 }
 
 export function getSummary(): SummaryJson {

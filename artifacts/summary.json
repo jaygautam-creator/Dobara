@@ -44,15 +44,15 @@
         "n_seeds": 30
       },
       "recovery_rate_of_failed_cycles": {
-        "point": NaN,
-        "ci_lo": NaN,
-        "ci_hi": NaN,
+        "point": null,
+        "ci_lo": null,
+        "ci_hi": null,
         "n_seeds": 0
       },
       "mandate_ever_recovered_rate": {
-        "point": NaN,
-        "ci_lo": NaN,
-        "ci_hi": NaN,
+        "point": null,
+        "ci_lo": null,
+        "ci_hi": null,
         "n_seeds": 0
       },
       "attempts_mean": {
@@ -62,9 +62,9 @@
         "n_seeds": 30
       },
       "attempts_mean_in_failed_cycles": {
-        "point": NaN,
-        "ci_lo": NaN,
-        "ci_hi": NaN,
+        "point": null,
+        "ci_lo": null,
+        "ci_hi": null,
         "n_seeds": 0
       },
       "notifications_total": {
@@ -98,9 +98,9 @@
         "n_seeds": 30
       },
       "recovered_per_notification": {
-        "point": NaN,
-        "ci_lo": NaN,
-        "ci_hi": NaN,
+        "point": null,
+        "ci_lo": null,
+        "ci_hi": null,
         "n_seeds": 0
       }
     },
@@ -597,7 +597,7 @@
       "dobara": {
         "attempts_touched_an_outage_window": {
           "n_mandates": 0,
-          "mandate_recovered_rate": NaN
+          "mandate_recovered_rate": null
         },
         "no_outage_window": {
           "n_mandates": 150000,
@@ -607,7 +607,7 @@
       "razorpay_default": {
         "attempts_touched_an_outage_window": {
           "n_mandates": 0,
-          "mandate_recovered_rate": NaN
+          "mandate_recovered_rate": null
         },
         "no_outage_window": {
           "n_mandates": 150000,

@@ -52,6 +52,7 @@ own aggregate.
 from __future__ import annotations
 
 import json
+import math
 import time
 from pathlib import Path
 from typing import Any
@@ -196,6 +197,30 @@ def _per_seed_totals(df: pd.DataFrame, arm: str) -> pd.DataFrame:
         per_seed["gross_recovered_inr"] / per_seed["notifications_total"]
     )
     return per_seed
+
+
+def _json_safe(obj: Any) -> Any:
+    """Recursively replaces `float("nan")` with `None` (JSON `null`) before
+    serialization. `bootstrap_mean_ci`/several rate calculations below use `nan` as the
+    internal "genuinely undefined" sentinel (e.g. `do_nothing`'s
+    `recovery_rate_of_failed_cycles`, undefined because it makes zero attempts, not
+    zero) -- that's a fine internal convention, but `json.dumps` has no native NaN and
+    Python's default `allow_nan=True` writes a bare `NaN` token that is not valid JSON
+    and every strict parser (including a browser's own `JSON.parse`) rejects. Fixed at
+    the producer, not at each consumer: `artifacts/summary.json` is a public evidence
+    artifact served verbatim by `/evidence/summary`, so it must be valid JSON on its own,
+    not merely readable by Python's own permissive `json.load`. `main()` calls this once
+    on the whole `summary` dict, then serializes with `allow_nan=False` as a backstop --
+    any NaN this function's recursion doesn't reach fails loudly instead of silently
+    reproducing this bug.
+    """
+    if isinstance(obj, float) and math.isnan(obj):
+        return None
+    if isinstance(obj, dict):
+        return {k: _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list | tuple):
+        return [_json_safe(v) for v in obj]
+    return obj
 
 
 def _metric_block(per_seed: pd.DataFrame) -> dict[str, Any]:
@@ -409,7 +434,9 @@ def main() -> None:
     }
     summary["elapsed_seconds"] = round(time.time() - t_start, 1)
 
-    (ARTIFACTS_DIR / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
+    (ARTIFACTS_DIR / "summary.json").write_text(
+        json.dumps(_json_safe(summary), indent=2, default=str, allow_nan=False)
+    )
     print(f"Wrote {len(df)} rows to artifacts/results.parquet")
     print(f"Wrote artifacts/summary.json in {summary['elapsed_seconds']}s total")
 

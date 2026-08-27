@@ -1,5 +1,5 @@
 import type { ArmName, SummaryJson } from "@/lib/types";
-import { formatCiCount, formatCiInr, formatNumber } from "@/lib/format";
+import { formatCiCount, formatCiInr, formatCiPctOrNA, formatNumber } from "@/lib/format";
 import { ArmSwatch } from "@/components/ui";
 
 const ARMS_IN_ORDER: ArmName[] = ["do_nothing", "razorpay_default", "aggressive_8x", "dobara", "oracle"];
@@ -14,6 +14,7 @@ export function ArmComparisonTable({ summary }: { summary: SummaryJson }) {
             <th className="px-4 py-3 text-right font-medium">Gross recovered</th>
             <th className="px-4 py-3 text-right font-medium">Net LTV (total)</th>
             <th className="px-4 py-3 text-right font-medium">Attempts (mean)</th>
+            <th className="px-4 py-3 text-right font-medium">Recovery rate (of failed cycles)</th>
             <th className="px-4 py-3 text-right font-medium">Notifications</th>
             <th className="px-4 py-3 text-right font-medium">Revocations</th>
           </tr>
@@ -57,7 +58,14 @@ export function ArmComparisonTable({ summary }: { summary: SummaryJson }) {
                     : formatCiInr(m.net_ltv_total.point, m.net_ltv_total.ci_lo, m.net_ltv_total.ci_hi)}
                 </td>
                 <td className="tabular-nums px-4 py-3 text-right text-text-secondary">
-                  {formatNumber(m.attempts_mean.point, 2)}
+                  {formatNumber(m.attempts_mean.point ?? 0, 2)}
+                </td>
+                <td className="tabular-nums px-4 py-3 text-right text-text-secondary">
+                  {formatCiPctOrNA(
+                    m.recovery_rate_of_failed_cycles.point,
+                    m.recovery_rate_of_failed_cycles.ci_lo,
+                    m.recovery_rate_of_failed_cycles.ci_hi,
+                  )}
                 </td>
                 <td className="tabular-nums px-4 py-3 text-right text-text-secondary">
                   {arm === "do_nothing"

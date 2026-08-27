@@ -33,6 +33,12 @@ export function ControlRoomClient({
   const [revealed, setRevealed] = useState(0);
   const [comparing, setComparing] = useState(false);
   const [selectedId, setSelectedId] = useState<number>(topCaseDecision.mandate_id);
+  const [restrainedOnly, setRestrainedOnly] = useState(false);
+
+  const restrainedCount = useMemo(
+    () => rows.filter((r) => RESTRAINED_ACTIONS.has(r.terminal_action_type)).length,
+    [rows],
+  );
 
   useEffect(() => {
     if (revealed >= rows.length) return;
@@ -40,7 +46,9 @@ export function ControlRoomClient({
     return () => clearTimeout(t);
   }, [revealed, rows.length]);
 
-  const visibleRows = rows.slice(0, revealed);
+  const visibleRows = rows
+    .slice(0, revealed)
+    .filter((r) => !restrainedOnly || RESTRAINED_ACTIONS.has(r.terminal_action_type));
   const streaming = revealed < rows.length;
   const progress = revealed / Math.max(rows.length, 1);
 
@@ -128,9 +136,33 @@ export function ControlRoomClient({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-text-primary">
-            Case queue, ranked by ₹ at risk
-          </h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-text-primary">
+              Case queue, ranked by ₹ at risk
+            </h3>
+            <div className="flex items-center rounded-md border border-border bg-surface-1 p-0.5 text-xs">
+              <button
+                onClick={() => setRestrainedOnly(false)}
+                className={`rounded px-2 py-1 font-medium transition-colors ${
+                  !restrainedOnly
+                    ? "bg-surface-2 text-text-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                All {rows.length}
+              </button>
+              <button
+                onClick={() => setRestrainedOnly(true)}
+                className={`rounded px-2 py-1 font-medium transition-colors ${
+                  restrainedOnly
+                    ? "bg-arm-dobara/15 text-arm-dobara"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Ended in stop or abstain ({restrainedCount})
+              </button>
+            </div>
+          </div>
           <div className="max-h-[720px] overflow-y-auto rounded-lg border border-border">
             <table className="w-full border-collapse text-sm">
               <tbody>

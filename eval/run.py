@@ -64,6 +64,7 @@ from agent.models import ModelBundle, load_model_bundle
 from agent.policy import PolicyConfig, load_policy
 from eval.arms import Arm
 from eval.metrics import bootstrap_mean_ci
+from eval.provenance import stamp
 from eval.runner import MandateResult, run_arm
 from eval.world import build_world
 from models.ltv import LifeTable, build_life_table
@@ -433,6 +434,12 @@ def main() -> None:
         ),
     }
     summary["elapsed_seconds"] = round(time.time() - t_start, 1)
+    # Stamped last, right before writing -- docs/DECISIONS.md [2026-08-27]: a stale
+    # headline survived four commits of agent/decide.py changing underneath it because
+    # nothing recorded which code produced these numbers. scripts/check_artifact_freshness.py
+    # (run by `make check`) fails when a later commit touches agent/, models/, eval/, or
+    # sim/ without this artifact being regenerated.
+    summary["provenance"] = stamp()
 
     (ARTIFACTS_DIR / "summary.json").write_text(
         json.dumps(_json_safe(summary), indent=2, default=str, allow_nan=False)

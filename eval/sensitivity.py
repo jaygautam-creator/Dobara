@@ -486,6 +486,10 @@ def main() -> None:
         for dotted_path, label in OTHER_AXES.items()
     }
 
+    from eval.provenance import stamp
+
+    out["provenance"] = stamp()
+
     Path("artifacts").mkdir(exist_ok=True)
     Path("artifacts/sensitivity.json").write_text(json.dumps(out, indent=2))
     print(

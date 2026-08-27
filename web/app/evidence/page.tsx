@@ -11,6 +11,7 @@ import { ReliabilityChart } from "@/components/charts/ReliabilityChart";
 import { SensitivityChart } from "@/components/charts/SensitivityChart";
 import { Callout, Card, SectionHeading, StatTile } from "@/components/ui";
 import { formatCiInr, formatInr, formatPct } from "@/lib/format";
+import type { SensitivityJson, SummaryJson } from "@/lib/types";
 
 export const metadata = { title: "Evidence — Dobara" };
 
@@ -160,6 +161,13 @@ export default function EvidencePage() {
               />
             </div>
             <ReliabilityChart diagram={recovery.lightgbm.calibrated.reliability_diagram} />
+            <p className="mt-2 text-[11px] text-status-warning">
+              The visible steps are real, not a rendering artifact: this calibrator
+              (isotonic regression, a step function by construction) emits only{" "}
+              <strong>17 distinct probability values</strong> across [0, 1]. See
+              &ldquo;Isotonic calibration is a step function&rdquo; in the honesty panel
+              below for what that costs.
+            </p>
             <p className="mt-2 text-[11px] text-text-muted">
               Beats logistic baseline:{" "}
               <span className={recovery.beats_baseline ? "text-status-good" : "text-status-critical"}>
@@ -189,6 +197,11 @@ export default function EvidencePage() {
               <MiniStat label="ROC AUC" value={hazard.calibrated.roc_auc.point.toFixed(3)} />
             </div>
             <ReliabilityChart diagram={hazard.calibrated.reliability_diagram} />
+            <p className="mt-2 text-[11px] text-status-warning">
+              Same step-function calibrator, coarser here: <strong>8 distinct
+              probability values</strong> across [0, 1] (n_validate is smaller for this
+              model, so isotonic regression has fewer points to fit steps to).
+            </p>
             <p className="mt-2 text-[11px] text-text-muted">
               Rising hazard with same-cycle failure count is recovered by the model, but
               does not itself confirm the thesis empirically — the relationship is a
@@ -339,10 +352,72 @@ export default function EvidencePage() {
             <code>ltv.margin_factor</code> (0.7, range [0.4, 0.9]) has no external anchor —
             flagged plainly in the break-even section above, not smoothed over.
           </Callout>
+          <Callout tone="warning" title="Isotonic calibration is a step function — and it costs real decision resolution">
+            Both models&apos; probability calibrators are <code>sklearn.isotonic.IsotonicRegression</code>,
+            which by construction outputs a piecewise-constant step function, not a
+            smooth curve — visible directly in the reliability diagrams above as flat
+            segments, not a rendering artifact. Measured exactly, not approximated: the
+            recovery model&apos;s LightGBM calibrator has <strong>17 distinct output
+            values</strong> across [0, 1] (33 knots, fit on the validation split,
+            n_validate={recovery.n_validate.toLocaleString("en-IN")}); its logistic
+            baseline has <strong>15</strong>; the hazard
+            model&apos;s calibrator has <strong>8</strong> (fewer knots — a smaller
+            validation set). This is what it costs: many genuinely different raw
+            predictions — the underlying LightGBM model does learn real
+            day-of-month/day-of-week signal, confirmed by nonzero feature importance —
+            collapse to an identical calibrated probability once the isotonic step
+            swallows them. On the committed demo fixture this produced an exact{" "}
+            <code>E[net]</code> tie at the argmax in 76% of decisions, some spanning
+            candidate dates a month apart — not a bug in candidate scoring, a resolution
+            ceiling in the calibrator. <code>agent/decide.py</code>&apos;s tie-break rule
+            (closest to the customer&apos;s declared preferred day, else earliest date)
+            exists specifically to give a principled answer at exactly the granularity
+            the calibrator can no longer discriminate. Full diagnosis in{" "}
+            <code>docs/DECISIONS.md</code> [2026-08-27].
+          </Callout>
         </div>
       </section>
+
+      <ProvenanceFooter summary={summary} sensitivity={sensitivity} />
     </div>
   );
+}
+
+function ProvenanceFooter({
+  summary,
+  sensitivity,
+}: {
+  summary: SummaryJson;
+  sensitivity: SensitivityJson;
+}) {
+  const same = summary.provenance.git_commit === sensitivity.provenance.git_commit;
+  return (
+    <div className="border-t border-border pt-4 text-[11px] text-text-muted">
+      <p>
+        <code>summary.json</code> generated {formatTimestamp(summary.provenance.generated_at)}{" "}
+        at commit <code>{summary.provenance.git_commit.slice(0, 12)}</code>.{" "}
+        {!same && (
+          <>
+            <code>sensitivity.json</code> generated{" "}
+            {formatTimestamp(sensitivity.provenance.generated_at)} at commit{" "}
+            <code>{sensitivity.provenance.git_commit.slice(0, 12)}</code>.{" "}
+          </>
+        )}
+        Checked by <code>make check</code>&apos;s <code>check_artifact_freshness</code>{" "}
+        step against every later commit touching <code>agent/</code>, <code>models/</code>,{" "}
+        <code>eval/</code>, or <code>sim/</code> — this page is never quoting numbers from
+        a policy the code has since changed.
+      </p>
+    </div>
+  );
+}
+
+function formatTimestamp(iso: string): string {
+  return new Date(iso).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }) + " UTC";
 }
 
 function MiniStat({ label, value, ci }: { label: string; value: string; ci?: string }) {

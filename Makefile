@@ -1,4 +1,4 @@
-.PHONY: setup sim train eval api web check demo demo-fixture clean
+.PHONY: setup sim train eval sensitivity api web check demo demo-fixture clean
 
 setup:
 	uv sync --extra dev
@@ -13,6 +13,9 @@ train:
 eval:
 	uv run python -m eval.run
 
+sensitivity:
+	uv run python -m eval.sensitivity
+
 api:
 	uv run uvicorn api.main:app --reload --port 8000
 
@@ -24,6 +27,7 @@ check:
 	uv run ruff format --check .
 	uv run mypy agent models sim features eval api
 	uv run pytest -q
+	uv run python -m scripts.check_artifact_freshness
 
 demo: sim train eval
 	@echo "Run 'make api' and 'make web' in separate terminals."

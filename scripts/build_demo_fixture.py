@@ -24,6 +24,7 @@ from typing import Any
 
 from api.demo import DEMO_FIXTURE_PATH, demo_data_from_batch, get_demo_batch
 from api.schemas import DecisionOut, QueueItemOut
+from eval.provenance import stamp
 
 
 def _decision_json(d: DecisionOut) -> dict[str, Any]:
@@ -45,6 +46,7 @@ def main() -> None:
             for mandate_id, decisions in data.audit_by_mandate.items()
         },
         "approvals": [_decision_json(d) for d in data.approvals],
+        "provenance": stamp(),
     }
     DEMO_FIXTURE_PATH.parent.mkdir(parents=True, exist_ok=True)
     DEMO_FIXTURE_PATH.write_text(json.dumps(payload, indent=2))

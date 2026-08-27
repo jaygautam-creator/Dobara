@@ -4,6 +4,11 @@
 // [2026-08-26] "Data-shipping architecture") -- just enough of each shape for the pages
 // that read it.
 
+export interface Provenance {
+  generated_at: string;
+  git_commit: string;
+}
+
 export interface CIValue {
   // null when genuinely undefined (n_seeds: 0) -- e.g. do_nothing's
   // recovery_rate_of_failed_cycles, undefined because it makes zero attempts, not zero.
@@ -75,6 +80,7 @@ export interface SummaryJson {
   };
   permanent_holdout_arm: PermanentHoldout;
   credibility_anchor: string;
+  provenance: Provenance;
 }
 
 export interface SensitivityPoint {
@@ -127,6 +133,7 @@ export interface SensitivityJson {
     razorpay_default_revocation_per_execution_ratio_at_break_even?: number;
   };
   other_axes: Record<string, OtherAxis>;
+  provenance: Provenance;
 }
 
 export interface ReliabilityDiagram {

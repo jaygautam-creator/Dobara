@@ -10,7 +10,7 @@ import { MoneyChart } from "@/components/charts/MoneyChart";
 import { ReliabilityChart } from "@/components/charts/ReliabilityChart";
 import { SensitivityChart } from "@/components/charts/SensitivityChart";
 import { Callout, Card, SectionHeading, StatTile } from "@/components/ui";
-import { formatCiInr, formatInr, formatPct } from "@/lib/format";
+import { formatCiInr, formatInr, formatNumber, formatPct } from "@/lib/format";
 import type { SensitivityJson, SummaryJson } from "@/lib/types";
 
 export const metadata = { title: "Evidence — Dobara" };
@@ -25,6 +25,13 @@ export default function EvidencePage() {
   const headline = summary.paired_dobara_vs_razorpay_default;
   const aggLoss = summary.paired_aggressive_8x_vs_razorpay_default;
   const holdout = summary.permanent_holdout_arm;
+  const dobaraArm = summary.arms.dobara;
+  const razorpayArm = summary.arms.razorpay_default;
+  // Both derivable straight from the arm totals, not hand-typed: dobara recovers less
+  // gross and wins anyway because what it buys back with that trade exceeds it.
+  const grossGivenUp =
+    dobaraArm.gross_recovered_inr.point! - razorpayArm.gross_recovered_inr.point!;
+  const mandateValueBoughtBack = headline.mean_diff - grossGivenUp;
 
   const breakEven = sensitivity.break_even_vs_razorpay_default;
   const marginAxis = sensitivity.other_axes["ltv.margin_factor"];
@@ -57,10 +64,12 @@ export default function EvidencePage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <StatTile
             label="Net LTV lift per mandate"
-            value="₹66"
-            ciText="[₹53.82, ₹80.63]"
+            value={formatInr(headline.mean_diff / summary.n_customers_per_seed, {
+              compact: false,
+            })}
+            ciText={`[${formatInr(headline.ci_lo / summary.n_customers_per_seed)}, ${formatInr(headline.ci_hi / summary.n_customers_per_seed)}]`}
             tone="good"
-            source="paired_dobara_vs_razorpay_default, ÷5,000 mandates/seed"
+            source={`paired_dobara_vs_razorpay_default, ÷${summary.n_customers_per_seed.toLocaleString("en-IN")} mandates/seed`}
           />
           <StatTile
             label="Net LTV lift, total (one seed)"
@@ -70,17 +79,37 @@ export default function EvidencePage() {
           />
           <StatTile
             label="Lift on razorpay_default's net-LTV base"
-            value="1.46%"
+            value={formatPct(headline.mean_diff / summary.arms.razorpay_default.net_ltv_total.point!, 2)}
             source="well under Razorpay's own published 4-6% success-rate lift — the credibility check"
           />
         </div>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-text-secondary">
-          Read as: ₹66/mandate is the number to quote, CI-backed. <code>aggressive_8x</code>{" "}
-          collapses against <code>razorpay_default</code> by{" "}
+          Read as: {formatInr(headline.mean_diff / summary.n_customers_per_seed)}/mandate
+          is the number to quote, CI-backed. <code>aggressive_8x</code> collapses against{" "}
+          <code>razorpay_default</code> by{" "}
           <strong className="text-status-critical">
             {formatCiInr(aggLoss.mean_diff, aggLoss.ci_lo, aggLoss.ci_hi, true)}
           </strong>{" "}
           — significant, in the losing direction.
+        </p>
+        <p className="mt-3 max-w-3xl text-xs leading-relaxed text-text-muted">
+          Rerun {formatTimestamp(summary.provenance.generated_at)} at commit{" "}
+          <code>{summary.provenance.git_commit.slice(0, 12)}</code>, after{" "}
+          <code>agent/decide.py</code>&apos;s tie-break fix (
+          <a
+            href="#tie-break-honesty"
+            className="underline decoration-dotted hover:text-text-secondary"
+          >
+            see the honesty panel
+          </a>
+          ) — the previous run (26 Aug, pre-tie-break-fix) reported ₹65.99/mandate
+          [₹53.82, ₹80.63]. Pre-registered before this rerun in{" "}
+          <code>docs/DECISIONS.md</code> [2026-08-27]: the rule is kept regardless of
+          which way the number moved. It moved by{" "}
+          <strong>
+            {signedInr(headline.mean_diff / summary.n_customers_per_seed - 65.99)}
+          </strong>
+          /mandate — a rounding-level change, not a regression.
         </p>
       </section>
 
@@ -95,23 +124,46 @@ export default function EvidencePage() {
       <section>
         <SectionHeading
           title="The mechanism, decomposed"
-          description="dobara recovers less gross and wins anyway — by cutting revocations, not by spending less on notifications."
+          description="dobara recovers less gross and wins anyway — cutting revocations far more than it cuts notification spend."
         />
         <div className="grid gap-4 sm:grid-cols-3">
           <StatTile
             label="Gross recovery given up"
-            value="−₹742,361"
+            value={formatInr(grossGivenUp, { compact: true })}
             tone="critical"
             source="dobara attempts less, more selectively"
           />
           <StatTile
             label="Mandate value bought back"
-            value="+₹1,072,301"
+            value={formatInr(mandateValueBoughtBack, { compact: true })}
             tone="good"
-            source="99.5% avoided revocation loss, 0.5% avoided notification spend"
+            source={`revocations ${formatNumber(dobaraArm.revocations_total.point!)} vs ${formatNumber(razorpayArm.revocations_total.point!)}; notifications ${formatNumber(dobaraArm.notifications_total.point!)} vs ${formatNumber(razorpayArm.notifications_total.point!)}`}
           />
-          <StatTile label="Net" value="+₹329,941" tone="good" source="per 5,000-mandate seed" />
+          <StatTile
+            label="Net"
+            value={formatInr(headline.mean_diff, { compact: true })}
+            tone="good"
+            source={`per ${summary.n_customers_per_seed.toLocaleString("en-IN")}-mandate seed`}
+          />
         </div>
+        <p className="mt-3 max-w-3xl text-xs leading-relaxed text-text-muted">
+          dobara cuts revocations{" "}
+          {formatPct(
+            1 - dobaraArm.revocations_total.point! / razorpayArm.revocations_total.point!,
+            0,
+          )}{" "}
+          ({formatNumber(dobaraArm.revocations_total.point!)} vs{" "}
+          {formatNumber(razorpayArm.revocations_total.point!)}) while sending{" "}
+          {formatPct(
+            1 -
+              dobaraArm.notifications_total.point! / razorpayArm.notifications_total.point!,
+            0,
+          )}{" "}
+          fewer notifications ({formatNumber(dobaraArm.notifications_total.point!)} vs{" "}
+          {formatNumber(razorpayArm.notifications_total.point!)}) — the much larger
+          relative cut is in revocations, the channel this thesis is built on, not
+          notification cost savings.
+        </p>
       </section>
 
       <section>
@@ -352,7 +404,11 @@ export default function EvidencePage() {
             <code>ltv.margin_factor</code> (0.7, range [0.4, 0.9]) has no external anchor —
             flagged plainly in the break-even section above, not smoothed over.
           </Callout>
-          <Callout tone="warning" title="Isotonic calibration is a step function — and it costs real decision resolution">
+          <Callout
+            id="tie-break-honesty"
+            tone="warning"
+            title="Isotonic calibration is a step function — and it costs real decision resolution"
+          >
             Both models&apos; probability calibrators are <code>sklearn.isotonic.IsotonicRegression</code>,
             which by construction outputs a piecewise-constant step function, not a
             smooth curve — visible directly in the reliability diagrams above as flat
@@ -410,6 +466,11 @@ function ProvenanceFooter({
       </p>
     </div>
   );
+}
+
+function signedInr(value: number): string {
+  const sign = value < 0 ? "−" : "+";
+  return `${sign}₹${Math.abs(value).toFixed(2)}`;
 }
 
 function formatTimestamp(iso: string): string {

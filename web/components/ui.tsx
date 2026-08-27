@@ -138,10 +138,12 @@ export function Callout({
   tone = "default",
   title,
   children,
+  id,
 }: {
   tone?: "default" | "good" | "warning" | "critical";
   title?: string;
   children: ReactNode;
+  id?: string;
 }) {
   const border =
     tone === "good"
@@ -152,7 +154,7 @@ export function Callout({
           ? "border-status-critical/40"
           : "border-border";
   return (
-    <div className={`rounded-lg border ${border} bg-surface-1 p-4`}>
+    <div id={id} className={`rounded-lg border ${border} bg-surface-1 p-4 scroll-mt-20`}>
       {title && <div className="mb-1.5 text-sm font-semibold text-text-primary">{title}</div>}
       <div className="text-sm leading-relaxed text-text-secondary">{children}</div>
     </div>

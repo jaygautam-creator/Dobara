@@ -312,7 +312,7 @@
         },
         {
           "value": 0.11249999999999999,
-          "dobara_mean_net_ltv": 4716.663719875984,
+          "dobara_mean_net_ltv": 4716.663789875984,
           "razorpay_default_mean_net_ltv": 4647.837233475008,
           "aggressive_8x_mean_net_ltv": 4420.161768634103,
           "ranking": [
@@ -323,7 +323,7 @@
         },
         {
           "value": 0.15,
-          "dobara_mean_net_ltv": 4716.6635798759835,
+          "dobara_mean_net_ltv": 4716.6636498759835,
           "razorpay_default_mean_net_ltv": 4647.837233475008,
           "aggressive_8x_mean_net_ltv": 4420.161768634103,
           "ranking": [
@@ -335,5 +335,9 @@
       ],
       "ranking_ever_changes": false
     }
+  },
+  "provenance": {
+    "generated_at": "2026-08-27T09:59:08.218919+00:00",
+    "git_commit": "3c38f314ef77da6dfa590a507814591bc94f900c"
   }
 }

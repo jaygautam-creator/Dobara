@@ -252578,5 +252578,9 @@
       }
     ]
   },
-  "approvals": []
+  "approvals": [],
+  "provenance": {
+    "generated_at": "2026-08-27T08:36:21.631895+00:00",
+    "git_commit": "3c38f314ef77da6dfa590a507814591bc94f900c"
+  }
 }

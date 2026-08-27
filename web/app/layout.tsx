@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
+
+// Runs before paint so a returning viewer's chosen theme never flashes to the dark
+// default first. Kept in perfect sync with ThemeToggle's own read of the same key.
+const THEME_INIT_SCRIPT = `
+  try {
+    var t = window.localStorage.getItem("dobara-theme");
+    if (t === "light") document.documentElement.dataset.theme = "light";
+  } catch (e) {}
+`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +40,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       data-theme="dark"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="bg-surface-0 text-text-primary">
         <header className="sticky top-0 z-40 border-b border-border bg-surface-0/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
@@ -49,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                   {item.label}
                 </Link>
               ))}
+              <ThemeToggle />
             </nav>
           </div>
         </header>

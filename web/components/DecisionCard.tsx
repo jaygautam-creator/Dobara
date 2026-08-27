@@ -1,6 +1,67 @@
-import type { DecisionOut } from "@/lib/types";
+import type { DecisionOut, RejectedAlternativeOut } from "@/lib/types";
 import { formatInr, formatInrPrecise, formatPct } from "@/lib/format";
 import { Badge, Card } from "@/components/ui";
+
+const TIED_PATTERN = /^(\d+) candidates tied at this E\[net\]$/;
+
+/** Groups consecutive "N candidates tied" rows sharing an E[net] into one collapsed,
+ * expandable row instead of repeating the same line under a moving cursor -- the ties
+ * are surfaced deliberately (the audit trail once misrepresented them as reasoned
+ * rejections) so they stay present, just not as visual noise. Named alternatives
+ * (e.g. a specific retry channel/date) are never grouped. */
+function RejectedAlternativesList({ alternatives }: { alternatives: RejectedAlternativeOut[] }) {
+  const groups: { tied: boolean; count: number; net: number; items: RejectedAlternativeOut[] }[] = [];
+  const tiedGroupByKey = new Map<string, (typeof groups)[number]>();
+  for (const alt of alternatives) {
+    const m = TIED_PATTERN.exec(alt.description);
+    if (!m) {
+      groups.push({ tied: false, count: 0, net: alt.expected_net, items: [alt] });
+      continue;
+    }
+    // Key on the *displayed* amount, not the raw float -- two ties that round to the same
+    // rupee figure read as duplicates on screen even if their underlying cents differ.
+    const key = `${m[1]}|${formatInr(alt.expected_net)}`;
+    const existing = tiedGroupByKey.get(key);
+    if (existing) {
+      existing.items.push(alt);
+    } else {
+      const group = { tied: true, count: Number(m[1]), net: alt.expected_net, items: [alt] };
+      tiedGroupByKey.set(key, group);
+      groups.push(group);
+    }
+  }
+
+  return (
+    <ul className="max-h-40 space-y-1 overflow-y-auto rounded-md bg-surface-0 p-3 text-xs">
+      {groups.map((g, i) =>
+        g.tied ? (
+          <li key={i} className="text-text-secondary">
+            <details>
+              <summary className="flex cursor-pointer items-center justify-between gap-3 marker:content-none">
+                <span className="truncate">
+                  {g.count} candidates tied at {formatInr(g.net)}
+                  {g.items.length > 1 ? ` (×${g.items.length})` : ""} ▸
+                </span>
+              </summary>
+              <ul className="mt-1 space-y-1 pl-3 text-text-muted">
+                {g.items.map((alt, j) => (
+                  <li key={j} className="truncate">
+                    {alt.reason}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        ) : (
+          <li key={i} className="flex items-center justify-between gap-3 text-text-secondary">
+            <span className="truncate">{g.items[0].description}</span>
+            <span className="tabular-nums shrink-0">{formatInr(g.items[0].expected_net)}</span>
+          </li>
+        ),
+      )}
+    </ul>
+  );
+}
 
 const ACTION_LABEL: Record<string, string> = {
   schedule_debit: "Schedule debit",
@@ -78,19 +139,12 @@ export function DecisionCard({ decision, bankId, method, amount }: {
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
             Rejected alternatives ({decision.rejected_alternatives.length})
           </h4>
-          <ul className="max-h-40 space-y-1 overflow-y-auto rounded-md bg-surface-0 p-3 text-xs">
-            {decision.rejected_alternatives.slice(0, 12).map((alt, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 text-text-secondary">
-                <span className="truncate">{alt.description}</span>
-                <span className="tabular-nums shrink-0">{formatInr(alt.expected_net)}</span>
-              </li>
-            ))}
-            {decision.rejected_alternatives.length > 12 && (
-              <li className="text-text-muted">
-                +{decision.rejected_alternatives.length - 12} more
-              </li>
-            )}
-          </ul>
+          <RejectedAlternativesList alternatives={decision.rejected_alternatives.slice(0, 12)} />
+          {decision.rejected_alternatives.length > 12 && (
+            <div className="mt-1 text-xs text-text-muted">
+              +{decision.rejected_alternatives.length - 12} more
+            </div>
+          )}
         </div>
       )}
 

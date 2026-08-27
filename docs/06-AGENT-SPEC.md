@@ -43,6 +43,26 @@ For each case, enumerate the legal candidate space:
 
 Score each, take the argmax, subject to the gate and the positivity floor.
 
+**Ties are common, not an edge case — and restraint decides them.** The isotonic
+probability calibrator used by the recovery model has a small number of distinct output
+steps (17 on the trained model, measured 2026-08-27); many different candidate days land
+in the same calibration step, producing an *exact* `E[net]` tie — confirmed on the
+committed demo fixture: 76% of decisions with alternatives have an exact tie at the
+argmax, some spanning candidate dates a month apart. This is not a bug — the underlying
+LightGBM model genuinely learns day-of-month/day-of-week signal (real, nonzero feature
+importance), but the calibrator's coarse resolution collapses much of it before `decide()`
+ever sees a probability. Rather than let this resolve to whichever candidate
+`_generate_candidates` happened to emit first (an accident of loop order, not a decision),
+`agent/decide.py::_tie_break_score` breaks value ties explicitly: prefer the candidate
+date closest to the customer's declared preferred day when one exists, otherwise the
+earliest legal date — the same restraint principle ("keep the mandate," fewest cycles of
+lingering exposure) applied at exactly the point the money model has nothing left to say.
+The audit trail's `ALT` block collapses each run of mutually-tied candidates into one
+summary line (`"N candidates tied at this E[net]"`) naming the tie-break reason, instead
+of repeating "lower by ₹0.00" once per tied candidate — see `docs/DECISIONS.md`
+[2026-08-27] for the full diagnosis and `tests/test_agent_decide.py`'s
+`test_tie_break_prefers_*` tests.
+
 ## The compliance gate
 
 `agent/compliance.py`. Declarative rules, each an object:

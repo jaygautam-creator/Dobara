@@ -18,7 +18,7 @@ from agent.actions import Abstain, EscalateToHuman, OfferDateChange, ScheduleDeb
 from agent.audit import AuditTrail, render
 from agent.compliance import Severity, evaluate
 from agent.context import DecisionContext
-from agent.decide import decide
+from agent.decide import _generate_candidates, decide
 from agent.models import ModelBundle
 from agent.stopping import StoppingReason
 from features.recovery import RECOVERY_FEATURE_COLUMNS
@@ -229,6 +229,35 @@ def test_positive_expected_value_schedules_a_debit() -> None:
     assert len(d.rejected_alternatives) > 0
 
 
+def test_tie_break_prefers_earliest_date_with_no_declared_preference() -> None:
+    # A constant-output fake model ties every ScheduleDebit candidate's E[net] exactly
+    # (same p_success/p_revoke/cost regardless of day) -- this is the real, common case
+    # documented in agent/decide.py's `_tie_break_score`, not a contrived edge case.
+    # window_start = now + 24h = 2026-08-29 09:14:02 -> first legal debit day 08-29.
+    ctx = _base_ctx(has_declared_preferred_day=False, declared_preferred_day=None)
+    models = _fake_bundle(p_success=0.9, p_revoke=0.01, slice_n=5000)
+    d = decide(ctx, models, _policy_config())
+    assert isinstance(d.chosen, ScheduleDebit)
+    assert d.chosen.t == datetime(2026, 8, 29, 10, 0)
+    # the tie collapses into one summary entry, not one near-duplicate per tied day
+    tie_summaries = [a for a in d.rejected_alternatives if a.reason.startswith("not chosen:")]
+    assert len(tie_summaries) == 1
+    assert "earliest available date" in tie_summaries[0].reason
+
+
+def test_tie_break_prefers_closest_to_declared_day() -> None:
+    # Same tie, but with a declared preferred day (Sept 2) -- restraint should now
+    # resolve toward the customer's own stated preference instead of the earliest date.
+    ctx = _base_ctx(has_declared_preferred_day=True, declared_preferred_day=2)
+    models = _fake_bundle(p_success=0.9, p_revoke=0.01, slice_n=5000)
+    d = decide(ctx, models, _policy_config())
+    assert isinstance(d.chosen, ScheduleDebit)
+    assert d.chosen.t == datetime(2026, 9, 2, 10, 0)
+    tie_summaries = [a for a in d.rejected_alternatives if a.reason.startswith("not chosen:")]
+    assert len(tie_summaries) == 1
+    assert "closest to the customer's declared preferred day (day 2)" in tie_summaries[0].reason
+
+
 def test_abstains_on_insufficient_slice_n() -> None:
     ctx = _base_ctx()
     models = _fake_bundle(p_success=0.9, p_revoke=0.01, slice_n=5)
@@ -308,12 +337,14 @@ def test_requires_signoff_above_threshold() -> None:
 
 
 def test_escalate_to_human_is_always_a_considered_candidate() -> None:
+    # Checked against candidate generation directly, not the audit trail's textual
+    # description: EscalateToHuman ties with Stop at the E[net]=0.0 baseline whenever
+    # neither wins outright, and agent/decide.py's tie-collapsing (docs/DECISIONS.md
+    # [2026-08-27]) folds that pair into one summary line rather than naming it --
+    # "always considered" is a candidate-generation invariant, not a display one.
     ctx = _base_ctx()
-    d = decide(ctx, _fake_bundle(), _policy_config())
-    escalate_seen = isinstance(d.chosen, EscalateToHuman) or any(
-        "escalate" in alt.description for alt in d.rejected_alternatives
-    )
-    assert escalate_seen
+    candidates = _generate_candidates(ctx, _policy_config())
+    assert any(isinstance(c, EscalateToHuman) for c in candidates)
 
 
 def test_rupee_math_carries_every_term() -> None:

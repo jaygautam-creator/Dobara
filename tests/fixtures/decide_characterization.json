@@ -206,12 +206,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -438,12 +433,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -666,12 +656,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -894,12 +879,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -1318,12 +1298,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -1550,12 +1525,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -1782,12 +1752,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -2014,12 +1979,7 @@
         "reason": "E[net] lower by Rs.55.59 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.173.09 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.173.09 than the chosen candidate"
       }
@@ -2272,47 +2232,12 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "offer date change to day 12 at 2026-08-29T10:00:00",
+        "description": "7 candidates tied at this E[net]",
         "expected_net": 0.01,
         "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
       },
       {
-        "description": "offer date change to day 12 at 2026-08-30T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-08-31T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-01T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-02T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-03T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-04T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.191.62 than the chosen candidate"
-      },
-      {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -2539,47 +2464,12 @@
         "reason": "E[net] lower by Rs.51.75 than the chosen candidate"
       },
       {
-        "description": "offer date change to day 12 at 2026-08-29T10:00:00",
+        "description": "7 candidates tied at this E[net]",
         "expected_net": 0.01,
         "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
       },
       {
-        "description": "offer date change to day 12 at 2026-08-30T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-08-31T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-01T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-02T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-03T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
-      },
-      {
-        "description": "offer date change to day 12 at 2026-09-04T10:00:00",
-        "expected_net": 0.01,
-        "reason": "E[net] lower by Rs.195.73 than the chosen candidate"
-      },
-      {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.195.74 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.195.74 than the chosen candidate"
       }
@@ -2832,12 +2722,7 @@
         "reason": "E[net] lower by Rs.2610.44 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.9600.45 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.9600.45 than the chosen candidate"
       }
@@ -2989,12 +2874,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -3247,12 +3127,7 @@
         "reason": "E[net] lower by Rs.52.25 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.192.79 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.192.79 than the chosen candidate"
       }
@@ -3479,12 +3354,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -3711,12 +3581,7 @@
         "reason": "E[net] lower by Rs.52.45 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.191.63 than the chosen candidate"
       }
@@ -3943,12 +3808,7 @@
         "reason": "E[net] lower by Rs.10.69 than the chosen candidate"
       },
       {
-        "description": "stop (negative_expected_value)",
-        "expected_net": 0.0,
-        "reason": "E[net] lower by Rs.38.02 than the chosen candidate"
-      },
-      {
-        "description": "escalate (no positive-expected-value action found this cycle)",
+        "description": "2 candidates tied at this E[net]",
         "expected_net": 0.0,
         "reason": "E[net] lower by Rs.38.02 than the chosen candidate"
       }

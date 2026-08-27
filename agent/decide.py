@@ -181,15 +181,12 @@ def decide(ctx: DecisionContext, models: ModelBundle, config: PolicyConfig) -> D
     legal = [a for a in candidates if is_hard_compliant(a, ctx, config)]
     scores = _score_all(legal, ctx, models)
     scored = list(zip(legal, scores, strict=True))
-    scored.sort(key=lambda pair: pair[1].expected_net, reverse=True)
+    scored.sort(
+        key=lambda pair: (pair[1].expected_net, -_tie_break_score(pair[0], ctx)), reverse=True
+    )
 
     best_action, best = scored[0]
-    rejected = [
-        RejectedAlternative(
-            description=_describe(a), expected_net=s.expected_net, reason=_reject_reason(s, best)
-        )
-        for a, s in scored[1:]
-    ]
+    rejected = _rejected_alternatives(best_action, best, scored[1:], ctx)
 
     satisfied, blocked = evaluate(best_action, ctx, config)
     clauses_satisfied = [ClauseRef(r.id, r.citation) for r in satisfied]
@@ -223,6 +220,48 @@ def decide(ctx: DecisionContext, models: ModelBundle, config: PolicyConfig) -> D
         stopping_reason=stopping_reason,
         requires_signoff=requires_signoff,
     )
+
+
+def _tie_break_score(action: Action, ctx: DecisionContext) -> float:
+    """Breaks ties in `E[net]` — and these are real, not rare: on the committed demo
+    fixture, 76% of decisions with alternatives have an exact tie at the top of the
+    argmax, most spanning many different candidate dates (see `docs/DECISIONS.md`
+    [2026-08-27] for the full diagnosis — genuine day-of-month/day-of-week recovery
+    signal exists and the trained model learns it, but the isotonic probability
+    calibrator's small number of distinct output steps quantizes many different raw
+    predictions to the identical calibrated `p_success`, and identical `p_success` at
+    identical cost is an identical `E[net]`). Before this, ties resolved to whichever
+    candidate `_generate_candidates` happened to emit first — the earliest legal day, by
+    accident of loop order, since day-then-channel is the generation order and Python's
+    sort is stable. That accident is now an explicit, tested rule, and it gains a case it
+    never handled: **restraint decides when the money model is indifferent.** Lower
+    returned score is more preferred:
+
+    - When the customer has a declared or evidenced-stable preferred day
+      (`ctx.has_declared_preferred_day`), prefer the `ScheduleDebit` candidate whose
+      calendar day is closest to it — nudging back toward the day they actually asked
+      for, at zero cost in expected value, is strictly better than an arbitrary one.
+    - Otherwise (including every `OfferDateChange` candidate, whose own `t` is when the
+      *offer* is sent, not a proposed debit day the customer has any stake in), prefer
+      the earliest legal `t` — resolving the cycle sooner bounds how many further
+      attempts/notifications this mandate can still generate, which is the same
+      fewest-notifications/lowest-burden principle applied to the one thing a
+      single-decision tie-break can actually control.
+
+    Candidates without a `t` (`Stop`/`EscalateToHuman`) return 0.0 — they never need this
+    axis, since compliance/candidate-generation determines whether they win, not a value
+    tie against a real action at the same `E[net]`.
+    """
+    if not isinstance(action, ScheduleDebit | OfferDateChange):
+        return 0.0
+    t = action.t
+    if (
+        isinstance(action, ScheduleDebit)
+        and ctx.has_declared_preferred_day
+        and ctx.declared_preferred_day is not None
+    ):
+        return float(abs(t.day - ctx.declared_preferred_day))
+    return (t - ctx.now).total_seconds()
 
 
 def _terminal_stop(ctx: DecisionContext) -> Decision | None:
@@ -638,3 +677,75 @@ def _describe(action: Action) -> str:
 def _reject_reason(candidate: _Score, best: _Score) -> str:
     delta = best.expected_net - candidate.expected_net
     return f"E[net] lower by Rs.{delta:.2f} than the chosen candidate"
+
+
+def _tie_break_reason_text(best_action: Action, ctx: DecisionContext) -> str:
+    """Human-readable version of `_tie_break_score`'s rule, for the audit trail's
+    collapsed tie summary (`_rejected_alternatives`) — names the actual reason the
+    chosen candidate won a tie, rather than a manufactured "lower by Rs.0.00" that isn't
+    a reason at all. See `_tie_break_score`'s docstring for the full diagnosis."""
+    if (
+        isinstance(best_action, ScheduleDebit)
+        and ctx.has_declared_preferred_day
+        and ctx.declared_preferred_day is not None
+    ):
+        return (
+            f"closest to the customer's declared preferred day (day {ctx.declared_preferred_day})"
+        )
+    if isinstance(best_action, ScheduleDebit | OfferDateChange):
+        return "earliest available date, all else equal"
+    # Stop tying EscalateToHuman at the E[net]=0.0 baseline (both always present, per
+    # module docstring "## Candidate generation") -- Stop wins because it's listed
+    # first and Python's sort is stable, a documented, deliberate ordering, not this
+    # function's own tie-break axis.
+    return "first considered, all else equal"
+
+
+def _rejected_alternatives(
+    best_action: Action, best: _Score, rest: list[tuple[Action, _Score]], ctx: DecisionContext
+) -> list[RejectedAlternative]:
+    """Builds the audit trail's rejected-alternative list from every non-chosen scored
+    candidate, collapsing **every** run of mutually-tied candidates into one summary
+    entry — not just the ones tied with `best`. The calibrator-plateau tie
+    (`_tie_break_score`'s docstring, `docs/DECISIONS.md` [2026-08-27]) produces one tie
+    cluster *per channel* in practice (same day-spanning collapse, three times, once per
+    `Channel`), not only at the very top: on the committed demo fixture, restricting this
+    to just the winning value left the channel below the winner's still repeating "lower
+    by Rs.0.15" 17+ times. `rest` is already sorted descending by the same key `scored`
+    was, so every tied cluster is a contiguous run — grouped here by walking it once,
+    not by re-sorting.
+    """
+    alternatives: list[RejectedAlternative] = []
+    i = 0
+    while i < len(rest):
+        value = rest[i][1].expected_net
+        j = i
+        while j < len(rest) and rest[j][1].expected_net == value:
+            j += 1
+        group = rest[i:j]
+        if len(group) == 1:
+            action, score = group[0]
+            alternatives.append(
+                RejectedAlternative(
+                    description=_describe(action),
+                    expected_net=score.expected_net,
+                    reason=_reject_reason(score, best),
+                )
+            )
+        else:
+            plural = "s" if len(group) != 1 else ""
+            if value == best.expected_net:
+                reason = f"not chosen: {_tie_break_reason_text(best_action, ctx)}"
+            else:
+                reason = (
+                    f"E[net] lower by Rs.{best.expected_net - value:.2f} than the chosen candidate"
+                )
+            alternatives.append(
+                RejectedAlternative(
+                    description=f"{len(group)} candidate{plural} tied at this E[net]",
+                    expected_net=value,
+                    reason=reason,
+                )
+            )
+        i = j
+    return alternatives

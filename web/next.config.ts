@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // Static export: the deploy target (Vercel, bom1) serves prebuilt HTML/JSON with no
+  // server runtime, matching the "zero external calls at request time" architecture claim.
+  output: "export",
 };
 
 export default nextConfig;

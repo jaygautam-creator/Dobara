@@ -44,8 +44,8 @@ const TERMS: Term[] = [
 ];
 
 const TONE_CLASS: Record<Term["tone"], string> = {
-  gain: "text-status-good",
-  loss: "text-status-critical",
+  gain: "text-status-good-text",
+  loss: "text-status-critical-text",
   cost: "text-text-secondary",
 };
 

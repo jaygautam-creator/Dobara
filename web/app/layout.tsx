@@ -7,10 +7,20 @@ import "./globals.css";
 
 // Runs before paint so a returning viewer's chosen theme never flashes to the dark
 // default first. Kept in perfect sync with ThemeToggle's own read of the same key.
+// `?theme=light`/`?theme=dark` overrides for this page load only (never written to
+// storage) -- docs/10-REDESIGN.md §6 requires contrast verified in BOTH themes, and
+// headless Chrome has no toggle to click, so this is the only way to render the light
+// theme deterministically for a screenshot. The stored preference still wins on the
+// next unparameterized load.
 const THEME_INIT_SCRIPT = `
   try {
-    var t = window.localStorage.getItem("dobara-theme");
-    if (t === "light") document.documentElement.dataset.theme = "light";
+    var q = new URLSearchParams(window.location.search).get("theme");
+    if (q === "light" || q === "dark") {
+      document.documentElement.dataset.theme = q;
+    } else {
+      var t = window.localStorage.getItem("dobara-theme");
+      if (t === "light") document.documentElement.dataset.theme = "light";
+    }
   } catch (e) {}
 `;
 

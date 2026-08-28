@@ -88,7 +88,7 @@ function DeltaAnnotation({
   return (
     <span
       className={`tabular-nums ml-1.5 text-xs font-medium ${
-        isGood ? "text-status-good" : "text-status-critical"
+        isGood ? "text-status-good-text" : "text-status-critical-text"
       }`}
     >
       {rose ? "+" : "−"}
@@ -129,13 +129,13 @@ function CaseComplianceGate({
           <div className="text-[11px] text-text-muted">candidates legal enough to score</div>
         </div>
         <div>
-          <div className="tabular-nums text-lg font-semibold text-status-critical">
+          <div className="tabular-nums text-lg font-semibold text-status-critical-text">
             {decision.clauses_blocked.length}
           </div>
           <div className="text-[11px] text-text-muted">clauses flagged on the winner</div>
         </div>
         <div>
-          <div className="tabular-nums text-lg font-semibold text-status-good">
+          <div className="tabular-nums text-lg font-semibold text-status-good-text">
             {decision.clauses_satisfied.length}
           </div>
           <div className="text-[11px] text-text-muted">clauses satisfied by the winner</div>
@@ -150,7 +150,7 @@ function CaseComplianceGate({
                 key={c.id}
                 className="rounded-md bg-status-critical/10 px-2.5 py-1.5 text-xs leading-relaxed text-text-secondary"
               >
-                <span className="tabular-nums font-semibold text-status-critical">{c.id}</span>{" "}
+                <span className="tabular-nums font-semibold text-status-critical-text">{c.id}</span>{" "}
                 {rule?.text ?? c.citation}
               </li>
             );
@@ -395,7 +395,7 @@ export function ControlRoomClient({
           </div>
           <div
             className={`mt-1.5 font-mono tabular-nums text-step-2 font-semibold ${
-              comparing ? "text-status-critical" : "text-status-good"
+              comparing ? "text-status-critical-text" : "text-status-good-text"
             }`}
           >
             <AnimatedNumber value={revocations} />
@@ -456,7 +456,7 @@ export function ControlRoomClient({
                 }}
                 className={`rounded px-2 py-1 font-medium transition-colors ${
                   restrainedOnly
-                    ? "bg-arm-dobara/15 text-arm-dobara"
+                    ? "bg-arm-dobara/15 text-arm-dobara-text"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -517,7 +517,7 @@ export function ControlRoomClient({
                           </span>
                         )}
                       {row.regime_shift_bank && (
-                        <span className="ml-1.5 text-[10px] text-status-warning">shift</span>
+                        <span className="ml-1.5 text-[10px] text-status-warning-text">shift</span>
                       )}
                     </TableCell>
                     <TableCell className="tabular-nums px-3 py-2 text-right font-medium text-text-primary">
@@ -527,7 +527,7 @@ export function ControlRoomClient({
                       <Link
                         href={`/audit/${row.mandate_id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-[11px] text-arm-dobara hover:underline"
+                        className="text-[11px] text-arm-dobara-text hover:underline"
                       >
                         full audit →
                       </Link>
@@ -554,7 +554,7 @@ export function ControlRoomClient({
               </p>
               <Link
                 href={`/audit/${selectedId}`}
-                className="mt-3 inline-block text-sm font-medium text-arm-dobara hover:underline"
+                className="mt-3 inline-block text-sm font-medium text-arm-dobara-text hover:underline"
               >
                 Open full audit →
               </Link>
@@ -576,7 +576,7 @@ function AttemptsNotMadeFeature({ value }: { value: number }) {
         <div className="text-xs font-medium uppercase tracking-wider text-text-muted">
           Attempts not made
         </div>
-        <div className="mt-1.5 font-mono tabular-nums text-step-4 font-semibold text-arm-dobara">
+        <div className="mt-1.5 font-mono tabular-nums text-step-4 font-semibold text-arm-dobara-text">
           <AnimatedNumber value={value} />
         </div>
       </div>

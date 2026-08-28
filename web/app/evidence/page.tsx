@@ -146,7 +146,7 @@ export default function EvidencePage() {
                 Read as: {formatInr(headline.mean_diff / summary.n_customers_per_seed)}
                 /mandate is the number to quote, CI-backed. <code>aggressive_8x</code>{" "}
                 collapses against <code>razorpay_default</code> by{" "}
-                <strong className="text-status-critical">
+                <strong className="text-status-critical-text">
                   {formatCiInr(aggLoss.mean_diff, aggLoss.ci_lo, aggLoss.ci_hi, true)}
                 </strong>{" "}
                 — significant, in the losing direction.
@@ -305,7 +305,7 @@ export default function EvidencePage() {
                   columns={["Predicted", "Observed"]}
                   rows={recoveryReliabilityRows}
                 />
-                <p className="mt-2 text-[11px] text-status-warning">
+                <p className="mt-2 text-[11px] text-status-warning-text">
                   The visible steps are real, not a rendering artifact: this calibrator
                   (isotonic regression, a step function by construction) emits only{" "}
                   <strong>17 distinct probability values</strong> across [0, 1]. See
@@ -316,7 +316,7 @@ export default function EvidencePage() {
                   Beats logistic baseline:{" "}
                   <span
                     className={
-                      recovery.beats_baseline ? "text-status-good" : "text-status-critical"
+                      recovery.beats_baseline ? "text-status-good-text" : "text-status-critical-text"
                     }
                   >
                     {String(recovery.beats_baseline)}
@@ -355,7 +355,7 @@ export default function EvidencePage() {
                   columns={["Predicted", "Observed"]}
                   rows={hazardReliabilityRows}
                 />
-                <p className="mt-2 text-[11px] text-status-warning">
+                <p className="mt-2 text-[11px] text-status-warning-text">
                   Same step-function calibrator, coarser here: <strong>8 distinct
                   probability values</strong> across [0, 1] (n_validate is smaller for
                   this model, so isotonic regression has fewer points to fit steps to).

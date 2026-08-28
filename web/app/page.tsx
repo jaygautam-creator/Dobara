@@ -15,7 +15,7 @@ export default function ThesisPage() {
     <div className="flex flex-col">
       {/* 1 — the claim */}
       <section className="mx-auto w-full max-w-6xl px-6 pb-16 pt-20 sm:pt-28">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-arm-dobara">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-arm-dobara-text">
           Razorpay AI Buildathon — Track 03: AI Revenue Recovery
         </p>
         <h1 className="mt-6 max-w-4xl font-serif text-step-6 leading-[0.95] tracking-tight text-text-primary">
@@ -176,7 +176,7 @@ function Fact({
   const external = href.startsWith("http");
   return (
     <div className="border-t border-border pt-5">
-      <div className="tabular-nums text-step-5 font-semibold leading-none text-arm-dobara">
+      <div className="tabular-nums text-step-5 font-semibold leading-none text-arm-dobara-text">
         {number}
       </div>
       <p className="mt-3 text-step-0 leading-relaxed text-text-primary">{claim}</p>

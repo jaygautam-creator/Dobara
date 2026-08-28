@@ -25,7 +25,7 @@ export default function ArchitecturePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-14 px-6 py-14">
       <header>
-        <p className="text-xs font-medium uppercase tracking-wider text-arm-dobara">
+        <p className="text-xs font-medium uppercase tracking-wider text-arm-dobara-text">
           Architecture
         </p>
         <h1 className="mt-2 max-w-3xl font-serif text-step-5 leading-[1.05] text-text-primary">

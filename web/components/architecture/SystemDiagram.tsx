@@ -242,7 +242,7 @@ export function SystemDiagram() {
               href={`${GITHUB_BLOB}/${selected.file}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-4 inline-block font-mono text-xs text-arm-dobara underline decoration-dotted underline-offset-2"
+              className="mt-4 inline-block font-mono text-xs text-arm-dobara-text underline decoration-dotted underline-offset-2"
             >
               {selected.file} ↗
             </a>
@@ -268,7 +268,7 @@ export function SystemDiagram() {
                 href={`${GITHUB_BLOB}/${BOUNDARY_TEST}`}
                 target="_blank"
                 rel="noreferrer"
-                className="font-mono text-xs text-arm-dobara underline decoration-dotted underline-offset-2"
+                className="font-mono text-xs text-arm-dobara-text underline decoration-dotted underline-offset-2"
               >
                 {BOUNDARY_TEST} ↗
               </a>{" "}

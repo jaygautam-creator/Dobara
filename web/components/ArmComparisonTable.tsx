@@ -34,7 +34,7 @@ export function ArmComparisonTable({ summary }: { summary: SummaryJson }) {
                   <ArmSwatch arm={arm} />
                   {arm}
                   {isDobara && (
-                    <span className="ml-2 rounded-full bg-arm-dobara/15 px-2 py-0.5 text-[10px] font-semibold text-arm-dobara">
+                    <span className="ml-2 rounded-full bg-arm-dobara/15 px-2 py-0.5 text-[10px] font-semibold text-arm-dobara-text">
                       headline
                     </span>
                   )}
@@ -50,7 +50,7 @@ export function ArmComparisonTable({ summary }: { summary: SummaryJson }) {
                 </td>
                 <td
                   className={`tabular-nums px-4 py-3 text-right font-semibold ${
-                    isDobara ? "text-arm-dobara" : "text-text-primary"
+                    isDobara ? "text-arm-dobara-text" : "text-text-primary"
                   }`}
                 >
                   {arm === "do_nothing"
@@ -78,7 +78,7 @@ export function ArmComparisonTable({ summary }: { summary: SummaryJson }) {
                 </td>
                 <td
                   className={`tabular-nums px-4 py-3 text-right ${
-                    isDobara ? "font-semibold text-status-good" : "text-text-secondary"
+                    isDobara ? "font-semibold text-status-good-text" : "text-text-secondary"
                   }`}
                 >
                   {arm === "do_nothing"

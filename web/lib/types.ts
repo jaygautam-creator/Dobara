@@ -244,7 +244,11 @@ export interface DecisionOut {
   model_versions: Record<string, string>;
   stopping_reason: string | null;
   requires_signoff: boolean;
-  audit_text: string;
+  prev_error_source: string | null;
+  prev_error_step: string | null;
+  prev_error_reason: string | null;
+  notifications_sent_this_cycle: number;
+  consecutive_failed_cycles: number;
 }
 
 export interface QueueItemOut {

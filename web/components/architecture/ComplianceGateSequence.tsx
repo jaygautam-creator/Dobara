@@ -57,7 +57,7 @@ export function ComplianceGateSequence({
                   aria-expanded={isOpen}
                   className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
                     rule.severity === "hard"
-                      ? "border-status-critical/40 text-status-critical"
+                      ? "border-status-critical/40 text-status-critical-text"
                       : "border-border text-text-secondary"
                   } ${isOpen ? "bg-surface-2" : "hover:bg-surface-2"}`}
                 >

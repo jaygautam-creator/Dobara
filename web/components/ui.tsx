@@ -96,11 +96,11 @@ export function StatTile({
 } & StatTileCI) {
   const toneClass =
     tone === "good"
-      ? "text-status-good"
+      ? "text-status-good-text"
       : tone === "warning"
-        ? "text-status-warning"
+        ? "text-status-warning-text"
         : tone === "critical"
-          ? "text-status-critical"
+          ? "text-status-critical-text"
           : "text-text-primary";
   return (
     <div className={`rounded-lg border border-border bg-surface-1 ${STAT_PADDING[size]}`}>
@@ -132,11 +132,11 @@ export function Badge({
 }) {
   const classes =
     color === "good"
-      ? "bg-status-good/15 text-status-good"
+      ? "bg-status-good/15 text-status-good-text"
       : color === "warning"
-        ? "bg-status-warning/20 text-status-warning"
+        ? "bg-status-warning/20 text-status-warning-text"
         : color === "critical"
-          ? "bg-status-critical/15 text-status-critical"
+          ? "bg-status-critical/15 text-status-critical-text"
           : "bg-surface-2 text-text-secondary";
   return (
     <span

@@ -14,24 +14,35 @@
   --surface-2: #ffffff;
   --text-primary: #0b0b0b;
   --text-secondary: #52514e;
-  --text-muted: #898781;
+  --text-muted: #6b6a64; /* darkened from #898781 2026-08-28: measured 3.41:1/3.50:1 on
+    surface-0/1, below §6's 4.5:1 body-text floor -- see docs/DECISIONS.md [2026-08-28]. */
   --gridline: #e1e0d9;
   --baseline: #c3c2b7;
   --border: rgba(11, 11, 11, 0.1);
 
-  /* categorical arm palette, fixed order -- references/palette.md slot order */
+  /* categorical arm palette, fixed order -- references/palette.md slot order. These
+     exact values are locked for chart lines/swatches/legends (§2 "palette discipline
+     holds") -- do not retune them for contrast. Where an arm colour is used as running
+     TEXT rather than a mark, a `*-text` variant below carries the contrast fix instead,
+     leaving the swatch identity untouched. */
   --arm-dobara: #2a78d6; /* slot 1 blue -- the star */
   --arm-razorpay-default: #4a3aa7; /* slot 7 violet */
   --arm-aggressive-8x: #eb6834; /* slot 2 orange */
   --arm-do-nothing: #898781; /* muted, not a categorical slot -- it's the null arm */
   --arm-oracle: #1baf7a; /* slot 3 aqua -- the ceiling, not a competitor */
+  --arm-dobara-text: #1a5fb4; /* measured 4.30:1 at --arm-dobara on surface-1, below
+    4.5:1 -- text-only darkening, chart/swatch colour above is untouched. */
 
-  /* status: reserved, never reused for a series (references/palette.md) */
+  /* status: reserved, never reused for a series (references/palette.md). Each has a
+     `*-text` variant for use as running text -- the base value stays tuned for
+     dots/badges/fills, which have a looser (3:1, non-text) contrast requirement. */
   --status-good: #0ca30c;
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
   --status-good-text: #006300;
+  --status-warning-text: #8a5a00; /* measured 1.79:1 at --status-warning on surface-1 */
+  --status-critical-text: #d03b3b; /* 4.68:1 on light surface-1 -- already passes */
 
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
 
@@ -89,12 +100,16 @@
     --arm-aggressive-8x: #d95926;
     --arm-do-nothing: #898781;
     --arm-oracle: #199e70;
+    --arm-dobara-text: #3987e5; /* 4.79:1 on dark surface-1 -- already passes */
 
     --status-good: #0ca30c;
     --status-warning: #fab219;
     --status-serious: #ec835a;
     --status-critical: #d03b3b;
     --status-good-text: #0ca30c;
+    --status-warning-text: #fab219; /* 9.49:1 on dark surface-1 -- already passes */
+    --status-critical-text: #e8615a; /* measured 3.62:1 at --status-critical on dark
+      surface-1, below 4.5:1 -- brightened for text only. */
   }
 }
 
@@ -115,12 +130,15 @@
   --arm-aggressive-8x: #d95926;
   --arm-do-nothing: #898781;
   --arm-oracle: #199e70;
+  --arm-dobara-text: #3987e5;
 
   --status-good: #0ca30c;
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
   --status-good-text: #0ca30c;
+  --status-warning-text: #fab219;
+  --status-critical-text: #e8615a;
 }
 
 @theme inline {
@@ -139,11 +157,15 @@
   --color-arm-aggressive-8x: var(--arm-aggressive-8x);
   --color-arm-do-nothing: var(--arm-do-nothing);
   --color-arm-oracle: var(--arm-oracle);
+  --color-arm-dobara-text: var(--arm-dobara-text);
 
   --color-status-good: var(--status-good);
   --color-status-warning: var(--status-warning);
   --color-status-serious: var(--status-serious);
   --color-status-critical: var(--status-critical);
+  --color-status-good-text: var(--status-good-text);
+  --color-status-warning-text: var(--status-warning-text);
+  --color-status-critical-text: var(--status-critical-text);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

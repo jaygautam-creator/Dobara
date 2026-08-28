@@ -231,9 +231,9 @@ function LaneColumn({
               <span
                 className={
                   beat.event.revoked
-                    ? "text-status-critical"
+                    ? "text-status-critical-text"
                     : beat.event.kind === "stop"
-                      ? "text-arm-dobara"
+                      ? "text-arm-dobara-text"
                       : "text-text-secondary"
                 }
               >
@@ -255,7 +255,7 @@ function LaneColumn({
         >
           <div
             className={`text-sm font-semibold ${
-              revoked ? "text-status-critical" : "text-arm-dobara"
+              revoked ? "text-status-critical-text" : "text-arm-dobara-text"
             }`}
           >
             {revoked

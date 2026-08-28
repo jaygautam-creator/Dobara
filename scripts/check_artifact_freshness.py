@@ -63,6 +63,8 @@ ARTIFACTS: list[tuple[Path, list[str]]] = [
     (Path("artifacts/sensitivity.json"), []),
     (Path("artifacts/demo_batch.json"), []),
     (Path("artifacts/money_chart_data.json"), []),
+    (Path("artifacts/home_demo.json"), []),
+    (Path("artifacts/compliance_rules.json"), []),
     (
         Path("artifacts/llm_cache/ask_why.json"),
         ["llm/", "scripts/generate_ask_why.py"],

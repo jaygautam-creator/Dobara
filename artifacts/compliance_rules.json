@@ -1,0 +1,115 @@
+{
+  "rules": [
+    {
+      "id": "RBI-PDN-24H",
+      "text": "Every debit attempt, including every retry, must be preceded by a pre-debit notification at least 24 hours earlier.",
+      "severity": "hard",
+      "citation": "RBI e-mandate framework",
+      "source_url": "https://rbi.org.in"
+    },
+    {
+      "id": "RBI-PDN-OPTOUT",
+      "text": "The pre-debit notification must carry an opt-out for this debit and for the mandate.",
+      "severity": "hard",
+      "citation": "RBI e-mandate framework",
+      "source_url": "https://rbi.org.in"
+    },
+    {
+      "id": "RBI-POST-CONF",
+      "text": "Every successful debit must be followed by a confirmation to the customer.",
+      "severity": "hard",
+      "citation": "RBI e-mandate framework",
+      "source_url": "https://rbi.org.in"
+    },
+    {
+      "id": "RBI-AFA-15K",
+      "text": "Debits above Rs.15,000 require Additional Factor Authentication (Rs.1,00,000 for insurance/mutual funds/credit-card bills).",
+      "severity": "hard",
+      "citation": "RBI e-mandate framework",
+      "source_url": "https://rbi.org.in"
+    },
+    {
+      "id": "RBI-NO-CHARGE",
+      "text": "No charge may be levied on the customer for the e-mandate facility.",
+      "severity": "hard",
+      "citation": "RBI e-mandate framework",
+      "source_url": "https://rbi.org.in"
+    },
+    {
+      "id": "CONDUCT-HOURS",
+      "text": "No customer contact outside 08:00-19:00 IST.",
+      "severity": "hard",
+      "citation": "RBI Fair Practices / Digital Lending",
+      "source_url": "https://www.bajajfinserv.in/rbi-guidelines-for-recovery-agents"
+    },
+    {
+      "id": "CONDUCT-NO-SHAME",
+      "text": "No contact with third parties; no shaming; no coercive language.",
+      "severity": "hard",
+      "citation": "RBI Digital Lending Guidelines",
+      "source_url": "https://www.bajajfinserv.in/rbi-guidelines-for-recovery-agents"
+    },
+    {
+      "id": "CONDUCT-RECORD",
+      "text": "Every interaction digitally recorded.",
+      "severity": "hard",
+      "citation": "RBI Fair Practices",
+      "source_url": "https://www.bajajfinserv.in/rbi-guidelines-for-recovery-agents"
+    },
+    {
+      "id": "TRAI-DLT",
+      "text": "Commercial SMS only via a registered DLT template; content must match the approved template.",
+      "severity": "hard",
+      "citation": "TRAI TCCCPR",
+      "source_url": "https://www.trai.gov.in"
+    },
+    {
+      "id": "WA-UTILITY",
+      "text": "WhatsApp messages must use an approved utility template within the allowed window.",
+      "severity": "hard",
+      "citation": "WhatsApp Business Policy",
+      "source_url": "https://business.whatsapp.com/policy"
+    },
+    {
+      "id": "DPDP-PURPOSE",
+      "text": "Data used only for recovery of the mandate it was collected for.",
+      "severity": "hard",
+      "citation": "DPDP Act 2023",
+      "source_url": "https://www.meity.gov.in/data-protection-framework"
+    },
+    {
+      "id": "DPDP-MINIMISE",
+      "text": "No feature may encode individual balance or cash-flow inference.",
+      "severity": "hard",
+      "citation": "DPDP Act 2023 s.6",
+      "source_url": "https://www.meity.gov.in/data-protection-framework"
+    },
+    {
+      "id": "DOBARA-NO-PROBE",
+      "text": "No probing/test debits of an amount other than the scheduled one.",
+      "severity": "hard",
+      "citation": "Self-imposed",
+      "source_url": "docs/01-REGULATORY.md"
+    },
+    {
+      "id": "DOBARA-CONVERGE",
+      "text": "A mandate's debit date may be changed at most once per N cycles, and only toward a customer-declared or evidenced-stable date.",
+      "severity": "soft",
+      "citation": "Self-imposed",
+      "source_url": "docs/01-REGULATORY.md"
+    },
+    {
+      "id": "DOBARA-FATIGUE",
+      "text": "Maximum notifications per mandate per cycle; hard cap regardless of expected value.",
+      "severity": "hard",
+      "citation": "Self-imposed",
+      "source_url": "docs/01-REGULATORY.md"
+    }
+  ],
+  "n_hard": 14,
+  "n_soft": 1,
+  "provenance": {
+    "generated_at": "2026-08-28T12:34:12.752162+00:00",
+    "git_commit": "c02b3854ee196371bf5a097d9a302318002f79b9"
+  }
+}

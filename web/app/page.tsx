@@ -1,124 +1,216 @@
 import Link from "next/link";
+import { Demonstration } from "@/components/home/Demonstration";
+import { Equation } from "@/components/home/Equation";
+import { getHomeDemo } from "@/lib/server-data";
+import { formatInr } from "@/lib/format";
+
+// docs/10-REDESIGN.md §4 `/` -- an editorial argument in five beats: the claim, the
+// demonstration, the three sourced facts, the equation, the way in.
 
 export default function ThesisPage() {
+  const demo = getHomeDemo();
+  const advantage = demo.selection.net_ltv_advantage_inr;
+
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-14 px-6 py-20">
-      <section>
-        <p className="mb-4 text-sm font-medium uppercase tracking-wider text-arm-dobara">
+    <div className="flex flex-col">
+      {/* 1 — the claim */}
+      <section className="mx-auto w-full max-w-6xl px-6 pb-16 pt-20 sm:pt-28">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-arm-dobara">
           Razorpay AI Buildathon — Track 03: AI Revenue Recovery
         </p>
-        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl">
+        <h1 className="mt-6 max-w-4xl font-serif text-step-6 leading-[0.95] tracking-tight text-text-primary">
           Every retry is a bet.
           <br />
           <span className="text-text-secondary">Dobara knows when to stop.</span>
         </h1>
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-secondary">
-          An AI revenue-recovery agent for Indian recurring payments.
+        <div className="mt-10 h-px w-24 bg-arm-dobara" />
+        <p className="mt-6 max-w-2xl text-step-1 leading-relaxed text-text-secondary">
+          In India a retry cannot be silent: every attempt on a recurring mandate must
+          carry its own pre-debit notification, at least 24 hours ahead. So the standard
+          dunning playbook — retry, and retry, and retry — is a legally-mandated stream of
+          messages telling a customer this merchant keeps failing to take their money. The
+          failed debit is not the loss. It is the trigger.
+        </p>
+        <p className="mt-8 font-serif text-step-3 italic text-text-primary">
+          “Recover the payment. Keep the mandate.”
         </p>
       </section>
 
-      <section className="grid gap-6 sm:grid-cols-3">
-        <FactCard
-          number="20M+"
-          label="UPI AutoPay mandates revoked every month, India"
-          source="business-standard.com, 2025"
-          href="https://www.business-standard.com/finance/news/upi-autopay-revocations-hit-20-mn-monthly-over-low-customer-balances-125090700500_1.html"
-        />
-        <FactCard
-          number="24h"
-          label="Mandatory pre-debit notification before every retry — no exceptions"
-          source="RBI e-mandate framework"
-          href="/evidence"
-        />
-        <FactCard
-          number="8x"
-          label="Retries the standard playbook allows — 8 mandatory warnings that this merchant keeps failing"
-          source="docs/01-REGULATORY.md"
-          href="/evidence"
-        />
+      {/* 2 — the demonstration */}
+      <section className="border-y border-border bg-surface-1/40">
+        <div className="mx-auto w-full max-w-6xl px-6 py-16">
+          <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
+            Watch it happen
+          </p>
+          <h2 className="mt-2 max-w-3xl font-serif text-step-4 leading-tight text-text-primary">
+            The same mandate, under two policies.
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-text-secondary">
+            Both lanes run on one shared clock, from the same simulated population and the
+            same seed. Every beat, timestamp and rupee figure below is read from the
+            recorded run — none of it is staged.
+          </p>
+          <div className="mt-8">
+            <Demonstration demo={demo} />
+          </div>
+          <p className="mt-6 max-w-3xl text-xs leading-relaxed text-text-muted">
+            Chosen mechanically, and deliberately not the best case:{" "}
+            <span className="tabular-nums">
+              {demo.selection.n_candidates.toLocaleString("en-IN")}
+            </span>{" "}
+            of the{" "}
+            <span className="tabular-nums">
+              {demo.selection.n_mandates.toLocaleString("en-IN")}
+            </span>{" "}
+            mandates in this held-out population (seed{" "}
+            <span className="tabular-nums">{demo.seed}</span>) revoked under the aggressive
+            policy but survived under Dobara. The one shown is the{" "}
+            <strong className="text-text-secondary">median</strong> of those by net
+            lifetime value kept — the middle case, not the flattering one. Across that
+            set, Dobara&apos;s advantage per mandate runs from{" "}
+            <span className="tabular-nums">{formatInr(advantage.p25)}</span> at the 25th
+            percentile to <span className="tabular-nums">{formatInr(advantage.p75)}</span>{" "}
+            at the 75th, with a median of{" "}
+            <span className="tabular-nums">{formatInr(advantage.median)}</span>. Population-
+            level results, with confidence intervals and every arm, are on{" "}
+            <Link href="/evidence" className="underline decoration-dotted underline-offset-2">
+              Evidence
+            </Link>
+            .
+          </p>
+        </div>
       </section>
 
-      <section className="space-y-4 border-l-2 border-arm-dobara pl-6">
-        <p className="text-lg leading-relaxed text-text-primary">
-          The failed debit is not the loss. <strong>It is the trigger.</strong> Debit fails
-          → customer is notified → customer opens their UPI app and kills the mandate →
-          the merchant loses not this month&apos;s payment, but every future one.
-        </p>
-        <p className="text-lg leading-relaxed text-text-primary">
-          In India, a retry cannot be silent. It cannot be faster than 24 hours. And{" "}
-          <strong>eight retries means eight mandatory messages</strong> telling a customer
-          this merchant keeps failing to take their money. The standard dunning
-          playbook — retry aggressively, up to eight attempts — is, under Indian
-          regulation, a legally-mandated harassment machine. The regulator forced the
-          retry to be loud, and nobody redesigned the strategy around it.
-        </p>
+      {/* 3 — the three sourced facts, as a band */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-16">
+        <div className="grid gap-8 sm:grid-cols-3">
+          <Fact
+            number="20M+"
+            claim="UPI AutoPay mandates are revoked every month in India."
+            source="Business Standard, 2025"
+            href="https://www.business-standard.com/finance/news/upi-autopay-revocations-hit-20-mn-monthly-over-low-customer-balances-125090700500_1.html"
+          />
+          <Fact
+            number="24h"
+            claim="Minimum notice before every debit attempt, retries included. No exceptions, no silent retry."
+            source="RBI e-mandate framework — docs/01-REGULATORY.md"
+            href="/architecture"
+          />
+          <Fact
+            number="8×"
+            claim="Retries the standard playbook allows — which is eight mandatory messages about a merchant who keeps failing."
+            source="docs/01-REGULATORY.md"
+            href="/architecture"
+          />
+        </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-surface-1 p-8">
-        <p className="text-sm font-medium uppercase tracking-wider text-text-muted">
-          Therefore
-        </p>
-        <p className="mt-2 text-xl font-medium leading-snug text-text-primary">
-          Every retry is a bet with downside. Retrying harder can lose more money than
-          not retrying at all.
-        </p>
-        <pre className="mt-6 overflow-x-auto rounded-lg bg-surface-0 p-4 text-sm leading-relaxed text-text-secondary">
-{`E[net | action] = P(success | t) × amount
-                − P(revoke | attempts+1, contacts) × LTV_remaining
-                − cost(channel)`}
-        </pre>
-        <p className="mt-4 text-sm leading-relaxed text-text-secondary">
-          Dobara acts on the argmax, and stops when the expression goes negative — a
-          stopping rule with a rupee behind it, not an arbitrary attempt cap.
-        </p>
+      {/* 4 — the equation */}
+      <section className="border-y border-border bg-surface-1/40">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
+              Therefore
+            </p>
+            <h2 className="mt-2 font-serif text-step-4 leading-tight text-text-primary">
+              Price the retry, not just the recovery.
+            </h2>
+            <p className="mt-4 text-step-0 leading-relaxed text-text-secondary">
+              Because every attempt forces a notification, the cost lands whether or not
+              the debit succeeds. That inverts the industry default: fewer, better-placed
+              attempts beat many attempts. Dobara scores every legal action at every legal
+              time against one expression, and refuses to act when the expression says the
+              bet is not worth taking.
+            </p>
+            <p className="mt-4 text-step-0 leading-relaxed text-text-secondary">
+              No language model is anywhere in this arithmetic — a boundary a test
+              enforces, not a promise a prompt makes. See{" "}
+              <Link
+                href="/architecture"
+                className="underline decoration-dotted underline-offset-2"
+              >
+                Architecture
+              </Link>
+              .
+            </p>
+          </div>
+          <Equation />
+        </div>
       </section>
 
-      <section className="text-center">
-        <p className="text-2xl font-medium italic text-text-primary">
-          &ldquo;Recover the payment. Keep the mandate.&rdquo;
-        </p>
-        <div className="mt-8 flex justify-center gap-3">
-          <Link
+      {/* 5 — the way in */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-16">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <EntryPoint
             href="/control-room"
-            className="rounded-md bg-arm-dobara px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          >
-            Open the Control Room
-          </Link>
-          <Link
+            label="Control Room"
+            description="A real batch of decisions, ranked by rupees at risk, each one openable down to the arithmetic."
+          />
+          <EntryPoint
             href="/evidence"
-            className="rounded-md border border-border px-6 py-3 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-1"
-          >
-            See the evidence
-          </Link>
+            label="Evidence"
+            description="Five arms, thirty seeds, 95% confidence intervals, a permanent holdout, and what would have to be true for the result to flip."
+          />
+          <EntryPoint
+            href="/architecture"
+            label="Architecture"
+            description="The system diagram, the wall the language model cannot cross, and the compliance gate that makes illegal actions unrepresentable."
+          />
         </div>
       </section>
     </div>
   );
 }
 
-function FactCard({
+function Fact({
   number,
-  label,
+  claim,
   source,
   href,
 }: {
   number: string;
-  label: string;
+  claim: string;
   source: string;
   href: string;
 }) {
+  const external = href.startsWith("http");
   return (
-    <a
-      href={href}
-      target={href.startsWith("http") ? "_blank" : undefined}
-      rel={href.startsWith("http") ? "noreferrer" : undefined}
-      className="block rounded-lg border border-border bg-surface-1 p-5 transition-colors hover:bg-surface-2"
-    >
-      <div className="tabular-nums text-3xl font-semibold text-arm-dobara">{number}</div>
-      <p className="mt-2 text-sm leading-snug text-text-secondary">{label}</p>
-      <p className="mt-2 text-[11px] text-text-muted underline decoration-dotted">
+    <div className="border-t border-border pt-5">
+      <div className="tabular-nums text-step-5 font-semibold leading-none text-arm-dobara">
+        {number}
+      </div>
+      <p className="mt-3 text-step-0 leading-relaxed text-text-primary">{claim}</p>
+      <a
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noreferrer" : undefined}
+        className="mt-3 inline-block text-[11px] text-text-muted underline decoration-dotted underline-offset-2"
+      >
         {source}
-      </p>
-    </a>
+      </a>
+    </div>
+  );
+}
+
+function EntryPoint({
+  href,
+  label,
+  description,
+}: {
+  href: string;
+  label: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-lg border border-border bg-surface-1 p-5 transition-colors hover:border-arm-dobara/50 hover:bg-surface-2"
+    >
+      <div className="flex items-baseline justify-between">
+        <span className="text-sm font-semibold text-text-primary">{label}</span>
+        <span className="text-text-muted transition-transform group-hover:translate-x-0.5">→</span>
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-text-secondary">{description}</p>
+    </Link>
   );
 }

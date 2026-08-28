@@ -7,6 +7,75 @@
 
 ## CURRENT STATE
 
+**Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session C** (`/` rebuild +
+the new `/architecture` route). `make check` green; `npx tsc --noEmit`, `npm run lint`
+and `npm run build` (static export) green.
+
+**Note on sequencing, flagged not buried:** the previous entry ended "Next: Session C —
+hold for the user's diff review first, per their explicit request." No review was
+recorded between then and this session, and the session opened with a handoff paste
+carrying no instruction. Session C was built anyway, then **committed locally and deliberately
+not pushed**, so the review still gates what lands on `main`.
+
+**What shipped this session:**
+
+1. **The landing page's demonstration is generated, not authored.** `eval/runner.py`
+   gained an opt-in per-beat trace (`AttemptEvent`, `run_arm(..., trace=True)`) —
+   default `False`, threaded explicitly, no global state, so the 30-seed harness and the
+   sensitivity sweep allocate nothing and behave identically.
+   `scripts/build_home_demo.py` (`make home-demo`) replays **one real mandate under two
+   arms** over the same held-out seed-301 population `/evidence`'s money chart
+   aggregates, and writes `artifacts/home_demo.json`: every beat, timestamp, notification
+   count and rupee figure the `/` demonstration renders. `tests/test_runner_trace.py`
+   (5 tests) pins that the trace changes no scored field — compared via
+   `dataclasses.replace(r, events=[])`, so a field added to `MandateResult` later is
+   covered automatically — and that the beats reconstruct the aggregates.
+2. **The case shown is the median, not the best.** Among the mandates that revoked under
+   `aggressive_8x` and survived under `dobara`, the script selects the median by
+   dobara's net-LTV advantage, and the page prints the candidate-set size and the
+   p25/median/p75 of that advantage next to it. The first version of this ranking
+   (notifications before revocation) selected a mandate that revoked in the *final*
+   cycle, where almost no lifetime value remains to forgo and the aggressive lane
+   therefore nets *more* — real, and exactly the wrong number to headline. See
+   `docs/DECISIONS.md` [2026-08-28] "The demonstration shows the median case".
+3. **`/` rebuilt as an editorial argument in five beats** (§4): serif hero + motto; the
+   two-lane demonstration on one shared clock, click-anywhere-to-skip, replayable;
+   the three sourced facts restyled as a band; the decision rule as a typeset object with
+   each term annotated and pointed at the file that computes it; three entry points.
+4. **`/architecture` is new** — an interactive SVG with the LLM boundary drawn as a
+   literal wall: the tabular path crosses it to the action, the LLM lane is confined
+   below it with its attempted crossing drawn stopped, and the wall names
+   `tests/test_no_llm_in_money_path.py` as what stops it. Selecting any node explains the
+   module and links its source on GitHub. Below it, the compliance gate as a sequence,
+   rendered from `artifacts/compliance_rules.json` — exported from
+   `agent/compliance.py::RULES` by `scripts/build_compliance_rules.py` (`make
+   compliance-rules`) so the page cannot drift from the gate it describes — and the seven
+   stopping reasons.
+5. **Two new artifacts registered in the freshness gate** (`home_demo.json`,
+   `compliance_rules.json`) and in `web/scripts/sync-data.mjs`.
+6. **A real hydration mismatch, found and fixed.** `lib/motion.ts`'s `staticRender` reads
+   `window`, so reading it *during render* makes server and client markup disagree — the
+   dev overlay caught it on `/architecture`. The diagram's entrance stagger was removed
+   outright (a staggered fade on ten static boxes is decoration, which §5 rules out), and
+   the demonstration now reads the flag through `useSyncExternalStore` (`false` on the
+   server, the real value on the client, no setState in an effect). Checked `/evidence`
+   for the same class of defect from Session B's chart changes: no warning — Recharts
+   renders client-side only there.
+
+**Screenshot recipe (owed by §5 since Session B, now current):** headless Chrome, and
+**append `?static=1`** so `staticRender` freezes chart draw and completes the landing
+page's demonstration immediately:
+`"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu
+--hide-scrollbars --virtual-time-budget=15000 --window-size=1440,2600
+--screenshot=out.png "http://localhost:3000/<page>?static=1"` — run from outside the
+extension. Verified on `/` and `/architecture` this session.
+
+**Next: Session D** (`/control-room` — hierarchy, table, command palette, compliance gate
+panel, the `StatTile` `source`-required type change §4 asks for when those counter call
+sites are touched).
+
+---
+
 **Last updated:** 2026-08-28, post-`bfa52dc` freshness-gate correction. **`make check`
 is green end-to-end, verified post-commit** — see `docs/DECISIONS.md` [2026-08-28]
 "Artifact-freshness gate: fix the class, not the instance" for the full story. Short
@@ -920,7 +989,7 @@ fully superseded by the 2026-08-26 Step 3 rerun (see `## CURRENT STATE` above an
 ## Phase 6 — Frontend (Day 8) · spec: `docs/08-FRONTEND-SPEC.md`
 
 - [x] **Load the `dataviz` skill before writing chart code** — dark-first tokens in `app/globals.css` follow `references/palette.md`, per the Phase 6 start log entry
-- [ ] Next.js scaffold, Tailwind, shadcn/ui, generated API types — Next.js + Tailwind done; **shadcn/ui was never installed** (interactive CLI init hung with no stdin, hand-built Tailwind components instead — see the Phase 6 start log entry and `docs/10-REDESIGN.md` §3.5, Session B scope); no generated API types exist (`lib/server-data.ts` reads committed JSON directly, no OpenAPI client generation step in the repo)
+- [ ] Next.js scaffold, Tailwind, shadcn/ui, generated API types — Next.js + Tailwind done; **shadcn/ui installed in redesign Session B (`da1bd22`)** — eleven primitives in `components/ui/` behind a token bridge; before that session the interactive CLI init hung with no stdin and the components were hand-built in Tailwind (see the Phase 6 start log entry and `docs/10-REDESIGN.md` §3.5); no generated API types exist (`lib/server-data.ts` reads committed JSON directly, no OpenAPI client generation step in the repo)
 - [x] `/` thesis page with inline sources (`web/app/page.tsx`, sourced stat tiles incl. `business-standard.com, 2025`, RBI e-mandate framework, `docs/01-REGULATORY.md`)
 - [x] `/control-room` — counters incl. "attempts not made", queue, decision cards, gate animation (`web/components/control-room/ControlRoomClient.tsx` — client-side streaming reveal, skippable only by finishing, not yet click-to-skip)
 - [x] **The comparison toggle** (aggressive vs Dobara) — `aggressive_8x` wired into `ControlRoomClient.tsx`
@@ -970,3 +1039,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-27, later same day** — Headless-Chrome visual pass against `/evidence`, `/control-room`, `/mandate/[id]` found and fixed five defects: legend/axis collision on two charts; Recharts mount animation frozen mid-draw under headless capture (`isAnimationActive={false}` everywhere, also makes screenshots deterministic); a ~1,700px layout void plus clipped cycle cards on `/mandate/[id]`; the Control Room queue never showing STOP/ABSTAIN outcomes (`QueueRow.terminal_action_type` added); a `₹ at risk` vs `₹ recovered` scope mismatch relabeled with explicit source captions rather than changed. Closed the `money_chart_data.json` staleness gap flagged the session before: `scripts/build_money_chart.py` committed, wired into `make check`'s artifact-freshness gate. `make check` (95 tests) and the web build (306 pages) green. Full account in `docs/DECISIONS.md` [2026-08-27] "Visual pass fixes".
 - **2026-08-27, later still / 2026-08-28** — Built the `/audit` "ask why" LLM narrative box end to end: `llm/provider.py`/`llm/narrate.py`, `scripts/generate_ask_why.py` narrating all 1,296 cached decisions after six provider/model quota switches in one evening (Gemini x3, Groq, Qwen), `AskWhyBox.tsx` reading the cache statically. Followed with per-entry `{text, provider, model, generated_at}` provenance, a numeric-grounding checker wired into `make check`, an embedded architecture diagram, and a CI scope fix (mypy was missing `eval`/`api`/`llm`/`scripts`, no artifact-freshness gate, no web build job — silently masking a real `ThemeToggle.tsx` ESLint error). Then reran the full stale-artifact chain (byte-identical decision content confirmed, no README changes needed) and ran the grounding checker against the full 1,296-narrative corpus: 22 flagged, triaged individually — 14 real hallucinations regenerated, 8 checker false positives whitelisted with per-case reasoning, final state 0 flagged. A separate hand-read of ten narratives caught one more real defect the automated checker structurally can't (a STOP case falsely claiming an escalation) and fixed it. `docs/10-REDESIGN.md`, a six-session frontend redesign spec, was authored and committed but not executed. Full account in `docs/DECISIONS.md` [2026-08-28] (three entries). Next: execute `docs/10-REDESIGN.md` Session B (foundations) onward.
 - **2026-08-28, later same day — Session B (foundations)**, per `docs/10-REDESIGN.md` §7: `motion` and `shadcn/ui` installed (had to hand-correct `shadcn init`'s non-interactive overwrite of `--border` and injection of a second `.dark`-class color system; replaced with a small token-bridge block pointing shadcn's variables at the project's existing tokens); Instrument Serif added alongside Geist Sans/Mono; the §3.1 fluid type scale added to `globals.css` and exposed via Tailwind `@theme`; `ui.tsx` rebuilt with `Card` surface variants and `StatTile` size tiers, both additive and backward-compatible so no existing route broke; `lib/motion.ts`'s `staticRender` gate added and wired into all three chart components; `chartTheme.ts` extracted from the three charts' repeated axis/legend/tooltip styling; every number moved to Geist Mono by extending the existing `.tabular-nums` convention rather than hand-touching ~30 call sites. `npx tsc --noEmit`, `npm run lint`, `npm run build` (306 pages) all green; served the static export locally and spot-checked four routes return 200. `make check` is currently red for a reason unrelated to this session (a pre-existing `check_artifact_freshness.py` gap from the prior session's `40b4a12`, flagged not fixed — see `## CURRENT STATE`). Next: Session C (`/` rebuild + `/architecture`) — hold for the user's diff review first, per their explicit request.
+- **2026-08-28, end of day — Session C (`/` rebuild + `/architecture`)**, per `docs/10-REDESIGN.md` §7. Built the landing page's side-by-side demonstration as *generated* data, not authored markup: an opt-in per-beat trace in `eval/runner.py` (`AttemptEvent`, `run_arm(..., trace=True)`, default off, 5 tests pinning that it changes no scored field), a producer script `scripts/build_home_demo.py` that replays one real mandate under `aggressive_8x` and `dobara` over the held-out seed-301 population, and `artifacts/home_demo.json` behind the page. Selection is the **median** case by dobara's net-LTV advantage, published alongside the candidate count and the p25/median/p75 — the first ranking tried (notifications before revocation) picked a final-cycle revocation where the aggressive lane nets more, which is the honest wrong answer and is recorded as such. `/` rebuilt into the spec's five beats; `/architecture` added, with the LLM boundary drawn as a wall naming the test that enforces it and a compliance-gate panel rendered from `artifacts/compliance_rules.json` (exported from `agent/compliance.py::RULES`). Found and fixed a real hydration mismatch caused by reading `staticRender` during render. `make check` green (103 tests); `tsc`/`lint`/`build` (307 pages) green; `/` and `/architecture` verified by headless screenshot at `?static=1`. Full account in `docs/DECISIONS.md` [2026-08-28] (three entries).

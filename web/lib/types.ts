@@ -318,3 +318,79 @@ export interface QueueRow {
   requires_signoff: boolean;
   abstain_reason?: string | null;
 }
+
+/** artifacts/home_demo.json -- one real mandate replayed under two arms, beat by beat,
+ * behind the landing page's side-by-side demonstration. Produced by
+ * scripts/build_home_demo.py from eval.runner's own trace (see AttemptEvent there); the
+ * page renders these events, it never authors or reorders them. */
+export interface HomeDemoEvent {
+  cycle_index: number;
+  attempt_index: number;
+  kind: "attempt" | "stop" | "abstain" | "escalate" | "offer_date_change";
+  at: string;
+  channel: string | null;
+  outcome: string | null;
+  notifications_to_date: number;
+  revoked: boolean;
+  reason: string | null;
+  ltv_lost_inr: number;
+}
+
+export interface HomeDemoLaneTotals {
+  n_attempts: number;
+  n_notifications: number;
+  n_successes: number;
+  gross_recovered_inr: number;
+  notification_cost_inr: number;
+  revoked: boolean;
+  revoked_at_cycle: number | null;
+  ltv_lost_inr: number;
+  net_ltv_inr: number;
+}
+
+export interface HomeDemoLane {
+  events: HomeDemoEvent[];
+  totals: HomeDemoLaneTotals;
+}
+
+export interface HomeDemoJson {
+  seed: number;
+  n_customers: number;
+  selection: {
+    criteria: string;
+    n_candidates: number;
+    n_mandates: number;
+    /** Dobara's net-LTV advantage over aggressive_8x, in rupees, across the candidate
+     * set -- `chosen` is the shown mandate's, and the quantiles say where in that spread
+     * it sits. The shown case is the median one, deliberately not the best one. */
+    net_ltv_advantage_inr: { chosen: number; p25: number; median: number; p75: number };
+  };
+  mandate: {
+    mandate_id: number;
+    bank_id: string;
+    method: string;
+    merchant_category: string;
+    amount: number;
+    cycle_day: number;
+  };
+  lanes: Record<"aggressive_8x" | "dobara", HomeDemoLane>;
+  provenance: Provenance;
+}
+
+/** artifacts/compliance_rules.json -- agent/compliance.py's live rule registry, exported
+ * by scripts/build_compliance_rules.py so /architecture cannot describe a gate other than
+ * the one that actually runs. */
+export interface ComplianceRule {
+  id: string;
+  text: string;
+  severity: "hard" | "soft";
+  citation: string;
+  source_url: string;
+}
+
+export interface ComplianceRulesJson {
+  rules: ComplianceRule[];
+  n_hard: number;
+  n_soft: number;
+  provenance: Provenance;
+}

@@ -2477,3 +2477,51 @@ committed git history is structurally blind to the commit it's about to become p
 run against a dirty working tree. From now on this gate — and any future one with the same
 shape — is verified **after** committing, immediately before pushing, not before. See
 `PROGRESS.md`'s `## CURRENT STATE` for the same note added to the session protocol.
+
+## [2026-08-28] The landing page's demonstration is generated, not authored
+**Chose:** Add an opt-in per-beat trace to the eval harness (`eval/runner.py::AttemptEvent`,
+`run_arm(..., trace=True)`) and a producer script, `scripts/build_home_demo.py`, that
+replays **one real mandate under two arms** and writes `artifacts/home_demo.json`. The
+`/` demonstration renders that file.
+**Over:** Hand-authoring the eight-notification sequence in the React component from the
+aggregate numbers already committed (`MandateResult` knows *how many* notifications an arm
+sent, not *when*), or driving it from `demo_batch.json`, which contains only the `dobara`
+arm's decisions and so cannot show the other lane at all.
+**Because:** The single most persuasive element on the site would otherwise be the one
+element on the site whose numbers nobody could check — CLAUDE.md's "simulated data must be
+declared loudly" and "every number reported must have a stated source" apply hardest to
+the thing a judge remembers. The trace is default-`False` and threaded explicitly (no
+global state), so the 30-seed harness and the sensitivity sweep allocate nothing and behave
+identically; `tests/test_runner_trace.py` pins that — it compares traced and untraced runs
+field-by-field via `dataclasses.replace(r, events=[])`, so any field added to
+`MandateResult` later is covered automatically, and separately asserts the beats
+reconstruct the aggregates they accompany.
+
+## [2026-08-28] The demonstration shows the median case, not the best one
+**Chose:** Among mandates that revoked under `aggressive_8x` and survived under `dobara`,
+select the **median** by dobara's net-LTV advantage on that mandate, and publish the
+candidate set's size and the p25/median/p75 of that advantage alongside it on the page.
+**Over:** The maximum (most dramatic) case; or an unranked "first qualifying" pick.
+**Because:** A worked example chosen because it flatters the thesis is an anecdote; the
+median of a stated population, with the spread shown, is a claim a reader can check —
+and the page says so in as many words.
+**Recorded because the first attempt was wrong in an instructive way:** the initial
+criterion ranked by *notifications sent before revocation*, which selected a mandate that
+revoked in the **final** cycle of the horizon — the point at which almost no lifetime value
+remains to forgo, so the aggressive lane actually netted *more* on that mandate
+(₹5,717 vs ₹4,539). Entirely real, entirely honest, and exactly the wrong number to build
+a headline on: the ranking optimised for the visual (a long row of notifications) rather
+than for the quantity the thesis is about. The fix was to rank by the thesis's own
+objective.
+
+## [2026-08-28] `/architecture` reads the compliance rule registry, it does not restate it
+**Chose:** `scripts/build_compliance_rules.py` exports `agent/compliance.py::RULES` to
+`artifacts/compliance_rules.json` (id, text, severity, citation, source_url, plus the
+HARD/SOFT counts), watched by `scripts/check_artifact_freshness.py` like every other
+artifact; the page renders that file.
+**Over:** A hand-written copy of the rule list in the frontend.
+**Because:** A second copy of the rules is a second source of truth, and it goes stale the
+first time a rule's text or severity changes — the same failure mode
+`money_chart_data.json` had before it got a committed producer ([2026-08-27]). This
+generator is model-free and takes seconds, so there is no cost to regenerating it on every
+`agent/compliance.py` change.

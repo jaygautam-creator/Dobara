@@ -1,4 +1,4 @@
-.PHONY: setup sim train eval sensitivity api web check demo demo-fixture money-chart ask-why clean
+.PHONY: setup sim train eval sensitivity api web check demo demo-fixture money-chart home-demo compliance-rules ask-why clean
 
 setup:
 	uv sync --extra dev
@@ -38,6 +38,15 @@ demo-fixture:
 
 money-chart:
 	uv run python -m scripts.build_money_chart
+
+# The landing page's side-by-side demonstration. Runs two full arms over the seed-301
+# population, so it takes about as long as `make money-chart`.
+home-demo:
+	uv run python -m scripts.build_home_demo
+
+# /architecture's rule list, straight out of agent/compliance.py. Seconds, no trained DB.
+compliance-rules:
+	uv run python -m scripts.build_compliance_rules
 
 ask-why:
 	uv run python -m scripts.generate_ask_why

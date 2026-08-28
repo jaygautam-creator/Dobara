@@ -9,7 +9,9 @@ import path from "node:path";
 import type {
   AskWhyCache,
   AskWhyEntry,
+  ComplianceRulesJson,
   DemoBatchJson,
+  HomeDemoJson,
   HazardModelReport,
   MoneyChartData,
   QueueRow,
@@ -47,6 +49,14 @@ export function getHazardModelReport(): HazardModelReport {
 
 export function getMoneyChartData(): MoneyChartData {
   return readJson<MoneyChartData>("money_chart_data.json");
+}
+
+export function getHomeDemo(): HomeDemoJson {
+  return readJson<HomeDemoJson>("home_demo.json");
+}
+
+export function getComplianceRules(): ComplianceRulesJson {
+  return readJson<ComplianceRulesJson>("compliance_rules.json");
 }
 
 let _demoBatch: DemoBatchJson | null = null;

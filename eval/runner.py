@@ -87,6 +87,34 @@ BASE_DATE = datetime(2026, 1, 1)
 
 
 @dataclass
+class AttemptEvent:
+    """One beat in a single mandate's lifetime under one arm — an attempt actually made,
+    or a non-attempt terminal decision (`dobara`'s stop/abstain/escalate) — with the
+    notification burden accumulated to that point.
+
+    Recorded only when a caller passes `trace=True` to `run_arm` (default `False`, so the
+    30-seed harness, the sensitivity sweep and every existing caller allocate nothing and
+    behave byte-for-byte as before). The one consumer today is
+    `scripts/build_home_demo.py`, which needs a real, per-beat reconstruction of one
+    mandate under two arms for the landing page's side-by-side demonstration — the
+    aggregate `MandateResult` fields below can say *how many* notifications an arm sent
+    but not *when*, and inventing that ordering for the page would be exactly the kind of
+    unsourced number CLAUDE.md forbids.
+    """
+
+    cycle_index: int
+    attempt_index: int
+    kind: str  # "attempt" | "stop" | "abstain" | "escalate" | "offer_date_change"
+    at: str  # ISO-8601, the moment the action is taken
+    channel: str | None  # notification channel for this beat, when one was sent
+    outcome: str | None  # sim.engine.attempt_outcome's outcome, for kind == "attempt"
+    notifications_to_date: int  # res.n_notifications after this beat
+    revoked: bool  # did the mandate revoke as a result of this beat
+    reason: str | None  # stop/abstain/escalate reason, verbatim from the emitted action
+    ltv_lost_inr: float  # res.ltv_lost_inr after this beat (0.0 until a revocation)
+
+
+@dataclass
 class MandateResult:
     """Realized outcomes for one mandate under one arm. Aggregated across mandates (and,
     for the sensitivity sweep / batch harness, across seeds) by the caller.
@@ -136,6 +164,9 @@ class MandateResult:
     # final value, since a revoked mandate's cumulative total simply stops moving.
     per_cycle_gross_inr: list[float] = field(default_factory=list)
     per_cycle_net_inr: list[float] = field(default_factory=list)
+    # Per-beat trace, empty unless the caller asked for it (`run_arm(..., trace=True)`).
+    # See AttemptEvent above.
+    events: list[AttemptEvent] = field(default_factory=list)
 
     @property
     def net_ltv_inr(self) -> float:
@@ -188,6 +219,35 @@ def _new_result(m: MandateSpec) -> MandateResult:
     )
 
 
+def _append_event(
+    res: MandateResult,
+    *,
+    cycle_index: int,
+    attempt_index: int,
+    kind: str,
+    at: datetime,
+    channel: str | None = None,
+    outcome: str | None = None,
+    reason: str | None = None,
+) -> None:
+    """Appends one `AttemptEvent`, reading the notification/LTV totals off `res` itself so
+    a trace can never disagree with the aggregate it accompanies."""
+    res.events.append(
+        AttemptEvent(
+            cycle_index=cycle_index,
+            attempt_index=attempt_index,
+            kind=kind,
+            at=at.isoformat(),
+            channel=channel,
+            outcome=outcome,
+            notifications_to_date=res.n_notifications,
+            revoked=res.revoked,
+            reason=reason,
+            ltv_lost_inr=res.ltv_lost_inr,
+        )
+    )
+
+
 def _draw_attempt(
     res: MandateResult,
     state: _MandateState,
@@ -206,11 +266,18 @@ def _draw_attempt(
     notifications_this_cycle: int,
     life_table: LifeTable,
     merchant_category: str,
+    trace: bool = False,
+    channel: str | None = None,
 ) -> str:
     """Draws one real attempt outcome (always with a valid PDN — every arm here sends
     one first), records it onto `res`/`state`, rolls the true revocation hazard on
     failure, and returns the outcome string. Shared by every arm so the bookkeeping
     cannot drift between them.
+
+    `trace`/`channel` are the opt-in per-beat trace (see `AttemptEvent`): appending one
+    record per attempt here, in the one function every arm's attempts already pass
+    through, is what keeps a traced lane and a scored lane from ever disagreeing about
+    what happened.
     """
     draw = attempt_outcome(
         bank,
@@ -231,14 +298,27 @@ def _draw_attempt(
     if _is_outage_day(bank.bank_id, at, dated_outages):
         res.attempts_in_outage_window += 1
 
+    def _record() -> str:
+        if trace:
+            _append_event(
+                res,
+                cycle_index=cycle_index,
+                attempt_index=attempt_index,
+                kind="attempt",
+                at=at,
+                channel=channel,
+                outcome=draw.outcome,
+            )
+        return draw.outcome
+
     if draw.outcome == "success":
         res.n_successes += 1
         res.success_attempt_indices.append(attempt_index)
         res.gross_recovered_inr += amount
         state.n_successes_to_date += 1
-        return draw.outcome
+        return _record()
     if draw.outcome == "rejected_no_pdn":
-        return draw.outcome  # never fires here — every arm always sends a valid PDN first
+        return _record()  # never fires here — every arm always sends a valid PDN first
 
     state.prev_error_source, state.prev_error_step, state.prev_error_reason = (
         draw.error_source,
@@ -247,7 +327,7 @@ def _draw_attempt(
     )
     if draw.outcome == "hard_decline":
         res.n_hard_declines += 1
-        return draw.outcome
+        return _record()
 
     state.cumulative_failure_notifications += 1
     hazard = revocation_hazard(
@@ -265,7 +345,7 @@ def _draw_attempt(
         res.ltv_lost_inr = ltv_remaining(
             amount, life_table, merchant_category, cycle_index - 1, params
         )
-    return draw.outcome
+    return _record()
 
 
 def _maybe_offer_date_change(
@@ -353,7 +433,7 @@ def _pad_cycle_history(res: MandateResult, n_cycles: int) -> None:
 
 
 def _run_cadence_arm(
-    world: World, cadence: Cadence, params: Params, life_table: LifeTable
+    world: World, cadence: Cadence, params: Params, life_table: LifeTable, trace: bool = False
 ) -> list[MandateResult]:
     """`do_nothing` / `razorpay_default` / `aggressive_8x` — a fixed attempt cadence,
     replicated bug-for-bug against `sim.engine.run_simulation`'s existing loop shape so
@@ -436,6 +516,8 @@ def _run_cadence_arm(
                     notifications_this_cycle,
                     life_table,
                     m.merchant_category,
+                    trace,
+                    "sms",
                 )
                 attempts_this_cycle += 1
                 prior_attempt_failed = outcome in ("soft_decline", "hard_decline")
@@ -467,6 +549,7 @@ def _run_dobara_arm(
     life_table: LifeTable,
     holdout_fraction: float,
     audit_trail: AuditTrail | None = None,
+    trace: bool = False,
 ) -> list[MandateResult]:
     """Calls `agent.decide()` live once per attempt decision point. Mandates routed to
     the permanent holdout slice (`config/policy.yaml`'s `holdout_fraction`, per
@@ -501,7 +584,7 @@ def _run_dobara_arm(
             holdout_world = World(
                 seed=world.seed, banks=world.banks, dated_outages=world.dated_outages, mandates=[m]
             )
-            res = _run_cadence_arm(holdout_world, rp_cadence, params, life_table)[0]
+            res = _run_cadence_arm(holdout_world, rp_cadence, params, life_table, trace)[0]
             res.routed_to_holdout = True
             results.append(res)
             continue
@@ -584,9 +667,27 @@ def _run_dobara_arm(
                 action = decision.chosen
 
                 if isinstance(action, Stop):
+                    if trace:
+                        _append_event(
+                            res,
+                            cycle_index=cycle_index,
+                            attempt_index=attempt_index,
+                            kind="stop",
+                            at=now,
+                            reason=action.reason.value,
+                        )
                     break
                 if isinstance(action, EscalateToHuman):
                     res.n_human_escalations += 1
+                    if trace:
+                        _append_event(
+                            res,
+                            cycle_index=cycle_index,
+                            attempt_index=attempt_index,
+                            kind="escalate",
+                            at=now,
+                            reason=action.reason,
+                        )
                     break
 
                 if isinstance(action, Abstain):
@@ -602,6 +703,15 @@ def _run_dobara_arm(
                     # vs. a confident negative-EV call) but mechanically it now behaves
                     # exactly like `Stop` here: no notification, no draw, no attempt.
                     res.n_abstentions += 1
+                    if trace:
+                        _append_event(
+                            res,
+                            cycle_index=cycle_index,
+                            attempt_index=attempt_index,
+                            kind="abstain",
+                            at=now,
+                            reason=action.reason.value,
+                        )
                     break
 
                 if isinstance(action, OfferDateChange):
@@ -620,6 +730,15 @@ def _run_dobara_arm(
                     cost = _notification_cost(params, action.channel.value)
                     notification_cost_this_cycle += cost
                     res.notification_cost_inr += cost
+                    if trace:
+                        _append_event(
+                            res,
+                            cycle_index=cycle_index,
+                            attempt_index=attempt_index,
+                            kind="offer_date_change",
+                            at=now,
+                            channel=action.channel.value,
+                        )
                     accepted = (
                         event_rng(
                             world.seed,
@@ -660,6 +779,8 @@ def _run_dobara_arm(
                         notifications_this_cycle,
                         life_table,
                         m.merchant_category,
+                        trace,
+                        action.notice.channel.value,
                     )
                     attempts_this_cycle += 1
                     prior_attempt_failed = outcome in ("soft_decline", "hard_decline")
@@ -882,22 +1003,27 @@ def run_arm(
     model_bundle: ModelBundle | None = None,
     holdout_fraction: float = 0.0,
     audit_trail: AuditTrail | None = None,
+    trace: bool = False,
 ) -> list[MandateResult]:
     """Dispatch by arm name. `policy`/`model_bundle` are required for `dobara` only;
     `holdout_fraction` and `audit_trail` are consumed only by `dobara`
-    (docs/07-EVAL-SPEC.md's permanent holdout arm; `audit_trail` for the Phase 5 API)."""
+    (docs/07-EVAL-SPEC.md's permanent holdout arm; `audit_trail` for the Phase 5 API).
+
+    `trace=True` additionally records a per-beat `AttemptEvent` list on every returned
+    `MandateResult` (see that dataclass); it changes no draw, no ordering and no scored
+    field, and is not supported by `oracle`, which no consumer needs traced."""
     if arm is Arm.DO_NOTHING:
-        return _run_cadence_arm(world, DO_NOTHING_CADENCE, params, life_table)
+        return _run_cadence_arm(world, DO_NOTHING_CADENCE, params, life_table, trace)
     if arm is Arm.RAZORPAY_DEFAULT:
-        return _run_cadence_arm(world, razorpay_default_cadence(params), params, life_table)
+        return _run_cadence_arm(world, razorpay_default_cadence(params), params, life_table, trace)
     if arm is Arm.AGGRESSIVE_8X:
-        return _run_cadence_arm(world, aggressive_8x_cadence(params), params, life_table)
+        return _run_cadence_arm(world, aggressive_8x_cadence(params), params, life_table, trace)
     if arm is Arm.ORACLE:
         return _run_oracle_arm(world, params, life_table)
     if arm is Arm.DOBARA:
         if policy is None or model_bundle is None:
             raise ValueError("dobara arm requires policy and model_bundle")
         return _run_dobara_arm(
-            world, params, policy, model_bundle, life_table, holdout_fraction, audit_trail
+            world, params, policy, model_bundle, life_table, holdout_fraction, audit_trail, trace
         )
     raise ValueError(f"unknown arm {arm}")  # pragma: no cover

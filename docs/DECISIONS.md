@@ -2355,3 +2355,66 @@ a real design change to a script every other artifact also depends on. Both are
 judgment calls belonging to whichever session next does Python/`eval/` work, not a
 side effect of a frontend foundations session. Flagged in `PROGRESS.md`'s `##
 CURRENT STATE` rather than silently worked around.
+
+## [2026-08-28] Post-Session-B follow-ups: artifact-freshness gate fixed, base-nova deviation recorded
+
+Three small follow-ups to `da1bd22` (Session B), before Session C.
+
+**1. Fixed the artifact-freshness gate's structural false positive on the ask-why cache.**
+
+Confirmed the mechanism exactly as the entry above predicted: `eval/provenance.py::stamp()`
+records `git_commit` as the commit current at *write time*, which is necessarily the
+**parent** of the commit that actually lands the write. So any commit that regenerates
+`artifacts/demo_batch.json` — even byte-identically — stamps `artifacts/llm_cache/
+ask_why.json`'s dependency check with its own parent and then fails the ancestry check
+against itself. The gate could never be satisfied from inside such a commit; it required
+a separate follow-up commit purely to bump the stamp. `40b4a12` hit exactly this and
+could not have avoided it.
+
+**Fix, not a workaround**: rather than just rerunning `make ask-why` to bump the stamp
+(real option (1) from the prior entry — correct but wastes LLM quota for zero content
+change) or leaving ancestry as the only check, added `eval/provenance.py::content_hash()`
+— a SHA-256 of the canonical JSON encoding of whatever field is actually consumed
+downstream — and changed `scripts/check_artifact_freshness.py` so the ask-why cache's
+dependency on `demo_batch.json` is no longer a git-log/ancestry check at all. It is now a
+direct content-hash comparison (`HASH_DEPENDENCIES` list): `generate_ask_why.py::
+save_cache()` stamps `provenance.demo_batch_content_hash` with a hash of
+`demo_batch.json`'s `audit_by_mandate` field (the only field the narration code actually
+reads — confirmed via `scripts/generate_ask_why.py` and `api/demo.py::
+_decision_out_from_json`) at generation time; the checker recomputes that hash against
+the live `demo_batch.json` on every run and only fails if the *content* actually
+diverged. `llm/` and `scripts/generate_ask_why.py` stay on the git-log/ancestry check —
+a real code change there should still stale the cache.
+
+This is a general design, not a one-off patch: `HASH_DEPENDENCIES` is a list precisely so
+a future cached-artifact-derived-from-another-artifact dependency doesn't hit the same
+self-inflicted-staleness bug and doesn't need this same investigation repeated.
+
+Restamped `artifacts/llm_cache/ask_why.json`'s `provenance` (git_commit +
+demo_batch_content_hash) to current HEAD in this commit, with no narrative content
+changed — the 1,296 narratives are untouched, per the prior entry's finding that
+`demo_batch.json`'s decision content is byte-identical across `40b4a12`'s rerun.
+
+**Also recording**: this gate was already red as of `40b4a12` (its own commit, by
+construction, per the mechanism above) — meaning `40b4a12`'s commit message claim of a
+clean `make check` was not accurate at the time it landed. The rest of that commit's
+claims (byte-identical decision content, unchanged README figures, the 22-narrative
+grounding triage) were independently verified in this session and stand; only the
+"`make check` passes end-to-end" framing was wrong, and it was wrong for the structural
+reason above, not because of any actual regression `40b4a12` introduced.
+
+**2. Documented an undocumented spec deviation**: `web/components.json` ships
+`"style": "base-nova"`; `docs/10-REDESIGN.md` §3.5 specified `"new-york"`. Session B's
+diff summary already explained this was a deliberate choice — `base-nova` is the current
+shadcn CLI default and is designed to pair with `@base-ui/react` — but the deviation was
+never written back into the spec or logged here, so it read as spec drift rather than a
+decision. Kept `base-nova` (no reason to fight the current default); §3.5 now names it
+explicitly and points here for the why.
+
+**3. Left a marker for Session D**, not implemented now: `docs/10-REDESIGN.md` §4
+`/control-room` now notes that when the counter call sites in `ControlRoomClient.tsx`
+get touched, `StatTile`'s CI/source rule (see the "stays a convention, not a hard gate"
+entry above) should move from a documented convention to a type-level requirement —
+`source` required, and a `noCi: "reason"` opt-out required in place of a silently absent
+`ciText` — rather than a runtime throw, which was correctly rejected in that entry for
+breaking the three legitimate no-CI live counters.

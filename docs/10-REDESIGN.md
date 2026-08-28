@@ -141,9 +141,11 @@ Sections separate by a single scale: `space-y-24` between major page sections,
 
 ### 3.5 Component library
 
-Install `shadcn/ui` (Tailwind v4, React 19, `new-york` style, CSS-variable theming
-pointed at the **existing** tokens in `globals.css` — do not let shadcn's init overwrite
-the palette). Adopt only these primitives, replacing hand-rolled equivalents:
+Install `shadcn/ui` (Tailwind v4, React 19, `base-nova` style — the current CLI default,
+paired with `@base-ui/react`; see `docs/DECISIONS.md` [2026-08-28] for why this
+superseded the `new-york` style originally specified here — CSS-variable theming pointed
+at the **existing** tokens in `globals.css` — do not let shadcn's init overwrite the
+palette). Adopt only these primitives, replacing hand-rolled equivalents:
 
 `tabs`, `tooltip`, `dialog`, `scroll-area`, `separator`, `table`, `badge`, `button`,
 `accordion`, `hover-card`, `command` (for the mandate jump-to search).
@@ -202,6 +204,10 @@ Keep the density; give it rank and a spine.
   `+18 revocations`) in status colours.
 - Add the **compliance gate panel** to the active case: the candidate set that was
   generated, which HARD rules eliminated which candidates, what survived to be scored.
+- When this session's counter call sites get touched, enforce `StatTile`'s CI/source
+  rule in the type system rather than at runtime: make `source` a required prop, and
+  require an explicit opt-out (e.g. `noCi: "reason why this counter has no CI"`) instead
+  of allowing `ciText` to be silently absent.
 
 ### `/evidence` — The dossier
 The content is strong; the navigation is absent.

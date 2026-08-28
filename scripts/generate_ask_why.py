@@ -37,7 +37,7 @@ from typing import Any
 
 from api.converters import render_from_decision_out
 from api.demo import _decision_out_from_json
-from eval.provenance import stamp
+from eval.provenance import content_hash, stamp
 from llm.narrate import narrate
 from llm.provider import QuotaExhausted, default_provider
 
@@ -69,8 +69,14 @@ def load_cache() -> dict[str, dict[str, Any]]:
     return {k: v for k, v in narratives.items() if isinstance(v, dict) and "text" in v}
 
 
-def save_cache(narratives: dict[str, dict[str, Any]]) -> None:
+def save_cache(narratives: dict[str, dict[str, Any]], audit_by_mandate: dict[str, Any]) -> None:
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    provenance = stamp()
+    # Recorded alongside (not instead of) git_commit -- see docs/DECISIONS.md
+    # [2026-08-28] and scripts/check_artifact_freshness.py. Lets the freshness gate tell
+    # "demo_batch.json's decision content actually changed" apart from "demo_batch.json
+    # was rewritten with identical content", which git ancestry alone can't do.
+    provenance["demo_batch_content_hash"] = content_hash(audit_by_mandate)
     payload = {
         "narratives": narratives,
         "generated_by": "llm/narrate.py + scripts/generate_ask_why.py, see module docstrings",
@@ -79,7 +85,7 @@ def save_cache(narratives: dict[str, dict[str, Any]]) -> None:
             "genuinely heterogeneous across free-tier quota switches, see "
             "docs/DECISIONS.md [2026-08-28]."
         ),
-        "provenance": stamp(),
+        "provenance": provenance,
     }
     CACHE_PATH.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
@@ -119,7 +125,7 @@ def main() -> None:
                 # Not transient -- every remaining decision would fail identically, so
                 # save what succeeded and stop immediately rather than cascading a FAIL
                 # through the other ~1,000+ decisions.
-                save_cache(narratives)
+                save_cache(narratives, audit_by_mandate)
                 print(f"ABORT at {key}: {exc}", file=sys.stderr)
                 print(
                     f"saved {generated} newly generated ({len(narratives)} total cached) "
@@ -132,11 +138,11 @@ def main() -> None:
                 print(f"FAIL  {key}: {exc}", file=sys.stderr)
                 continue
             if generated % 25 == 0:
-                save_cache(narratives)
+                save_cache(narratives, audit_by_mandate)
                 print(f"[{done}/{total}] checkpoint saved ({generated} generated this run)")
             time.sleep(PAUSE_SECONDS)
 
-    save_cache(narratives)
+    save_cache(narratives, audit_by_mandate)
     print(
         f"done: {generated} generated, {skipped} already cached, {len(failed)} failed "
         f"(of {total} total decisions)"

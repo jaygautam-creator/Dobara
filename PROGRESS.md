@@ -7,14 +7,19 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-28, later same day. **`docs/10-REDESIGN.md` Session B
-(foundations) is done and pushed.** `motion` and `shadcn/ui` are installed, the type
-scale and shadcn token bridge are in `globals.css`, `ui.tsx` is rebuilt with `Card`
-surface variants and `StatTile` size tiers, `lib/motion.ts` and
-`components/charts/chartTheme.ts` exist, and every existing route still builds
-unchanged. Session C (`/` rebuild + `/architecture`) is next — do not start it before
-reading the diff summary below; per the redesign spec's own sequencing note, Session B
-is load-bearing and determines whether C–F are assembly or rework.
+**Last updated:** 2026-08-28, post-Session-B follow-ups. **`make check` is green
+end-to-end again** (it was red as of `40b4a12`, two commits before this one — see
+`docs/DECISIONS.md` [2026-08-28] "Post-Session-B follow-ups"). Fixed the
+artifact-freshness gate's structural false positive on `artifacts/llm_cache/
+ask_why.json` (a real design fix — content-hash comparison via `eval/provenance.py::
+content_hash()`, not just a stamp bump), documented the `base-nova` vs `new-york`
+shadcn deviation in `docs/10-REDESIGN.md` §3.5, and left a marker in §4 for Session D to
+enforce `StatTile`'s CI/source rule in the type system when those call sites are next
+touched. `npx tsc --noEmit` and `npm run build` (web/) both clean. Nothing else changed
+— `docs/10-REDESIGN.md` Session B (foundations) itself is still done and pushed as
+described below. Session C (`/` rebuild + `/architecture`) is next — do not start it
+before reading the diff summary below; per the redesign spec's own sequencing note,
+Session B is load-bearing and determines whether C–F are assembly or rework.
 
 **What shipped this session (Session B only — no route was redesigned, per the
 session's explicit scope):**
@@ -74,20 +79,15 @@ installing the ten shadcn primitives. Served the static `out/` build locally
 `/mandate/[id]`/`/audit/[id]` all return 200 with no runtime error, and that
 `.tabular-nums`/Geist Mono is present broadly on `/evidence`'s rendered HTML.
 
-**`make check` is currently red, for a reason unrelated to this session's `web/`-only
-changes** — this session touched no Python file. `scripts/check_artifact_freshness.py`
-flags `artifacts/llm_cache/ask_why.json` stale: its top-level `provenance.git_commit`
-stamp is `f199e87`, but `40b4a12` (also this session's predecessor, the stale-artifact
-rerun) touched `artifacts/demo_batch.json` — one of the cache's watched paths — after
-that stamp, even though `40b4a12`'s own commit message confirms the touch was
-content-neutral (decision content byte-identical, confirmed empirically). The checker
-is doing exactly its documented job (any post-stamp touch to a watched path fails,
-unconditionally) — this isn't a checker bug, it's a real gap between "provably
-inconsequential" and "the freshness gate can tell that automatically." Not fixed here:
-out of a foundations-session's scope, and the fix is a judgment call (rerun `make
-ask-why` to bump the stamp — costs LLM quota for zero content change — or teach the
-checker to special-case a content-identical touch) that the next session touching
-Python/`eval/` should make deliberately, not as a side effect of frontend work.
+**`make check` was red at the time this session ended**, for a reason unrelated to this
+session's `web/`-only changes — this session touched no Python file.
+`scripts/check_artifact_freshness.py` flagged `artifacts/llm_cache/ask_why.json` stale:
+its top-level `provenance.git_commit` stamp was `f199e87`, but `40b4a12` (also this
+session's predecessor, the stale-artifact rerun) touched `artifacts/demo_batch.json` —
+one of the cache's watched paths — after that stamp, even though `40b4a12`'s own commit
+message confirms the touch was content-neutral (decision content byte-identical,
+confirmed empirically). **Fixed in the very next commit** — see `docs/DECISIONS.md`
+[2026-08-28] "Post-Session-B follow-ups" and the updated `## CURRENT STATE` above.
 
 ---
 

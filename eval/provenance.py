@@ -10,6 +10,8 @@ enforces that this key exists and that no later commit touching `agent/`, `model
 
 from __future__ import annotations
 
+import hashlib
+import json
 import subprocess
 from datetime import UTC, datetime
 from typing import Any
@@ -30,3 +32,15 @@ def stamp() -> dict[str, Any]:
         "generated_at": datetime.now(UTC).isoformat(),
         "git_commit": _git_commit(),
     }
+
+
+def content_hash(value: Any) -> str:
+    """SHA-256 of `value`'s canonical JSON encoding. Per `docs/DECISIONS.md`
+    [2026-08-28]: `git_commit` ancestry alone can't tell a commit that regenerated an
+    artifact with byte-identical content from one that actually changed it -- the commit
+    that writes the artifact necessarily post-dates the commit `stamp()` records, so a
+    provenance stamp can never satisfy an ancestry check against its own commit. A
+    content hash of the fields that are actually consumed downstream lets a freshness
+    check compare what changed instead of when it landed."""
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()

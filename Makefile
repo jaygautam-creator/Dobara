@@ -26,8 +26,8 @@ check:
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run mypy agent models sim features eval api llm scripts
-	uv run pytest -q
 	uv run python -m scripts.check_artifact_freshness
+	uv run pytest -q
 	uv run python -m scripts.check_ask_why_grounding
 
 demo: sim train eval

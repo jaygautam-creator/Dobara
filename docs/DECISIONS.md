@@ -2418,3 +2418,62 @@ entry above) should move from a documented convention to a type-level requiremen
 `source` required, and a `noCi: "reason"` opt-out required in place of a silently absent
 `ciText` — rather than a runtime throw, which was correctly rejected in that entry for
 breaking the three legitimate no-CI live counters.
+
+## [2026-08-28] Artifact-freshness gate: fix the class, not the instance
+
+`bfa52dc` ("Post-Session-B follow-ups") fixed `artifacts/llm_cache/ask_why.json`'s
+structural false positive with a content-hash check, and reported `make check` green.
+That report was measured pre-commit, against the working tree — `check_artifact_freshness.py`
+is git-log-based, so it could not yet see the commit it was about to become part of.
+Verified post-commit (`git log --oneline -1` confirming HEAD was `bfa52dc`, then rerunning
+the gate), `make check` was red with **5** failures, not the 1 it started with:
+`summary.json`, `sensitivity.json`, `demo_batch.json`, `money_chart_data.json`, and
+`ask_why.json`'s ancestry check (separately from its now-passing content-hash check) all
+failed. Cause: `bfa52dc` added `eval/provenance.py::content_hash()`, and `eval/` is in
+`WATCHED_PATHS` — the very commit that fixed the gate tripped it on every other artifact,
+by the same mechanism already diagnosed (path-touched is a bad proxy for
+content-could-have-changed) but not yet fixed as a class. A helper function consumed only
+by a checker script and by one generator's cache-write path cannot alter any of these five
+artifacts' content, yet it staled all of them.
+
+**Fix, generalized this time.** `scripts/check_artifact_freshness.py::stale_commits_for()`
+now applies two narrowings to the ancestry proxy, in order, for every commit that touched
+a watched path since an artifact's stamp:
+
+1. **Self-regeneration exclusion (automatic).** A commit that rewrites the artifact file
+   itself can't be stale relative to itself — `stamp()` records HEAD's parent, so any
+   write-commit necessarily post-dates its own stamp. This is the general form of the
+   `ask_why.json`/`demo_batch.json` bug from the prior entry, now applied to every artifact,
+   not hand-fixed per dependency.
+2. **Committed waivers** (`docs/artifact_freshness_waivers.json`): a `(artifact, commit)`
+   pair with a written reason, for a commit that touched a watched path but is known not
+   to affect that artifact's generation. Added five entries for `bfa52dc`'s `content_hash()`
+   addition, each with the specific grep/import-graph reasoning for why that artifact's
+   generator doesn't call it. Default stays fail — an unwaived, non-self-regen touch to a
+   watched path still fails, which is what must keep catching a real change to
+   `agent/decide.py`'s scoring.
+
+Considered but rejected: rerunning `make eval`/`sensitivity`/`demo-fixture`/`money-chart`
+to bump stamps with byte-identical content (the "automatic, no judgment" option from the
+prior entry) — correct in principle, but `demo_batch.json`'s rerun costs ~100 LLM-quota
+minutes for a change that provably touches zero generator code paths; not a good use of
+remaining build time for a helper function. The waiver file is the honest version of that
+judgment call: written down, attributed to a commit, and inert-by-construction (it doesn't
+touch `WATCHED_PATHS` scope, so it can't quietly narrow what the gate catches for anyone
+else's real change).
+
+**Test added**: `tests/test_check_artifact_freshness.py` builds a throwaway git repo (never
+touches this repo's own history) and exercises `stale_commits_for()` directly: a real
+`agent/decide.py`-style change is still flagged stale; a commit that rewrites the artifact
+itself is not; a waived commit is reported as waived, not real-stale. This is the gate's
+first test of its own correctness.
+
+**Also**: moved `check_artifact_freshness` ahead of `pytest` in `make check` — it's a
+git-log query, not a full test run, and previously a stale artifact only surfaced after a
+~225s pytest wait.
+
+**Process note, recorded for future gates shaped like this one**: any check that reads
+committed git history is structurally blind to the commit it's about to become part of when
+run against a dirty working tree. From now on this gate — and any future one with the same
+shape — is verified **after** committing, immediately before pushing, not before. See
+`PROGRESS.md`'s `## CURRENT STATE` for the same note added to the session protocol.

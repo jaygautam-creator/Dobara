@@ -1,0 +1,27 @@
+[
+  {
+    "artifact": "artifacts/summary.json",
+    "commit": "bfa52dc24c55727f54b023671114e8016b45b5a4",
+    "reason": "bfa52dc added eval/provenance.py::content_hash(), a new pure function. It is called only by scripts/check_artifact_freshness.py::check_hash_dependency() and by scripts/generate_ask_why.py::save_cache() (to stamp demo_batch_content_hash). Nothing in eval/run.py or its call graph invokes it, so artifacts/summary.json's generation is unaffected. Verified via `grep -rn content_hash eval/ scripts/` before recording this waiver."
+  },
+  {
+    "artifact": "artifacts/sensitivity.json",
+    "commit": "bfa52dc24c55727f54b023671114e8016b45b5a4",
+    "reason": "Same as artifacts/summary.json: bfa52dc's only eval/ change is the new, unused-by-generators content_hash() helper. eval/sensitivity.py does not import it."
+  },
+  {
+    "artifact": "artifacts/demo_batch.json",
+    "commit": "bfa52dc24c55727f54b023671114e8016b45b5a4",
+    "reason": "Same as artifacts/summary.json: bfa52dc's only eval/ change is the new, unused-by-generators content_hash() helper. scripts/build_demo_fixture.py does not import it."
+  },
+  {
+    "artifact": "artifacts/money_chart_data.json",
+    "commit": "bfa52dc24c55727f54b023671114e8016b45b5a4",
+    "reason": "Same as artifacts/summary.json: bfa52dc's only eval/ change is the new, unused-by-generators content_hash() helper. scripts/build_money_chart.py does not import it."
+  },
+  {
+    "artifact": "artifacts/llm_cache/ask_why.json",
+    "commit": "bfa52dc24c55727f54b023671114e8016b45b5a4",
+    "reason": "bfa52dc's eval/ change (content_hash() addition) is not imported by llm/ or scripts/generate_ask_why.py's narration path -- generate_ask_why.py calls content_hash() only when *writing* the cache (to stamp demo_batch_content_hash), not as part of narrating a decision, so the narrated text is unaffected. content_hash()'s own behavior for this artifact's actual dependency is separately covered by the HASH_DEPENDENCIES content check below, which passes."
+  }
+]

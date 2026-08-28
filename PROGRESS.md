@@ -7,19 +7,37 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-28, post-Session-B follow-ups. **`make check` is green
-end-to-end again** (it was red as of `40b4a12`, two commits before this one — see
-`docs/DECISIONS.md` [2026-08-28] "Post-Session-B follow-ups"). Fixed the
-artifact-freshness gate's structural false positive on `artifacts/llm_cache/
-ask_why.json` (a real design fix — content-hash comparison via `eval/provenance.py::
-content_hash()`, not just a stamp bump), documented the `base-nova` vs `new-york`
-shadcn deviation in `docs/10-REDESIGN.md` §3.5, and left a marker in §4 for Session D to
-enforce `StatTile`'s CI/source rule in the type system when those call sites are next
-touched. `npx tsc --noEmit` and `npm run build` (web/) both clean. Nothing else changed
-— `docs/10-REDESIGN.md` Session B (foundations) itself is still done and pushed as
-described below. Session C (`/` rebuild + `/architecture`) is next — do not start it
-before reading the diff summary below; per the redesign spec's own sequencing note,
-Session B is load-bearing and determines whether C–F are assembly or rework.
+**Last updated:** 2026-08-28, post-`bfa52dc` freshness-gate correction. **`make check`
+is green end-to-end, verified post-commit** — see `docs/DECISIONS.md` [2026-08-28]
+"Artifact-freshness gate: fix the class, not the instance" for the full story. Short
+version: `bfa52dc` (the previous "fix") was itself verified pre-commit, against a
+working tree `git log` couldn't yet see the commit in, so its "green" claim didn't
+hold once committed — `make check` was red with 5 failures at that HEAD, worse than the
+1 it started with, because `eval/provenance.py`'s new `content_hash()` helper touched a
+`WATCHED_PATHS` directory and staled every artifact via the same ancestry-proxy
+mechanism, not just the one instance already fixed. This session generalized the fix:
+`scripts/check_artifact_freshness.py` now (1) automatically excludes a commit that
+rewrites the artifact file itself from staling that artifact (fixes the self-inflicted
+case for any artifact, not just `ask_why.json`), and (2) accepts committed, per-commit
+waivers in `docs/artifact_freshness_waivers.json` for changes provably inert to a given
+artifact's generation (used here for `bfa52dc`'s helper addition, across all 5
+artifacts). Covered by a new test, `tests/test_check_artifact_freshness.py`, which
+proves the gate still fails on a real scoring change. The freshness gate also now runs
+*before* pytest in `make check` (was after — a 224s wait to learn a fast check had
+failed).
+
+**Session-protocol addition**: any gate that reads committed git history (this one, and
+any future one shaped like it) must be verified **after** committing, not against the
+dirty working tree — `git log` can't see a commit that doesn't exist yet, so a
+pre-commit "green" run is structurally blind to what the commit it's about to make will
+trip. Verify with `git log --oneline -1` (confirm it's the commit you just made), then
+rerun the gate/`make check` against that committed state, before pushing.
+
+`docs/10-REDESIGN.md` Session B (foundations) itself is still done and pushed as
+described below, unaffected by any of the above (Session B touched only `web/`).
+Session C (`/` rebuild + `/architecture`) is next — do not start it before reading the
+diff summary below; per the redesign spec's own sequencing note, Session B is
+load-bearing and determines whether C–F are assembly or rework.
 
 **What shipped this session (Session B only — no route was redesigned, per the
 session's explicit scope):**

@@ -9,6 +9,27 @@ An artifact whose `git_commit` is not an ancestor of `HEAD` (e.g. a local commit
 on the branch this checkout has, or a rebase) is reported as unverifiable, not stale --
 the check only fails on the case it exists to catch: real, landed commits to the money
 path since the artifact was generated.
+
+Per `docs/DECISIONS.md` [2026-08-28] "Post-Session-B follow-ups" and the entry that
+supersedes it: naive ancestry ("did any file under a watched directory change") is a
+false-positive-prone proxy for "could this artifact's content have changed". Two
+mechanisms narrow that proxy, applied in order for every commit that touched a watched
+path since an artifact's stamp:
+
+1. Self-regeneration exclusion (automatic, no human judgment). `stamp()` records
+   `git_commit` as HEAD's *parent* at write time -- the commit that actually lands the
+   write necessarily comes after its own stamp. A commit that rewrites the artifact file
+   itself is therefore never "stale relative to itself"; it's evidence the artifact
+   already reflects that commit. Any commit in range that touched `path` itself is
+   dropped from the stale set before the watched-path check runs.
+2. Committed waivers (`docs/artifact_freshness_waivers.json`), for a commit that
+   touched a watched path but is known, and written down, not to affect this artifact's
+   generation -- e.g. a helper function added to `eval/provenance.py` that no generator
+   calls yet. A waiver is scoped to one (artifact, commit) pair and requires a reason;
+   it is not a way to narrow `WATCHED_PATHS` and does not apply to any other commit or
+   artifact. Default stays fail: an unwaived, non-self-regen touch to a watched path
+   fails the gate, which is what catches a real change to `agent/decide.py`'s scoring
+   that nobody regenerated artifacts for.
 """
 
 from __future__ import annotations
@@ -21,6 +42,7 @@ from pathlib import Path
 from eval.provenance import content_hash
 
 WATCHED_PATHS = ["agent/", "models/", "eval/", "sim/"]
+WAIVERS_PATH = Path("docs/artifact_freshness_waivers.json")
 
 # (artifact path, extra watched paths beyond WATCHED_PATHS above). The ask-why cache is
 # derived from agent/'s audit fields *and* from the narration code that turns them into
@@ -33,14 +55,9 @@ WATCHED_PATHS = ["agent/", "models/", "eval/", "sim/"]
 # (which would flag every artifact stale on any llm/ change, including ones with nothing
 # to do with narration).
 #
-# demo_batch.json is deliberately NOT in this git-log-based watched list. Per
-# docs/DECISIONS.md [2026-08-28]: a provenance stamp records the commit that produced an
-# artifact, which is always the *parent* of the commit that writes the file -- so a
-# commit that regenerates demo_batch.json (even byte-identically, e.g. after an
-# unrelated schema change elsewhere) necessarily post-dates its own artifact's stamp and
-# trips the ancestry check on itself. Ancestry can't distinguish "content changed" from
-# "file was rewritten with the same content." demo_batch.json's dependency is checked by
-# content hash instead, below.
+# demo_batch.json's dependency on its own generator is checked by ancestry below like
+# everything else; its dependency on *what it narrates* being consumed correctly by the
+# ask-why cache is a separate, content-hash check -- see HASH_DEPENDENCIES.
 ARTIFACTS: list[tuple[Path, list[str]]] = [
     (Path("artifacts/summary.json"), []),
     (Path("artifacts/sensitivity.json"), []),
@@ -75,6 +92,30 @@ def _is_ancestor(commit: str) -> bool:
         ["git", "merge-base", "--is-ancestor", commit, "HEAD"], capture_output=True
     )
     return result.returncode == 0
+
+
+def _commits_touching(path_args: list[str], since: str) -> set[str]:
+    out = _run(["log", f"{since}..HEAD", "--format=%H", "--", *path_args])
+    return {line for line in out.split() if line}
+
+
+def _load_waivers() -> set[tuple[str, str]]:
+    if not WAIVERS_PATH.exists():
+        return set()
+    entries = json.loads(WAIVERS_PATH.read_text())
+    return {(e["artifact"], e["commit"]) for e in entries}
+
+
+def stale_commits_for(path: Path, commit: str, watched: list[str]) -> tuple[list[str], list[str]]:
+    """Full hashes of commits in `commit..HEAD` that touched `watched`, split into
+    (real, waived) after dropping self-regeneration commits (see module docstring)."""
+    touching_watched = _commits_touching(watched, since=commit)
+    self_regen = _commits_touching([str(path)], since=commit)
+    candidates = touching_watched - self_regen
+    waivers = _load_waivers()
+    real = sorted(c for c in candidates if (str(path), c) not in waivers)
+    waived = sorted(c for c in candidates if (str(path), c) in waivers)
+    return real, waived
 
 
 def check_hash_dependency(
@@ -116,15 +157,21 @@ def check_one(path: Path, extra_watched: list[str]) -> bool:
         )
         return True
     watched = [*WATCHED_PATHS, *extra_watched]
-    later = _run(["log", f"{commit}..HEAD", "--oneline", "--", *watched]).strip()
-    if later:
-        stale_commits = later.splitlines()
+    real, waived = stale_commits_for(path, commit, watched)
+    if waived:
         print(
-            f"FAIL  {path}: generated at {commit[:12]}, but {len(stale_commits)} later "
+            f"WAIVE {path}: {len(waived)} commit(s) touched {'/'.join(watched)} but are "
+            f"waived (see {WAIVERS_PATH}):"
+        )
+        for c in waived:
+            print(f"        {c[:12]}")
+    if real:
+        print(
+            f"FAIL  {path}: generated at {commit[:12]}, but {len(real)} later "
             f"commit(s) touched {'/'.join(watched)}:"
         )
-        for line in stale_commits:
-            print(f"        {line}")
+        for c in real:
+            print(f"        {c[:12]} {_run(['log', '-1', '--format=%s', c]).strip()}")
         return False
     print(f"OK    {path}: fresh (generated at {commit[:12]})")
     return True

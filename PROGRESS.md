@@ -7,10 +7,65 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-27, later same day. **The visual browser pass (previously the
-top open item) is done: all five defects it found are fixed and re-verified by
-screenshot.** See `docs/DECISIONS.md` [2026-08-27] "Visual pass fixes" for full detail;
-summary below. Phase 6 continues next.
+**Last updated:** 2026-08-28. **The `/audit` "ask why" LLM narrative box is built and
+ground-verified across its full corpus.** Phase 6 continues next; a frontend redesign
+spec (`docs/10-REDESIGN.md`) now exists but has not been executed — see its own session
+plan for the six-session breakdown (A bookkeeping close-out / B foundations / C–F
+per-route rebuilds + ship).
+
+**What shipped, in order (2026-08-27 later, 2026-08-28):**
+
+1. **`/audit/[id]` "ask why" box** (`5564c2c`): `llm/provider.py` (`GeminiProvider`,
+   `GroqProvider` behind one `LLMProvider` protocol), `llm/narrate.py` (explain the
+   structured record, never invent or second-guess it), `scripts/generate_ask_why.py`
+   (`make ask-why`) narrates all 1,296 decisions in `artifacts/demo_batch.json` to a
+   committed cache, `artifacts/llm_cache/ask_why.json`. Frontend (`AskWhyBox.tsx`) reads
+   the cache statically, renders nothing for a missing entry, and states plainly that the
+   narrative was generated ahead of time by a model that never touched the money
+   decision. Generating the batch took six provider/model switches across an evening
+   (Gemini daily-quota exhaustion three ways, a false quota-reset sighting, a Groq
+   TPD-limit false positive, a Qwen model that leaked `<think>` blocks) — full blow-by-
+   blow in `docs/DECISIONS.md` [2026-08-28].
+2. **Per-entry ask-why provenance** (`f199e87`): every cache entry now carries its own
+   `{text, provider, model, generated_at}` rather than one file-level stamp, so a partial
+   re-run (only the failing/stale entries regenerated) doesn't misrepresent untouched
+   entries' provenance. A numeric-grounding gate
+   (`scripts/check_ask_why_grounding.py`) checks every rupee figure and count named in a
+   narrative against the source audit record, wired into `make check`. An architecture
+   diagram (mermaid, in `README.md`) and a CI scope fix (was missing `eval`/`api`/`llm`/
+   `scripts` from the mypy invocation, had no artifact-freshness gate, and had no web
+   build job — which had silently been masking a real ESLint error in
+   `ThemeToggle.tsx`) shipped the same session.
+3. **Stale-artifact rerun, grounding triage, and a real narrative bug caught by hand**
+   (`40b4a12`): `check_artifact_freshness.py`'s `main()` was short-circuiting on `any()`
+   and had stopped checking artifacts past the first failure — fixed, which surfaced that
+   `summary.json`/`sensitivity.json`/`demo_batch.json`/`money_chart_data.json` all
+   predated an earlier additive `eval/runner.py` change. Reran the full chain
+   (`demo-fixture` → `eval` → `sensitivity` → `money-chart`); confirmed empirically (not
+   just by diff) that decision content was byte-identical before/after, so the 1,296
+   already-cached narratives stayed valid — zero extra LLM quota spent. Ran the grounding
+   checker against the full corpus (previously only spot-checked on 50 entries): 22
+   flagged, triaged individually — **14 real hallucinations** (invented "N compliance
+   checks" counts, a wildly wrong candidate-count claim, a garbled date, a decimal-comma
+   typo, an off-by-one) regenerated and reread clean; **8 checker false positives**
+   (legitimate named-rule prose like "the 24-hour rule", a correctly-signed CI restated
+   as a loss, an accurate loose paraphrase) individually whitelisted with reasoning, not
+   by loosening the matcher. Final state: 0 flagged, 0 unmatched tokens across all 1,296.
+   A separate hand-read of ten narratives (not driven by the automated checker) caught
+   one more real defect the grounding checker structurally can't catch — a STOP decision
+   whose narrative falsely claimed the system "escalated the case for manual review"
+   (it had mistaken a rejected, tied `EscalateToHuman` alternative for the chosen
+   action) — regenerated. Every headline number in `README.md` was confirmed
+   byte-identical before/after the rerun; no README changes were needed. `make check`
+   (95 tests, artifact freshness, ask-why grounding) and the web build (306 static pages)
+   green throughout.
+
+**Not done this pass, flagged not fixed**: no redeploy or live production spot-check
+happened after the ask-why work landed — `.vercel/` (last touched 2026-08-27) and
+`docs/09-DEMO-SCRIPT.md`'s rough-take notes both predate commits `5564c2c`/`f199e87`/
+`40b4a12`. The live site (`https://dobara-one.vercel.app`, confirmed reachable, HTTP 200)
+does not yet reflect the ask-why box or the architecture diagram. Next redeploy should
+pick that up along with whatever Session B–F of the redesign produces.
 
 **What happened, in order:** a headless-Chrome screenshot pass against `/evidence`,
 `/control-room`, and `/mandate/[id]` (recipe: `"Google Chrome" --headless --disable-gpu
@@ -755,29 +810,29 @@ fully superseded by the 2026-08-26 Step 3 rerun (see `## CURRENT STATE` above an
 
 ## Phase 6 — Frontend (Day 8) · spec: `docs/08-FRONTEND-SPEC.md`
 
-- [ ] **Load the `dataviz` skill before writing chart code**
-- [ ] Next.js scaffold, Tailwind, shadcn/ui, generated API types
-- [ ] `/` thesis page with inline sources
-- [ ] `/control-room` — counters incl. "attempts not made", queue, decision cards, gate animation
-- [ ] **The comparison toggle** (aggressive vs Dobara)
-- [ ] `/evidence` — five arms with CIs, money chart, calibration first, sensitivity, break-even, honesty panel
-- [ ] `/audit/[id]`
-- [ ] `/mandate/[id]` timeline
-- [ ] Abstention banner
-- [ ] Deployed demo works with **no API key**
+- [x] **Load the `dataviz` skill before writing chart code** — dark-first tokens in `app/globals.css` follow `references/palette.md`, per the Phase 6 start log entry
+- [ ] Next.js scaffold, Tailwind, shadcn/ui, generated API types — Next.js + Tailwind done; **shadcn/ui was never installed** (interactive CLI init hung with no stdin, hand-built Tailwind components instead — see the Phase 6 start log entry and `docs/10-REDESIGN.md` §3.5, Session B scope); no generated API types exist (`lib/server-data.ts` reads committed JSON directly, no OpenAPI client generation step in the repo)
+- [x] `/` thesis page with inline sources (`web/app/page.tsx`, sourced stat tiles incl. `business-standard.com, 2025`, RBI e-mandate framework, `docs/01-REGULATORY.md`)
+- [x] `/control-room` — counters incl. "attempts not made", queue, decision cards, gate animation (`web/components/control-room/ControlRoomClient.tsx` — client-side streaming reveal, skippable only by finishing, not yet click-to-skip)
+- [x] **The comparison toggle** (aggressive vs Dobara) — `aggressive_8x` wired into `ControlRoomClient.tsx`
+- [x] `/evidence` — five arms with CIs, money chart, calibration first, sensitivity, break-even, honesty panel (`web/app/evidence/page.tsx`)
+- [x] `/audit/[id]` (`web/app/audit/[id]`, statically generated for all 150 demo mandates)
+- [x] `/mandate/[id]` timeline (`web/app/mandate/[id]`, statically generated)
+- [x] Abstention banner (`web/components/DecisionCard.tsx`, referenced from `web/app/evidence/page.tsx`)
+- [x] Deployed demo works with **no API key** — `https://dobara-one.vercel.app` confirmed reachable (HTTP 200) 2026-08-28; static export design means no API key is ever required. **Caveat**: this deployment predates `5564c2c`/`f199e87`/`40b4a12` (last `.vercel/` touch 2026-08-27) — it does not yet serve the ask-why box or the architecture diagram; a fresh deploy is still owed, tracked in `## CURRENT STATE`
 
 ## Phase 7 — Ship (Day 9–10)
 
-- [ ] Architecture diagram (mermaid + SVG)
-- [ ] README: problem, thesis, approach, metrics **read from `summary.json`**, run instructions
-- [ ] README: assumptions table, unsourced parameters, regulatory grey area, break-even
-- [ ] README: **"What Dobara deliberately does not do"**
-- [ ] README: RBI FREE-AI Sutra mapping table
-- [ ] README: "not legal advice" disclaimer; "Razorpay test mode, no affiliation" note
-- [ ] CI green: ruff, mypy strict, pytest, reduced-seed eval
-- [ ] Consistency check: every README number matches `summary.json`
-- [ ] Deploy to Vercel `bom1`
-- [ ] Record 5-min video per `docs/09-DEMO-SCRIPT.md`
+- [x] Architecture diagram (mermaid + SVG) — embedded in `README.md` (mermaid, line 69), shipped in `f199e87`
+- [x] README: problem, thesis, approach, metrics **read from `summary.json`**, run instructions — `README.md` §"The problem"/"The mechanism nobody prices"/"What it does"/"Honest metrics"/"Run it"; headline figures confirmed byte-identical to `summary.json` across the 2026-08-28 rerun (`docs/DECISIONS.md` [2026-08-28])
+- [x] README: assumptions table, unsourced parameters, regulatory grey area, break-even — §"Honesty statement", §"Break-even reporting"
+- [x] README: **"What Dobara deliberately does not do"** — present at line 424
+- [x] README: RBI FREE-AI Sutra mapping table — §"Compliance", line 451
+- [x] README: "not legal advice" disclaimer; "Razorpay test mode, no affiliation" note — lines 455 and 497
+- [x] CI green: ruff, mypy strict, pytest, reduced-seed eval — `.github/workflows/*.yml` `python` job covers all four plus artifact-freshness; `web` job added, not originally in this checkbox's scope but verified present
+- [ ] Consistency check: every README number matches `summary.json` — spot-verified for the headline figure only (`docs/DECISIONS.md` [2026-08-28] confirms byte-identical pre/post-rerun); a full line-by-line reconciliation of every quoted number has not been performed this session, leaving unticked
+- [ ] Deploy to Vercel `bom1` — a `bom1` deploy exists but is stale (see the caveat above); the redeploy that would pick up the ask-why box and architecture diagram has not happened
+- [ ] Record 5-min video per `docs/09-DEMO-SCRIPT.md` — not started
 - [ ] Submit
 
 ---
@@ -803,3 +858,5 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-26** — Day 6 continued, Step 3. User back at a stable desk with power; launched the full 30-seed x 5-arm harness supervised (`nohup uv run python -m eval.run`, monitored to completion rather than left unattended). Completed cleanly in 101.0 min — no repeat of the earlier unsupervised 7+-hour stall. **Headline: `dobara` beats `razorpay_default` by ₹66 per mandate [95% CI ₹53.82, ₹80.63], paired difference across 30 seeds of 5,000 mandates each, CI excludes zero, significant** (same figure as ₹329,940.56 [₹269,095.77, ₹403,153.56] *total* over one seed's 5,000-mandate population — not divided by 150,000, the pooled 30-seed row count). Decomposed: ₹742,361/seed of gross given up, ₹1,072,301 of mandate value bought back (99.5% avoided revocation loss), netting ₹329,941 — a 1.46% lift on `razorpay_default`'s net-LTV base, comfortably under Razorpay's own 4-6% published lift. A second lift estimate in `summary.json` (`permanent_holdout_arm`, ₹98.04/mandate, no seed-bootstrap CI) is reconciled, not left unexplained — ₹66/mandate stays the number to quote. `aggressive_8x` collapses as predicted (significant loss vs. `razorpay_default`); `oracle` weakly dominates every arm. **Reported as designed restraint, not apologised for as underperformance**: sliced by bank (directional, no CI — `robustness_slices.note` says so explicitly), `dobara` wins clearly on the 7 non-shifted banks but on `SBI` (the one bank with a real injected shift, correctly caught by the change-point detector) the price of correctly declining to trust the model there is a lower net LTV/mandate despite halving `SBI` revocations — confirms at full scale exactly what this session's smoke-scale decomposition predicted. Flagged as the next lever (the abstention *response*, not detection quality — out of Step 2's scope), not fixed this session. Published in `README.md`'s "Honest metrics" table + surrounding prose, verbatim from `artifacts/summary.json`; full account in `docs/DECISIONS.md` [2026-08-26] "Step 3". Phase 4's headline gate is now genuinely closed.
 - **2026-08-26** — Day 6 continued, reporting fixes + money chart + sensitivity sweep. User caught three real reporting bugs in the Step 3 writeup: (1) the headline unit mixed a per-seed total (₹329,940) with an all-seeds mandate count (150,000), a nonsensical ₹2.20 if divided naively — fixed to ₹66/mandate [₹53.82, ₹80.63], paired difference across 30 seeds of 5,000 mandates each, everywhere (README/PROGRESS.md/DECISIONS.md); (2) `permanent_holdout_arm` implies ₹98.04/mandate, a second unreconciled lift estimate — explained (denominator dilution from ~10% zero-effect holdout-routed mandates in the paired denominator; no seed-bootstrap CI on the holdout figure), not left to collide on `/evidence`; (3) bank-level slices carry no valid CI (`robustness_slices.note` says so) — relabeled directional, not headline-authority. Also added the mechanism decomposition (gross given up / value bought back / net, verified against row-level `results.parquet`), the explicit 1.46%-vs-4-6% credibility check, and reframed `SBI` as designed restraint (the changepoint detector correctly caught the injected shift and the agent correctly declined to trust its model there) rather than apologised-for underperformance. Then built the money chart (new single-seed per-cycle instrumented replay, `artifacts/money_chart.svg`, static dependency-free SVG per the `dataviz` skill since Recharts is the declared Phase 6 choice) — found the actual shape isn't what `docs/07-EVAL-SPEC.md` assumed (`aggressive_8x` trails on net from cycle 1, no mid-horizon crossover; its own gross lead loses to `razorpay_default`'s past cycle 4), reported as observed. Extended `eval/sensitivity.py` to include `aggressive_8x` and compute break-even both ways: no break-even vs. `aggressive_8x` in the declared range (robust), but a real one vs. `razorpay_default` at hazard≈0.074 against the calibrated, NPCI-anchored 0.098 (~33% margin) — a more consequential finding than the one the spec named by name, given equal weight in the README's new "Break-even reporting" section. `make check` green throughout; a pre-flight ruff/mypy pass caught a `NameError` in `eval/sensitivity.py` before the first ~10-minute sweep run wasted on it. Full account in `docs/DECISIONS.md` [2026-08-26] (three entries). Phase 4 is now substantively complete — remaining: the other three sensitivity axes (LTV horizon, notification cost, response_rate incl. 0%), non-blocking. Next: Phase 5 (API + Razorpay test mode) or Phase 6 (frontend) — user's call.
 - **2026-08-26** — Day 6 continued, break-even strengthened + remaining sensitivity axes + spec corrections. User: judging the hazard break-even against the declared `sensitivity_range` alone uses the weaker (guessed) object to judge the stronger (NPCI-calibrated) one. `eval/sensitivity.py` now records `razorpay_default_revocation_per_execution_ratio` at every swept point and interpolates it at the break-even hazard: **the break-even corresponds to a ≈1.91% revocation ratio, ~24% below NPCI's published ≈2.5%** — a materially stronger statement than the raw 33% hazard-value margin (kept alongside it, not replaced, per instruction). Then swept the remaining three declared axes via a new generic `sweep_other_axes`: `date_change_offer.response_rate` [0.0, 0.15] incl. the required 0% run — robust; `notification.cost_inr.whatsapp` [0.2, 0.6] — no measurable effect; `ltv.margin_factor` [0.4, 0.9] (substituted for `horizon_cycles`, which has no declared range, substitution stated not hidden) — a second break-even at ≈0.48, calibrated 0.7 ~46% above it, no external anchor available to strengthen further. All published in README. Also corrected `docs/07-EVAL-SPEC.md`'s money-chart section and `docs/09-DEMO-SCRIPT.md`'s evidence beat to state the actual finding (no crossover, `aggressive_8x` trails from cycle 1, loses its own gross lead past cycle 4) instead of the shape assumed before the chart existed — user's explicit "never bend a finding to match a spec I wrote before the data existed." Incidentally fixed a second, unrelated stale line caught while editing the same demo-script beat: "Graceful failure" still described `Abstain` falling back to Razorpay's default, stale since the 2026-08-25 fix. `make check` green throughout (79 tests unaffected; ruff/mypy clean on the refactored `eval/sensitivity.py`). Full account in `docs/DECISIONS.md` [2026-08-26] (two more entries). Phase 4 is now fully complete, all checkboxes closed except the non-blocking test-set-count honesty marker. Next: the `SBI` abstention-response question, or Phase 5/6 — user's call.
+- **2026-08-27, later same day** — Headless-Chrome visual pass against `/evidence`, `/control-room`, `/mandate/[id]` found and fixed five defects: legend/axis collision on two charts; Recharts mount animation frozen mid-draw under headless capture (`isAnimationActive={false}` everywhere, also makes screenshots deterministic); a ~1,700px layout void plus clipped cycle cards on `/mandate/[id]`; the Control Room queue never showing STOP/ABSTAIN outcomes (`QueueRow.terminal_action_type` added); a `₹ at risk` vs `₹ recovered` scope mismatch relabeled with explicit source captions rather than changed. Closed the `money_chart_data.json` staleness gap flagged the session before: `scripts/build_money_chart.py` committed, wired into `make check`'s artifact-freshness gate. `make check` (95 tests) and the web build (306 pages) green. Full account in `docs/DECISIONS.md` [2026-08-27] "Visual pass fixes".
+- **2026-08-27, later still / 2026-08-28** — Built the `/audit` "ask why" LLM narrative box end to end: `llm/provider.py`/`llm/narrate.py`, `scripts/generate_ask_why.py` narrating all 1,296 cached decisions after six provider/model quota switches in one evening (Gemini x3, Groq, Qwen), `AskWhyBox.tsx` reading the cache statically. Followed with per-entry `{text, provider, model, generated_at}` provenance, a numeric-grounding checker wired into `make check`, an embedded architecture diagram, and a CI scope fix (mypy was missing `eval`/`api`/`llm`/`scripts`, no artifact-freshness gate, no web build job — silently masking a real `ThemeToggle.tsx` ESLint error). Then reran the full stale-artifact chain (byte-identical decision content confirmed, no README changes needed) and ran the grounding checker against the full 1,296-narrative corpus: 22 flagged, triaged individually — 14 real hallucinations regenerated, 8 checker false positives whitelisted with per-case reasoning, final state 0 flagged. A separate hand-read of ten narratives caught one more real defect the automated checker structurally can't (a STOP case falsely claiming an escalation) and fixed it. `docs/10-REDESIGN.md`, a six-session frontend redesign spec, was authored and committed but not executed. No redeploy or live spot-check happened this session — flagged, not done. Full account in `docs/DECISIONS.md` [2026-08-28] (three entries). Next: execute `docs/10-REDESIGN.md` Session B (foundations) onward.

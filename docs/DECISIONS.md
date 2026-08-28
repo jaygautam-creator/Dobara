@@ -2125,3 +2125,149 @@ Running it after the fix surfaced that staleness for the first time: `summary.js
 which touched `eval/runner.py`'s per-cycle tracking -- **not fixed here**, out of scope
 for tonight's ask-why work and requires a full `make eval` rerun (~100 minutes for the
 30-seed harness). `artifacts/llm_cache/ask_why.json` itself reports fresh.
+
+## [2026-08-28] Per-entry ask-why provenance, not file-level
+
+**Chose**: `llm/provider.py` and `scripts/generate_ask_why.py` stamp
+`{text, provider, model, generated_at}` on every individual cache entry in
+`artifacts/llm_cache/ask_why.json`, not once at the top of the file.
+
+**Why**: the cache's provenance is genuinely heterogeneous -- the free-tier quota saga
+documented the same day (`GeminiProvider` across three sub-models, then `GroqProvider`
+across three more) means different entries in the *same committed file* were narrated by
+different providers and models at different times, entirely dependent on which quota
+bucket happened to have headroom when that entry's turn came up. A single file-level
+stamp would misrepresent every entry as sharing one provenance. This repo already holds
+every other kind of output to per-record provenance -- `model_version` on every audit
+record, a `source` field on every simulator parameter and every UI number -- so the
+narratives were the one place still cutting that corner. Per-entry stamping also means a
+future partial regeneration (only the entries a grounding-check triage flags, as
+happened same-session in `40b4a12`) doesn't retroactively mislabel the untouched
+majority's provenance.
+
+**How to apply**: any future cache or artifact holding multiple independently-generated
+records should default to per-record provenance, not per-file, unless every record in
+the file is genuinely known to share one generation event.
+
+## [2026-08-28] Numeric grounding checker design + the 8 whitelisted false positives
+
+**Chose**: `scripts/check_ask_why_grounding.py`, wired into `make check`, extracts every
+numeric token from each cached ask-why narrative and asserts it traces back to a number
+actually present in that decision's rendered audit record (via
+`api/converters.py::render_from_decision_out`), tolerating documented format
+equivalences only (rounding to 0/1/2 decimal places, probability-as-percentage). Anything
+outside those tolerances is flagged for human triage, never silently passed or silently
+dropped.
+
+**Why**: this is the concrete mechanism behind CLAUDE.md's "money decisions never pass
+through an LLM" -- the LLM narrates a decision it never made, and this checker is what
+makes "narrates faithfully" a testable claim rather than a hope. A narrative inventing a
+number (a compliance-clause count, a candidate count, a rupee figure) would otherwise
+only be caught by luck during a hand-read.
+
+Eight entries were individually whitelisted after the full 1,296-narrative run, each
+reviewed against its own audit record before being added (never by loosening the
+matcher's tolerance):
+
+- **Three entries citing RBI-PDN-24H** (`18:5:1`, `78:2:1`, `112:7:1`, token `24.0`):
+  the narrative names "the 24-hour rule" by its regulatory content, not as a fabricated
+  count -- the number is the clause's real cited duration, just not printed as a raw
+  digit anywhere in the record's structured fields the extractor reads.
+- **Three entries citing RBI-AFA-15K** (`83:8:1`, `96:5:1`, `40:8:3`, token `15000.0`):
+  same pattern for the ₹15,000 additional-factor-authentication threshold named by rule,
+  not restated as a bare number in the record.
+- **`103:5:2`** (token `13.92`): the record's 95% CI lower bound is -₹13.92; the
+  narrative correctly restates this as "losing ₹13.92" -- the sign is carried by the
+  word "losing" rather than a literal minus sign in the narrative's own digits, so the
+  checker's sign-preserving comparison doesn't match it against the negative ground
+  truth. Verified by hand that the underlying claim is accurate before whitelisting.
+- **`24:6:1`** (token `900.0`): the record's largest rejected-alternative delta is
+  exactly ₹909.45 below the chosen candidate; the narrative paraphrases this loosely as
+  "up to over ₹900" rather than the exact figure. Directionally and numerically
+  consistent with the record -- a loose paraphrase, not an invented number -- just not
+  an exact-token match the extractor can credit automatically.
+
+**How to apply**: any new grounding-checker flag should get the same treatment --
+read the specific narrative against its specific audit record, and only whitelist (with
+a comment naming the case and the reasoning) if the underlying claim is verified
+accurate. A flag that turns out to be a real hallucination gets regenerated, not
+whitelisted; 14 of the 22 flags in the full-corpus run were exactly that (see the
+sibling `40b4a12` entry below).
+
+## [2026-08-28] CI scope gap: mypy, artifact freshness, and no web build job
+
+**Found**: `.github/workflows/ci.yml` had drifted from `make check` and from what
+Vercel actually builds. Specifically: the `mypy` step's package list was missing
+`eval`, `api`, `llm`, and `scripts` (only checking `agent models sim features`, the
+Phase 0-3 set, never updated as later phases added packages); there was no
+artifact-freshness gate, so a landed code change that silently staled a committed
+`artifacts/*.json` (exactly the class of bug `check_artifact_freshness.py` exists to
+catch, per the `[2026-08-27]` "headline evidence rerun" entry) would pass CI; and there
+was no job building `web/` at all -- `tsc`, `eslint`, and `next build` were only ever
+run by hand, locally, before a commit.
+
+**Why this matters**: the missing web build job was not a theoretical gap -- verified
+by actually running each CI step locally rather than trusting the YAML, which caught a
+real, pre-existing lint error in `ThemeToggle.tsx` (a legitimate SSR-hydration pattern
+the newer `react-hooks` lint rule flags) that had been shipping unnoticed because
+nothing in CI would ever have caught it. A judge reading this repo's CI badge as "this
+build is verified" was being told something false for the frontend half of the
+submission.
+
+**Fixed**: mypy's invocation now matches `make check`'s full package list; the
+artifact-freshness check runs as its own CI step (requires `fetch-depth: 0` on checkout
+-- the freshness script walks `git log <artifact's commit>..HEAD`, which a shallow
+depth-1 checkout can't do); a second CI job builds `web/` (`tsc --noEmit`, `next lint`,
+`next build`, static export) on every push/PR, the same build Vercel runs on deploy.
+
+**How to apply**: when adding a new top-level package or a new deployable surface
+(frontend, a second service, etc.), update `.github/workflows/ci.yml` in the same
+commit, not as a follow-up -- this gap sat unnoticed for multiple phases specifically
+because it wasn't.
+
+## [2026-08-28] Stale-artifact rerun + full-corpus grounding triage
+
+Full regeneration chain (`make demo-fixture` -> `eval` -> `sensitivity` ->
+`money-chart`), triggered by the `[2026-08-28]` CI-scope entry's discovery that
+`summary.json`/`sensitivity.json`/`demo_batch.json`/`money_chart_data.json` all
+predated commit `1c6286f`'s additive per-cycle tracking change in `eval/runner.py`.
+
+Confirmed empirically, not just by code-diff, that the rerun was safe to treat as a
+non-event for the narrative cache: `demo_batch.json`'s decision content (chosen action,
+rupee math, rejected alternatives, clauses -- every field, all 150 mandates) is
+byte-identical before and after. Because of that, the 1,296 already-cached narratives
+stayed valid and were **not** regenerated wholesale -- zero additional LLM quota spent
+on the ~1,282 unaffected entries. Every headline number already quoted in `README.md`
+(the ₹65.71/mandate paired comparison, all five arms' gross/net/attempts/notifications/
+revocations) is also byte-identical to the pre-rerun figures; no README changes were
+needed.
+
+Ran `scripts/check_ask_why_grounding.py` against the complete 1,296-narrative corpus for
+the first time (previously only spot-checked against a 50-entry sample). 22 flagged,
+triaged individually:
+
+- **14 real hallucinations**, regenerated and reread clean: a fabricated "N compliance
+  checks" count invented in ten narratives (the record always satisfies exactly 15
+  named clauses, never counted as a bare number); one wildly wrong candidate-count claim
+  ("90 other options" against a record with 5 total candidates); one garbled date
+  fragment ("Fe20"); one decimal-comma typo ("₹566,44" for ₹566.44); one off-by-one
+  alternative count.
+- **8 checker false positives**, whitelisted with individual reasoning -- see the
+  sibling `[2026-08-28]` "Numeric grounding checker design" entry above for the full
+  per-case breakdown.
+
+Grounding check is now clean across the full corpus: 0 flagged, 0 unmatched tokens.
+
+**Also caught by a separate hand-read of ten narratives** (not driven by the automated
+checker, which structurally can't catch a narrative describing the *wrong action* when
+every number it states is individually accurate): `5:2:2`'s STOP-decision narrative
+claimed the system "escalated the case for manual review," but the actual decision was
+STOP with no escalation -- the model appears to have mistaken a rejected `EscalateToHuman`
+alternative (tied at the same E[net] as the chosen STOP) for the action actually taken.
+Regenerated; the new narrative correctly describes only the stop.
+
+**How to apply**: the grounding checker verifies numbers, not actions -- a hand-read
+pass against a small sample stays necessary even with the automated gate in place,
+specifically for the class of error where every digit is right but the described action
+isn't. `make check` (95 tests, artifact freshness, ask-why grounding) and the web build
+(306 static pages) green throughout.

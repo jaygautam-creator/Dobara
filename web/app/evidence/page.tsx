@@ -76,11 +76,13 @@ export default function EvidencePage() {
             value={formatInr(headline.mean_diff, { compact: true })}
             ciText={`[${formatInr(headline.ci_lo, { compact: true })}, ${formatInr(headline.ci_hi, { compact: true })}]`}
             tone="good"
+            source="paired_dobara_vs_razorpay_default, one seed's total (unlike the per-mandate tile beside it)"
           />
           <StatTile
             label="Lift on razorpay_default's net-LTV base"
             value={formatPct(headline.mean_diff / summary.arms.razorpay_default.net_ltv_total.point!, 2)}
             source="well under Razorpay's own published 4-6% success-rate lift — the credibility check"
+            noCi="a ratio of two point estimates, not itself a bootstrapped quantity"
           />
         </div>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-text-secondary">
@@ -132,18 +134,21 @@ export default function EvidencePage() {
             value={formatInr(grossGivenUp, { compact: true })}
             tone="critical"
             source="dobara attempts less, more selectively"
+            noCi="a point-estimate difference of two arms' gross totals, not itself bootstrapped"
           />
           <StatTile
             label="Mandate value bought back"
             value={formatInr(mandateValueBoughtBack, { compact: true })}
             tone="good"
             source={`revocations ${formatNumber(dobaraArm.revocations_total.point!)} vs ${formatNumber(razorpayArm.revocations_total.point!)}; notifications ${formatNumber(dobaraArm.notifications_total.point!)} vs ${formatNumber(razorpayArm.notifications_total.point!)}`}
+            noCi="a point-estimate difference of two arms' totals, not itself bootstrapped"
           />
           <StatTile
             label="Net"
             value={formatInr(headline.mean_diff, { compact: true })}
             tone="good"
             source={`per ${summary.n_customers_per_seed.toLocaleString("en-IN")}-mandate seed`}
+            ciText={`[${formatInr(headline.ci_lo, { compact: true })}, ${formatInr(headline.ci_hi, { compact: true })}]`}
           />
         </div>
         <p className="mt-3 max-w-3xl text-xs leading-relaxed text-text-muted">

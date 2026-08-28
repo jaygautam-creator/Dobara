@@ -67,27 +67,33 @@ const STAT_PADDING: Record<StatTileSize, string> = {
   compact: "p-3",
 };
 
-/** A single number. Renders its 95% CI and source when given -- CLAUDE.md's "every
- * number reported must have a confidence interval and a stated source" applies equally
- * across every `size`; a `hero` or `compact` tile is not exempt from carrying a `ciText`/
- * `source` just because it's visually smaller. (Live fixture counts with no statistical
- * CI, e.g. Control Room's running counters, are the one legitimate exception -- they
- * still need a `source`.) */
+/** Either a 95% CI, or an explicit written reason there isn't one -- the type system's
+ * enforcement of CLAUDE.md's "every number reported must have a confidence interval and
+ * a stated source" (docs/10-REDESIGN.md §4 `/control-room`: Session B left this as a
+ * docstring convention; a call site could silently omit `ciText` and no one would notice
+ * a live fixture counter had quietly lost its CI). `noCi` must name the actual reason
+ * (e.g. "live fixture counter, not a statistical estimate"), not restate that there is
+ * no CI. */
+type StatTileCI = { ciText: string; noCi?: undefined } | { ciText?: undefined; noCi: string };
+
+/** A single number. `source` is mandatory -- CLAUDE.md's "every number reported must
+ * have a confidence interval and a stated source" applies equally across every `size`; a
+ * `hero` or `compact` tile is not exempt from carrying a source just because it's
+ * visually smaller. */
 export function StatTile({
   label,
   value,
-  ciText,
   source,
   tone = "default",
   size = "default",
+  ...ci
 }: {
   label: string;
   value: string;
-  ciText?: string;
-  source?: string;
+  source: string;
   tone?: "default" | "good" | "warning" | "critical";
   size?: StatTileSize;
-}) {
+} & StatTileCI) {
   const toneClass =
     tone === "good"
       ? "text-status-good"
@@ -104,12 +110,15 @@ export function StatTile({
       >
         {value}
       </div>
-      {ciText && (
+      {ci.ciText && (
         <div className="mt-1 font-mono tabular-nums text-xs text-text-secondary">
-          95% CI {ciText}
+          95% CI {ci.ciText}
         </div>
       )}
-      {source && <div className="mt-1 text-[11px] text-text-muted">{source}</div>}
+      {ci.noCi && (
+        <div className="mt-1 text-xs italic text-text-muted">no CI — {ci.noCi}</div>
+      )}
+      <div className="mt-1 text-[11px] text-text-muted">{source}</div>
     </div>
   );
 }

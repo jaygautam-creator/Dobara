@@ -2525,3 +2525,27 @@ first time a rule's text or severity changes — the same failure mode
 `money_chart_data.json` had before it got a committed producer ([2026-08-27]). This
 generator is model-free and takes seconds, so there is no cost to regenerating it on every
 `agent/compliance.py` change.
+
+## [2026-08-28] Compliance gate panel scoped to what's actually serialized
+**Chose:** `/control-room`'s per-case compliance gate panel (docs/10-REDESIGN.md §4)
+reports candidate count (from `rejected_alternatives`, same source `DecisionCard`
+already uses) and the chosen action's own `clauses_satisfied`/`clauses_blocked` —
+nothing else.
+**Over:** A "which HARD rules eliminated which candidates" breakdown, as §4's prose
+literally asks for.
+**Because:** `agent/decide.py::decide()` filters candidates against every HARD rule
+before scoring (`legal = [a for a in candidates if is_hard_compliant(...)]`) but never
+records *which* rule eliminated *which* candidate — only the survivors are scored, and
+`clauses_satisfied`/`clauses_blocked` are computed once, against the winning action only.
+Inventing a per-rule elimination count would violate CLAUDE.md's "no hand-typed numbers"
+rule as surely as a literal `66` in JSX. The panel says so explicitly and points to
+`/architecture`'s `ComplianceGateSequence` for the qualitative "In / Gate / Out" picture.
+
+## [2026-08-28] StatTile's CI opt-out is a discriminated union, not a second optional prop
+**Chose:** `StatTile` takes `source: string` (required) plus exactly one of `ciText:
+string` or `noCi: string`, enforced via a TS union type, not two independent optional
+props.
+**Over:** Keeping `ciText?` optional and adding `noCi?` beside it.
+**Because:** Two independent optionals let a call site omit both silently — exactly the
+gap docs/10-REDESIGN.md §4 asked Session D to close. The union makes "no CI" a decision
+the caller states, not an omission the compiler lets slide.

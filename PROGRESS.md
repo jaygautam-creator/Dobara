@@ -7,6 +7,61 @@
 
 ## CURRENT STATE
 
+**Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session D**
+(`/control-room`). `make check` green (verified post-commit); `npx tsc --noEmit`, `npm
+run lint` and `npm run build` (static export) green. **Committed locally, deliberately
+NOT pushed** — still awaiting the diff review that also gates `ad1e671` (Session C) +
+`b4e3c5e` (its freshness waivers), per the previous handoff's explicit instruction.
+
+**What shipped this session:**
+
+1. **`StatTile`'s CI rule moved from docstring convention to the type system**
+   (`web/components/ui.tsx`): `source` is now a required prop, and `ciText`/`noCi` form a
+   discriminated union — a call site must supply a real CI string or an explicit written
+   reason there isn't one (`noCi: "..."`.). Every existing call site
+   (`app/evidence/page.tsx`, `ControlRoomClient.tsx`) was audited and fixed, not just
+   made to compile — several tiles had a `source` but no CI and no stated reason why not
+   (a real, if minor, non-negotiable-CLAUDE.md gap Session B's docstring version let
+   through silently). See `docs/DECISIONS.md` [2026-08-28] "StatTile's CI opt-out is a
+   discriminated union, not a second optional prop".
+2. **`/control-room` rebuilt to §4's spec**: `₹ net LTV` promoted to the page's one
+   `hero` StatTile; the rest of the counter row is `compact`; "Attempts not made" is now
+   the page's one `feature` card (§3.2 rations `feature` to one per page — this is it),
+   with a caption stating why a *non*-action is the headline. The queue is now a shadcn
+   `table` inside a `scroll-area`, sticky header, keyboard-navigable (↑/↓ moves the
+   active-case selection, Enter opens `/audit/[id]`) — plus a `command`-palette jump-to-
+   mandate (⌘K, or the visible button, since not every judge tries the shortcut). The
+   streaming batch reveal is now `motion`-driven per-row (not a hard index cutoff) and
+   click-anywhere-skippable, same as `/`'s demonstration. The `aggressive_8x` comparison
+   toggle now tweens its numbers (`AnimatedNumber`, a `useSpring`-backed motion value)
+   and annotates the revocations delta in status colour (`DeltaAnnotation`) instead of
+   silently swapping the figure.
+3. **A new per-case compliance gate panel** on the active case (`CaseComplianceGate`),
+   reporting exactly what `DecisionOut` actually carries — candidate count, and the
+   chosen action's own satisfied/blocked clauses — deliberately *not* a per-rule
+   elimination breakdown, since that isn't serialized anywhere. See `docs/DECISIONS.md`
+   [2026-08-28] "Compliance gate panel scoped to what's actually serialized" for why that
+   scope cut was made rather than inventing the number.
+4. **`lib/motion.ts` gained `useStaticRender()`**, the `useSyncExternalStore`-wrapped
+   read of `staticRender` that Session C's `Demonstration.tsx` had inlined to fix a
+   hydration mismatch — extracted so Session D's new motion (the streaming reveal, the
+   tweened counters) doesn't re-derive the same pattern a third time.
+   `Demonstration.tsx` now calls the shared hook too.
+5. **Verified against the actual protocol, not skipped**: this session touched no
+   `agent/`, `models/`, `eval/` or `sim/` Python, so the artifact-freshness gate was not
+   expected to move — confirmed: `git log --oneline -1` after committing, then
+   `scripts/check_artifact_freshness.py` (run inside `make check`) showed the same 5
+   waived / 2 clean artifacts as before, no new reds.
+
+**Screenshot recipe (unchanged from Session C, verified again on `/control-room`):**
+headless Chrome with `?static=1` appended — see the Session C entry below for the exact
+command. This session confirmed no clipping, overlap, or dev-overlay issue badge at
+1440×3400.
+
+**Next: Session E** (`/evidence` — sticky rail, scroll-spy, chart polish).
+
+---
+
 **Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session C** (`/` rebuild +
 the new `/architecture` route). `make check` green; `npx tsc --noEmit`, `npm run lint`
 and `npm run build` (static export) green.

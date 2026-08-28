@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView } from "motion/react";
-import { staticRender } from "@/lib/motion";
+import { useStaticRender } from "@/lib/motion";
 import { formatInr, formatNumber } from "@/lib/format";
 import type { HomeDemoEvent, HomeDemoJson, HomeDemoLane } from "@/lib/types";
 
@@ -86,15 +86,7 @@ export function Demonstration({ demo }: { demo: HomeDemoJson }) {
   }, [demo]);
 
   const total = beats.length;
-  // `staticRender` reads `window`, so it cannot be read during render without the server
-  // and client disagreeing about the markup (a real hydration mismatch, caught in the dev
-  // overlay during this session's screenshot pass). useSyncExternalStore is the SSR-safe
-  // read: `false` on the server, the real value on the client, no setState in an effect.
-  const isStatic = useSyncExternalStore(
-    () => () => {},
-    () => staticRender,
-    () => false,
-  );
+  const isStatic = useStaticRender();
   const [liveStep, setStep] = useState(0);
   // A reduced-motion visitor and a `?static=1` screenshot capture get the completed end
   // state immediately, per docs/10-REDESIGN.md §5 -- not a sequence they cannot see.

@@ -1,6 +1,7 @@
 import {
   getApprovals,
   getAskWhy,
+  getComplianceRules,
   getCounters,
   getQueueRows,
   getTopCaseFull,
@@ -15,6 +16,7 @@ export default function ControlRoomPage() {
   const counters = getCounters();
   const topCase = getTopCaseFull();
   const approvals = getApprovals();
+  const complianceRules = getComplianceRules();
 
   if (!topCase) {
     return (
@@ -42,6 +44,7 @@ export default function ControlRoomPage() {
           topCase.decision.attempt_index,
         )}
         approvals={approvals}
+        complianceRules={complianceRules.rules}
       />
       <p className="border-t border-border pt-4 text-xs text-text-muted">
         <strong>Precomputed, not live:</strong> this deploy is a static site reading{" "}

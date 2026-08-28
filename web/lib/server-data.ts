@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type {
   AskWhyCache,
+  AskWhyEntry,
   DemoBatchJson,
   HazardModelReport,
   MoneyChartData,
@@ -130,14 +131,15 @@ function getAskWhyCache(): AskWhyCache | null {
   return _askWhyCache;
 }
 
-/** Looks up the pre-generated "ask why" narrative for one decision, keyed exactly as
+/** Looks up the pre-generated "ask why" entry (narrative text plus which provider/model
+ * generated it) for one decision, keyed exactly as
  * scripts/generate_ask_why.py::decision_key() writes it. Returns null when the cache is
  * absent or doesn't (yet) have this decision. */
 export function getAskWhy(
   mandateId: number,
   cycleIndex: number,
   attemptIndex: number,
-): string | null {
+): AskWhyEntry | null {
   const cache = getAskWhyCache();
   if (!cache) return null;
   return cache.narratives[`${mandateId}:${cycleIndex}:${attemptIndex}`] ?? null;

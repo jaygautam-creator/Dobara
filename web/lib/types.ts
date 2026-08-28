@@ -278,11 +278,22 @@ export interface DemoBatchJson {
   approvals: DecisionOut[];
 }
 
+/** One cached "ask why" narrative -- stamped per-entry with which provider/model
+ * actually generated it, not once at file level, since the cache is genuinely
+ * heterogeneous (docs/DECISIONS.md [2026-08-28]: getting the full batch through
+ * free-tier quotas took several provider/model switches). */
+export interface AskWhyEntry {
+  text: string;
+  provider: string;
+  model: string;
+  generated_at: string;
+}
+
 /** `artifacts/llm_cache/ask_why.json`, generated offline by `make ask-why`
  * (scripts/generate_ask_why.py) -- see components/AskWhyBox.tsx for how a missing key
  * is handled (the cache can be partial: the batch call is resumable and rate-limited). */
 export interface AskWhyCache {
-  narratives: Record<string, string>;
+  narratives: Record<string, AskWhyEntry>;
 }
 
 /** Trimmed queue row for the Control Room's list view -- no audit_text/rejected_alternatives,

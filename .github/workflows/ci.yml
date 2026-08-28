@@ -5,10 +5,15 @@ on:
   pull_request:
 
 jobs:
-  test:
+  python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # check_artifact_freshness.py walks `git log <artifact's commit>..HEAD` --
+          # the default shallow (depth-1) checkout has no history to walk, so this
+          # step would either error or silently pass for the wrong reason.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -27,13 +32,48 @@ jobs:
       - name: Format check (ruff)
         run: uv run ruff format --check .
 
-      - name: Type check (mypy strict, money path)
-        run: uv run mypy agent models sim features
+      - name: Type check (mypy strict)
+        # Matches `make check` -- agent/models/sim/features (the money path) plus
+        # eval/api/llm/scripts, all under the same strict config (pyproject.toml).
+        run: uv run mypy agent models sim features eval api llm scripts
 
       - name: Unit tests
         run: uv run pytest -q
 
-      - name: Reduced-seed simulator + eval smoke run
-        run: |
-          uv run python -m sim.run --seeds 1 --cycles 2 --mandates 200
-        continue-on-error: false
+      - name: Reduced-seed simulator smoke run
+        run: uv run python -m sim.run --seeds 1 --cycles 2 --mandates 200
+
+      - name: Evidence artifact freshness
+        # Fails if a committed artifact (artifacts/summary.json etc.) is older than
+        # a landed commit to the code that produces it -- see the script's docstring
+        # and docs/DECISIONS.md [2026-08-27] for the incident this gate exists to catch.
+        run: uv run python -m scripts.check_artifact_freshness
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (static export)
+        # Exercises scripts/sync-data.mjs against the committed artifacts/ and every
+        # generateStaticParams() route -- the same build Vercel runs on deploy.
+        run: npm run build

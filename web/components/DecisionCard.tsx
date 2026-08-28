@@ -1,4 +1,4 @@
-import type { DecisionOut, RejectedAlternativeOut } from "@/lib/types";
+import type { AskWhyEntry, DecisionOut, RejectedAlternativeOut } from "@/lib/types";
 import { formatInr, formatInrPrecise, formatPct } from "@/lib/format";
 import { Badge, Card } from "@/components/ui";
 import { AskWhyBox } from "@/components/AskWhyBox";
@@ -75,7 +75,7 @@ export function DecisionCard({ decision, bankId, method, amount, askWhy }: {
   bankId?: string;
   method?: string;
   amount?: number;
-  askWhy?: string | null;
+  askWhy?: AskWhyEntry | null;
 }) {
   const rm = decision.rupee_math;
   return (
@@ -167,7 +167,7 @@ export function DecisionCard({ decision, bankId, method, amount, askWhy }: {
         </div>
       </div>
 
-      <AskWhyBox narrative={askWhy ?? null} />
+      <AskWhyBox entry={askWhy ?? null} />
 
       <details className="text-xs">
         <summary className="cursor-pointer text-text-muted hover:text-text-secondary">

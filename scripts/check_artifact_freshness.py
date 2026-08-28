@@ -22,10 +22,19 @@ WATCHED_PATHS = ["agent/", "models/", "eval/", "sim/"]
 
 # (artifact path, extra watched paths beyond WATCHED_PATHS above). The ask-why cache is
 # derived from agent/'s audit fields *and* from the narration code that turns them into
-# prose -- a change to either should mark it stale, but llm/ and scripts/generate_ask_why.py
-# have no bearing on any other artifact here, so they're scoped to just this one entry
-# rather than added to the global WATCHED_PATHS (which would flag every artifact stale on
-# any llm/ change, including ones with nothing to do with narration).
+# prose *and* from artifacts/demo_batch.json itself, whose decisions it narrates -- a
+# regeneration of the fixture with different decisions leaves every cached narrative
+# describing a decision that no longer exists. A watched *path* works for this the same
+# way it works for source directories: `git log` accepts any pathspec, including a
+# committed artifact file, so a later commit that touched demo_batch.json is caught the
+# same way a later commit touching agent/ is. This edge was missing until a user review
+# caught it -- the same class of gap as the short-circuit bug below (a real dependency
+# with nothing enforcing it, silent until someone reads for it by hand).
+#
+# llm/ and scripts/generate_ask_why.py have no bearing on any other artifact here, so
+# they're scoped to just this one entry rather than added to the global WATCHED_PATHS
+# (which would flag every artifact stale on any llm/ change, including ones with nothing
+# to do with narration).
 ARTIFACTS: list[tuple[Path, list[str]]] = [
     (Path("artifacts/summary.json"), []),
     (Path("artifacts/sensitivity.json"), []),
@@ -33,7 +42,7 @@ ARTIFACTS: list[tuple[Path, list[str]]] = [
     (Path("artifacts/money_chart_data.json"), []),
     (
         Path("artifacts/llm_cache/ask_why.json"),
-        ["llm/", "scripts/generate_ask_why.py"],
+        ["llm/", "scripts/generate_ask_why.py", "artifacts/demo_batch.json"],
     ),
 ]
 

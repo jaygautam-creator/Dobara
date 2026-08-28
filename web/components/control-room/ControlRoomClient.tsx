@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { CounterOut, DecisionOut, QueueRow } from "@/lib/types";
+import type { AskWhyEntry, CounterOut, DecisionOut, QueueRow } from "@/lib/types";
 import { formatInr, formatNumber } from "@/lib/format";
 import { Badge, Card, StatTile } from "@/components/ui";
 import { DecisionCard } from "@/components/DecisionCard";
@@ -29,7 +29,7 @@ export function ControlRoomClient({
   rows: QueueRow[];
   counters: CounterOut;
   topCaseDecision: DecisionOut;
-  topCaseAskWhy: string | null;
+  topCaseAskWhy: AskWhyEntry | null;
   approvals: DecisionOut[];
 }) {
   const [revealed, setRevealed] = useState(0);

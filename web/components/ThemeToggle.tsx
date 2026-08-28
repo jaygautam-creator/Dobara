@@ -20,6 +20,12 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
 
   useEffect(() => {
+    // One-time read of a browser-only API (localStorage) after mount, deliberately not
+    // during render -- reading it during the initial render would return a different
+    // value on the server (none) than the client, causing a hydration mismatch. This is
+    // the documented exception to "don't setState synchronously in an effect": syncing
+    // from an external, non-React source exactly once, not a derived-state anti-pattern.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(readStoredTheme());
   }, []);
 

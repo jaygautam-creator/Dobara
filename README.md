@@ -64,6 +64,64 @@ rules carry their citations; nothing above the sign-off threshold runs autonomou
 **④ Measures** — five arms, thirty seeds, paired confidence intervals, sensitivity analysis,
 and a stated break-even condition under which our conclusion would flip.
 
+### Architecture, in one frame
+
+```mermaid
+flowchart TB
+    subgraph SRC["Data sources"]
+        SIM["Simulator<br/>(NPCI/RBI-calibrated,<br/>hidden latent state)"]
+        RZP["Razorpay Test Mode API<br/>(real Subscription objects,<br/>real webhooks)"]
+    end
+
+    subgraph DETECT["① DETECT — revenue at risk"]
+        BH["Bank Health Monitor<br/>EWMA + adaptive time decay<br/>+ change-point flag"]
+        PRE["Pre-debit Risk Scorer<br/>P(fail | upcoming execution)"]
+        Q["At-Risk Queue<br/>ranked, ₹ attached"]
+    end
+
+    subgraph DECIDE["② DETERMINE — the right intervention"]
+        RC["Root-Cause Classifier<br/>Razorpay error taxonomy<br/>source / step / reason"]
+        M1["Recovery Model<br/>P(success | context, t)<br/>LightGBM + isotonic"]
+        M2["Revocation Hazard Model<br/>P(revoke | attempts, contacts)<br/>discrete-time hazard"]
+        LTV["LTV Estimator<br/>remaining mandate value"]
+        POL["Policy<br/>argmax E[net] s.t. E[net] > 0"]
+    end
+
+    subgraph EXEC["③ EXECUTE — bounded"]
+        GATE["Compliance Gate<br/>declarative rules + citations<br/>HARD rules cannot be bypassed"]
+        ACT["Bounded Action Set"]
+        HUMAN["Human Sign-off<br/>above threshold"]
+        LLM["LLM Layer<br/>root-cause narrative ·<br/>audit 'ask why' (pre-generated)"]
+    end
+
+    subgraph MEASURE["④ MEASURE — the winning stage"]
+        AUD["Audit Trail<br/>inputs · outputs · action ·<br/>rejected alts · clauses · ₹ maths"]
+        HARN["Batch Harness<br/>5 arms × 30 seeds"]
+        HOLD["Permanent Holdout Arm<br/>x% always baseline"]
+        EV["Evidence<br/>gross vs net LTV · 95% CI ·<br/>sensitivity · break-even"]
+    end
+
+    SIM --> BH & PRE
+    RZP --> BH & PRE
+    BH --> Q
+    PRE --> Q
+    Q --> RC --> M1 & M2
+    M1 & M2 & LTV --> POL
+    POL --> GATE
+    GATE -->|pass| ACT
+    GATE -->|refuse + reason| AUD
+    ACT --> HUMAN
+    ACT --> LLM
+    ACT -->|proposal only| RZP
+    ACT & POL & GATE --> AUD
+    AUD --> HARN --> EV
+    HOLD --> HARN
+```
+
+Money decisions (the `POL` policy node) never pass through the LLM layer — enforced by an
+import boundary, not just convention (`tests/test_no_llm_in_money_path.py`). Full module
+contracts: [`docs/02-ARCHITECTURE.md`](docs/02-ARCHITECTURE.md).
+
 ---
 
 ## Honest metrics
@@ -340,6 +398,27 @@ no source traces it to a specific NPCI release or states whether it means new ma
 active mandates, or monthly executions. Full reasoning in
 [`docs/04-DATA-MODEL.md`](docs/04-DATA-MODEL.md#calibration-anchors-real-cited).
 
+### The `/audit` "ask why" box's narratives are generated ahead of time, and the cache is mixed
+
+The deployed site is a static export with no server — there is no runtime to hold an API
+key or make an LLM call. So every plain-English explanation in the "ask why" box on
+`/audit/[id]` was generated **offline, once, ahead of time**, from that exact decision's
+structured audit record (`scripts/generate_ask_why.py`, `make ask-why`), and committed to
+`artifacts/llm_cache/ask_why.json`. The narrating model never sees, touches, or influences
+the money decision it's explaining — it runs well after `agent/decide.py` has already
+logged the outcome, reading only what was already written down.
+
+**The cache is genuinely heterogeneous across providers and models**, and each of the
+1,296 entries is stamped individually with which one generated it (`provider`, `model`,
+`generated_at` — not a single file-level claim), for the same reason every audit record
+carries `model_versions` and every number in this README carries a source. Getting the
+full batch through free-tier quotas required switching between Google Gemini and Groq,
+and between several models within each, as one free-tier daily budget after another was
+exhausted — the blow-by-blow is in
+[`docs/DECISIONS.md`](docs/DECISIONS.md) under `[2026-08-28]`. Every narrative is checked
+against its own decision's numbers by an automated grounding pass (below) regardless of
+which model wrote it, so heterogeneity doesn't mean uneven trust.
+
 ---
 
 ## What Dobara deliberately does not do
@@ -386,8 +465,19 @@ make setup
 make demo     # sim → train → eval → api + web
 ```
 
-Works on a clean machine with **no API keys and no cloud account**. LLM outputs are cached
-and committed; the deployed demo serves committed artifacts.
+Works on a clean machine with **no API keys and no cloud account**. LLM outputs
+(`artifacts/llm_cache/ask_why.json`) are pre-generated and committed; the deployed demo
+and this clone both serve committed artifacts, never a live model call.
+
+Regenerating the ask-why cache itself is the one step that needs a key, and it's optional
+— everything else runs without it:
+
+```bash
+GROQ_API_KEY=... make ask-why   # or GEMINI_API_KEY=...
+```
+
+Resumable: only fills in decisions missing from the cache, so an interrupted run picks
+back up rather than re-spending calls already made.
 
 ## Documentation
 

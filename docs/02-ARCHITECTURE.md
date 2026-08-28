@@ -31,7 +31,7 @@ flowchart TB
         GATE["Compliance Gate<br/>declarative rules + citations<br/>HARD rules cannot be bypassed"]
         ACT["Bounded Action Set"]
         HUMAN["Human Sign-off<br/>above threshold"]
-        LLM["LLM Layer<br/>narrative · Hinglish nudge<br/>· audit Q&A"]
+        LLM["LLM Layer<br/>root-cause narrative ·<br/>audit 'ask why' (pre-generated)"]
     end
 
     subgraph MEASURE["④ MEASURE — the winning stage"]

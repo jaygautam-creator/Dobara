@@ -28,6 +28,7 @@ check:
 	uv run mypy agent models sim features eval api llm scripts
 	uv run pytest -q
 	uv run python -m scripts.check_artifact_freshness
+	uv run python -m scripts.check_ask_why_grounding
 
 demo: sim train eval
 	@echo "Run 'make api' and 'make web' in separate terminals."

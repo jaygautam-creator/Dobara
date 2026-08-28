@@ -70,6 +70,13 @@ class QuotaExhausted(RuntimeError):
 
 
 class LLMProvider(Protocol):
+    #: Short, stable identifier for who generated a narrative -- "gemini" / "groq" --
+    #: stamped onto every cache entry (scripts/generate_ask_why.py) alongside `model`,
+    #: since the cache has already been genuinely heterogeneous across both providers
+    #: and several models per provider (see docs/DECISIONS.md [2026-08-28]).
+    provider_id: str
+    model: str
+
     def generate(self, prompt: str) -> str: ...
 
 
@@ -78,17 +85,18 @@ class GeminiProvider:
     project dependency) rather than adding the `google-generativeai` SDK for a single
     call shape -- keeps the adapter a one-file swap, per the module docstring above."""
 
+    provider_id = "gemini"
+
     def __init__(self, api_key: str, model: str = DEFAULT_GEMINI_MODEL) -> None:
         self._api_key = api_key
-        self._model = model
+        self.model = model
         # gemini-3.6-flash "thinks" before answering -- several seconds is normal, not a
         # hang, so this needs headroom beyond httpx's 5s default.
         self._client = httpx.Client(timeout=60.0)
 
     def _post(self, prompt: str) -> httpx.Response:
         url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{self._model}:generateContent"
+            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         )
         return self._client.post(
             url,
@@ -139,9 +147,11 @@ class GroqProvider:
     separate bucket, verified fresh and narration-quality-checked before the switch)
     picked up the rest."""
 
+    provider_id = "groq"
+
     def __init__(self, api_key: str, model: str = DEFAULT_GROQ_MODEL) -> None:
         self._api_key = api_key
-        self._model = model
+        self.model = model
         self._client = httpx.Client(timeout=60.0)
 
     def _post(self, prompt: str) -> httpx.Response:
@@ -151,7 +161,7 @@ class GroqProvider:
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
             },
-            json={"model": self._model, "messages": [{"role": "user", "content": prompt}]},
+            json={"model": self.model, "messages": [{"role": "user", "content": prompt}]},
         )
 
     def generate(self, prompt: str) -> str:

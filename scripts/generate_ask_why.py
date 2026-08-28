@@ -7,11 +7,23 @@ time from the structured audit record (never the reverse -- the LLM never sees a
 `artifacts/llm_cache/ask_why.json`, which the frontend reads as a plain static asset.
 This script is the only thing in the repo that calls an LLM.
 
+Every cache entry is stamped with the provider, model, and timestamp that actually
+generated it -- not once at file level. Per docs/DECISIONS.md [2026-08-28]: getting the
+full batch through free-tier quotas took several provider/model switches, so the cache
+*is* genuinely heterogeneous, the same way `model_versions` is per-decision on every
+audit record and every number in this repo carries a source. The stamp is taken live, at
+generation time, from the provider object that actually made the call -- never
+reconstructed after the fact from logs, which would risk quietly asserting an attribution
+that's wrong in a repo whose whole point is that every claim is checkable.
+
 Resumable: re-running only fills in keys missing from the existing cache file, so an
 interrupted run (rate limit, network blip) picks back up rather than re-spending calls
-on decisions already narrated.
+on decisions already narrated. A cache entry from before this per-entry-provenance
+schema existed (a bare string, not a `{text, provider, model, generated_at}` object) is
+treated as absent, not reused -- resumability applies within one schema, not across one.
 
 Usage: GEMINI_API_KEY=... uv run python -m scripts.generate_ask_why
+   or: GROQ_API_KEY=...   uv run python -m scripts.generate_ask_why
 """
 
 from __future__ import annotations
@@ -19,7 +31,9 @@ from __future__ import annotations
 import json
 import sys
 import time
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from api.converters import render_from_decision_out
 from api.demo import _decision_out_from_json
@@ -43,20 +57,28 @@ def decision_key(mandate_id: int, cycle_index: int, attempt_index: int) -> str:
     return f"{mandate_id}:{cycle_index}:{attempt_index}"
 
 
-def load_cache() -> dict[str, str]:
+def load_cache() -> dict[str, dict[str, Any]]:
     if not CACHE_PATH.exists():
         return {}
     data = json.loads(CACHE_PATH.read_text())
     narratives = data.get("narratives", {})
     assert isinstance(narratives, dict)
-    return narratives
+    # Legacy bare-string entries (pre-per-entry-provenance) don't carry provider/model --
+    # drop them so they're regenerated with the current schema rather than silently kept
+    # without an attribution.
+    return {k: v for k, v in narratives.items() if isinstance(v, dict) and "text" in v}
 
 
-def save_cache(narratives: dict[str, str]) -> None:
+def save_cache(narratives: dict[str, dict[str, Any]]) -> None:
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "narratives": narratives,
         "generated_by": "llm/narrate.py + scripts/generate_ask_why.py, see module docstrings",
+        "schema_note": (
+            "Each entry carries its own {provider, model, generated_at} -- the cache is "
+            "genuinely heterogeneous across free-tier quota switches, see "
+            "docs/DECISIONS.md [2026-08-28]."
+        ),
         "provenance": stamp(),
     }
     CACHE_PATH.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
@@ -85,7 +107,13 @@ def main() -> None:
                 continue
             audit_text = render_from_decision_out(decision)
             try:
-                narratives[key] = narrate(provider, audit_text)
+                text = narrate(provider, audit_text)
+                narratives[key] = {
+                    "text": text,
+                    "provider": provider.provider_id,
+                    "model": provider.model,
+                    "generated_at": datetime.now(UTC).isoformat(),
+                }
                 generated += 1
             except QuotaExhausted as exc:
                 # Not transient -- every remaining decision would fail identically, so

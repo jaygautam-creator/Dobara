@@ -68,6 +68,7 @@ the user overrules.
 | `docs/07-EVAL-SPEC.md` | Batch harness, arms, CIs, sensitivity analysis |
 | `docs/08-FRONTEND-SPEC.md` | Control Room design specification |
 | `docs/09-DEMO-SCRIPT.md` | 5-minute pitch video plan |
+| `docs/10-REDESIGN.md` | Frontend redesign spec — visual system, per-route intent, sequencing |
 | `docs/DECISIONS.md` | Append-only log of decisions made during the build |
 
 ## Commands

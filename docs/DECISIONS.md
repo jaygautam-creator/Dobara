@@ -2576,3 +2576,39 @@ render during SSR, and there was no guarantee a future edit wouldn't make these 
 components reachable from a server-rendered path. `lib/motion.ts`'s hook exists
 specifically so this pattern doesn't get re-derived a fourth time; using it here closes
 the gap instead of leaving it for Session F or later to rediscover.
+
+## [2026-08-28] Session F discovered `audit_text` was never actually in the committed fixture
+**Chose:** Removed `audit_text: string` from `web/lib/types.ts`'s `DecisionOut`, added the
+five `prev_error_*`/`notifications_sent_this_cycle`/`consecutive_failed_cycles` fields
+that ARE present, and reconstructed the SAW/DID/WHY narrative lines in TypeScript
+(`web/components/audit/renderAuditSections.ts`), mirroring `agent/audit.py::render_fields`
+term for term from those structured fields.
+**Over:** Continuing to read `decision.audit_text` as the old `DecisionCard` did.
+**Because:** `scripts/build_demo_fixture.py` deliberately excludes `audit_text` from the
+committed fixture (`api/converters.py`: it's an 11.7KB rendered string per decision,
+losslessly re-derivable, and only the live `/demo` API path re-renders it via
+`api/demo.py::render_from_decision_out`). The static site has no Python runtime at
+request time, so `decision.audit_text` was silently `undefined` in every DecisionCard
+ever rendered on the deployed site -- caught while wiring Session F's SAW/THOUGHT/ALT/
+GATE/DID/WHY grid, which is exactly the kind of defect a stack of `<pre>` paragraphs
+hides and a labelled grid surfaces (nothing rendered there before either, just silently).
+
+## [2026-08-28] Contrast fixes are separate CSS variables, not retuned base colours
+**Chose:** Added `--arm-dobara-text`, `--status-warning-text`, `--status-critical-text`
+(and wired the previously-orphaned `--status-good-text`, defined since an earlier session
+but never registered in the `@theme` block, so `text-status-good-text` never existed as a
+utility) as darkened/brightened variants used only where these colours render as running
+TEXT. Left `--arm-dobara`/`--status-good`/`--status-warning`/`--status-critical` (the
+values used for swatches, chart lines, dot fills, badge backgrounds) untouched.
+**Over:** Darkening the base tokens directly, which would also be simpler (no new
+variables, no ~40 call-site class renames).
+**Because:** docs/10-REDESIGN.md §2 locks arm colours to their `references/palette.md`
+slots for identity reasons (chart lines, legends, swatches must stay recognizable across
+sessions and screenshots); status colours aren't arm colours but are still load-bearing
+identity (a green dot means "compliant" everywhere in the UI). WCAG's 4.5:1 floor applies
+to text, not to a 2.5mm dot or a 15%-opacity badge fill (which only needs 3:1 as a UI
+component boundary and already clears it) -- so the actual defect was narrower than "this
+colour is wrong," and fixing only the text contexts avoids re-tuning marks that were
+already screenshot-verified and fine. Measured, real failures (light unless noted):
+text-muted 3.41:1 -> 5.15:1, status-warning 1.79:1 -> 5.77:1, arm-dobara 4.30:1 -> 6.12:1,
+dark status-critical 3.62:1 -> 5.22:1. All others measured and already passing.

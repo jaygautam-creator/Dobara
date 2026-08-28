@@ -7,6 +7,109 @@
 
 ## CURRENT STATE
 
+**Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session F** — the last
+redesign session. **The redesign (Sessions A-F) is feature-complete.** `npx tsc
+--noEmit`, `npm run lint`, `npm run build` (static export, 307 pages) all green. `make
+check` green from repo root, run **after** committing per protocol (ruff, ruff format,
+mypy, artifact-freshness gate — same waived artifacts as before, no new reds — 103
+pytest, ask-why grounding: 1,296/1,296 clean). **Committed locally (`bb758ab`),
+deliberately NOT pushed** — this is now the sixth unpushed local commit, stacked on
+`ad1e671`+`b4e3c5e` (Session C), `12ff577` (Session D), `c4d09df`+`f24e34e` (Session E).
+**Deploy is the one remaining item and it needs the push decision** — Vercel builds
+from the remote, so nothing here reaches production until that review clears and
+someone pushes. After that: the 5-minute pitch video (`docs/09-DEMO-SCRIPT.md`). Ship
+target 3 Sep 2026, hard deadline 5 Sep 2026.
+
+**What shipped this session:**
+
+1. **`/mandate/[id]` rebuilt as a real continuous-time-axis timeline**
+   (`components/timeline/MandateTimeline.tsx`), replacing the old `w-40` box-per-cycle
+   wrap layout. One shared x-scale across the whole mandate (not one lane per cycle with
+   its own local axis) — cycles render as labelled bands on that one axis, so the actual
+   calendar gaps between cycles are visible, not just their ordinal sequence. Each
+   action type carries one glyph (lucide-react icon) AND one colour (§6: colour is never
+   the only carrier of meaning); each cycle's terminal action gets a ring emphasis. A
+   running pre-debit-notification count draws alongside on the same x-scale, so the
+   page *shows* restraint (few notices, long gaps) rather than only asserting it. Pure
+   server-rendered SVG — no client JS, no hydration cost added across the 150
+   statically generated pages; native SVG `<title>` elements give hover detail with zero
+   JS. A `ChartDataTable` (reused from `/evidence`, not reinvented) gives the full trail
+   as an accessible text alternative.
+2. **`/audit/[id]`'s `DecisionCard` rebuilt around the spec's SAW/THOUGHT/ALT/GATE/DID/WHY
+   structure** as a labelled, scannable grid instead of a stack of paragraphs. Rejected
+   alternatives are now a comparison table (candidate / E[net] / why it lost) instead of
+   a truncated list. The rupee maths render as a worked equation with this decision's
+   real numbers substituted in (`components/audit/DecisionEquation.tsx`, the same
+   expression `/`'s `Equation.tsx` shows). `AskWhyBox`'s per-entry `narrated by
+   provider/model` line is untouched — still visible, not hidden behind a hover.
+3. **Found and fixed while wiring SAW/DID/WHY: `demo_batch.json` never actually
+   serializes `audit_text`.** `scripts/build_demo_fixture.py` deliberately excludes it
+   (it's a live-API-only rendering per `api/converters.py`) — so the *old* DecisionCard's
+   `decision.audit_text` reference was silently `undefined` on the deployed static site,
+   before this session touched anything. `lib/types.ts`'s `DecisionOut` updated to match
+   what the fixture actually contains (`prev_error_source`/`prev_error_step`/
+   `prev_error_reason`/`notifications_sent_this_cycle`/`consecutive_failed_cycles`, all
+   genuinely present), and `components/audit/renderAuditSections.ts` reconstructs the
+   SAW/DID/WHY lines from those fields, mirroring `agent/audit.py::render_fields` term
+   for term rather than inventing new phrasing. See `docs/DECISIONS.md` [2026-08-28].
+4. **`?theme=light`/`?theme=dark` query-param support** added to `app/layout.tsx`'s
+   pre-paint script and `ThemeToggle`'s own read of the same `localStorage` key (kept in
+   perfect sync, per the existing code comment's own requirement) — never written to
+   storage, so it only affects the page load it's on. This exists because headless
+   Chrome has no toggle to click; without it, §6's "verify contrast in both themes"
+   requirement was structurally unverifiable for light mode.
+5. **§6 contrast actually measured (WCAG relative-luminance formula), not eyeballed, in
+   both themes — four real failures found and fixed:**
+   - light `--text-muted` on surface-0/1: **3.41:1 / 3.50:1** (fails 4.5:1 body-text
+     floor) → darkened to `#6b6a64`, now 5.15:1 / 5.28:1.
+   - light `--status-warning` as text: **1.79:1** → new `--status-warning-text:
+     #8a5a00`, now 5.77:1.
+   - light `--arm-dobara` as text: **4.30:1** (just under) → new `--arm-dobara-text:
+     #1a5fb4`, now 6.12:1.
+   - dark `--status-critical` as text: **3.62:1** → new `--status-critical-text:
+     #e8615a`, now 5.22:1.
+   Fixed via new `*-text` CSS variables used only where these colours render as running
+   text — the base tokens (chart lines, swatches, dot fills, badge backgrounds) are
+   untouched, so palette discipline (§2) holds and nothing already screenshot-verified
+   changed appearance. `--status-good-text` had existed since an earlier session but was
+   never registered in the `@theme` block — a dead token wired up alongside the new
+   ones. ~13 files' `text-status-good`/`text-status-warning`/`text-status-critical`/
+   `text-arm-dobara` class strings updated to the `-text` variants; every other measured
+   pair (dark text-muted, dark text-secondary, light/dark status-good, light
+   status-critical, etc.) already passed and was left alone. See `docs/DECISIONS.md`
+   [2026-08-28].
+6. **Keyboard reachability and reduced-motion verified, not assumed**: every shadcn
+   primitive in use ships its own `focus-visible:ring-*` treatment; the Control Room
+   queue's hand-rolled keyboard nav already had a visible focus ring
+   (`focus-visible:ring-2 focus-visible:ring-arm-dobara/40`); no click-only (keyboard-
+   inaccessible) interactive element was found — the "click anywhere to skip" wrapper
+   divs on `/` and `/control-room` are conveniences layered on top of a real `<button>`,
+   never the sole path. `prefers-reduced-motion` already routed through the same
+   `staticRender` gate as `?static=1` everywhere (charts, the landing demonstration, the
+   Control Room streaming reveal and tweened counters) — confirmed, not new work.
+7. **Perf checked, not assumed**: `npm run build`'s largest client chunk is 400KB;
+   `demo_batch.json` (45.9MB) still never reaches a client bundle (`lib/server-data.ts`
+   is `server-only` and each page extracts only what it needs — `/mandate/[id]` and
+   `/audit/[id]` each pull just their one mandate's audit trail, same pattern as before).
+8. **Screenshot-verified, both themes**: `/mandate/[id]` and `/audit/[id]` at
+   `?static=1&theme=light` and `?static=1&theme=dark` — timeline bands and glyphs render
+   correctly in both, SAW/THOUGHT/ALT/GATE/DID/WHY grid is scannable, worked equation
+   shows real substituted numbers. Also re-checked `/`, `/architecture`, `/control-room`,
+   `/evidence` in **light** theme for the first time ever (previous sessions only ever
+   screenshotted dark) — all four clean, no clipping/overlap/contrast issue found beyond
+   the four fixed above. Static build served locally (`npx serve out`); `/`,
+   `/architecture`, `/control-room`, `/evidence`, a sampled `/mandate/[id]`, a sampled
+   `/audit/[id]` all return 200.
+
+**Screenshot recipe, extended:** same headless Chrome invocation as before, now with
+`&theme=light` or `&theme=dark` appended to the URL alongside `?static=1` to pin the
+theme deterministically — e.g. `http://localhost:3000/mandate/5?static=1&theme=light`.
+
+**Next:** deploy (push the six local-only commits after the diff review clears), then
+the 5-minute pitch video.
+
+---
+
 **Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session E** (`/evidence`).
 `npx tsc --noEmit`, `npm run lint`, `npm run build` (static export, 307 pages) all green.
 `make check` green from repo root, run **after** committing per protocol (ruff, ruff

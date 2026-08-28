@@ -132,7 +132,7 @@ class GeminiProvider:
         return text
 
 
-DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
+DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 
 
 class GroqProvider:

@@ -33,7 +33,7 @@
     130
   ],
   "n_customers_per_seed": 5000,
-  "elapsed_seconds": 6170.0,
+  "elapsed_seconds": 6491.5,
   "headline_comparison": "dobara vs razorpay_default",
   "arms": {
     "do_nothing": {
@@ -631,7 +631,7 @@
   },
   "credibility_anchor": "Razorpay's own production routing system reports a 4-6% success-rate lift (https://arxiv.org/abs/2111.00783) across millions of real transactions. If dobara's headline lift looks far larger than this, treat it as a bug to investigate, not a result to celebrate -- docs/07-EVAL-SPEC.md.",
   "provenance": {
-    "generated_at": "2026-08-27T08:34:45.539565+00:00",
-    "git_commit": "3c38f314ef77da6dfa590a507814591bc94f900c"
+    "generated_at": "2026-08-28T07:35:43.651734+00:00",
+    "git_commit": "f199e87bb74ac5a75f35912efd0ede50f58f1b2b"
   }
 }

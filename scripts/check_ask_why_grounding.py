@@ -48,10 +48,35 @@ DEMO_BATCH_PATH = Path("artifacts/demo_batch.json")
 _NUMBER = re.compile(r"(?<!\d)-?\d[\d,]*\.?\d*")
 _PRECISIONS = (0, 1, 2)
 
-# Deliberately empty until a real, reviewed false positive is found -- see the module
-# docstring. Each entry: (decision_key, rounded_value) -> whitelisted, with a comment
-# explaining why it's not a hallucination despite not matching the record.
-WHITELISTED_TOKENS: set[tuple[str, float]] = set()
+# Each entry reviewed individually against its decision's audit record before being
+# added -- see the module docstring's warning against loosening the matcher instead.
+# Found on the first full-corpus run (1,296 narratives, 22 flagged): every clause in
+# the compliance gate is real domain content the narrative is allowed to name even
+# though its *number* isn't literally printed in the record -- RBI-PDN-24H is the
+# 24-hour pre-debit notice rule, RBI-AFA-15K is the ₹15,000 additional-factor-
+# authentication threshold. A narrative correctly citing "the 24-hour rule" or "the
+# ₹15,000 threshold" is reading the clause ID, not inventing a number.
+WHITELISTED_TOKENS: set[tuple[str, float]] = {
+    # RBI-PDN-24H ("24-hour pre-debit notice") named in prose, not a fabricated count.
+    ("18:5:1", 24.0),
+    ("78:2:1", 24.0),
+    ("112:7:1", 24.0),
+    # RBI-AFA-15K (₹15,000 additional-factor-authentication threshold) named in prose.
+    ("83:8:1", 15000.0),
+    ("96:5:1", 15000.0),
+    ("40:8:3", 15000.0),
+    # 103:5:2: record's 95% CI lower bound is -13.92 (Rs.-13.92); narrative correctly
+    # states this as "losing Rs.13.92" -- the sign is carried by "losing", not by a
+    # minus sign in the narrative's own number, so the raw token doesn't match negative
+    # ground truth under this checker's sign-preserving comparison. Verified by hand:
+    # the underlying claim (possible loss of Rs.13.92) is accurate.
+    ("103:5:2", 13.92),
+    # 24:6:1: record's largest rejected-alternative delta is Rs.909.45 below the chosen
+    # candidate's Rs.909.45 E[net]; narrative paraphrases this loosely as "up to over
+    # Rs.900" rather than the exact figure. Directionally and numerically consistent
+    # with the record, just not an exact-token match.
+    ("24:6:1", 900.0),
+}
 
 
 def extract_numbers(text: str) -> list[float]:

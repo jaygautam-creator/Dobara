@@ -1,5 +1,10 @@
 import { notFound } from "next/navigation";
-import { getAllMandateIds, getMandateAudit, getQueueItemSummaryByMandate } from "@/lib/server-data";
+import {
+  getAllMandateIds,
+  getAskWhy,
+  getMandateAudit,
+  getQueueItemSummaryByMandate,
+} from "@/lib/server-data";
 import { DecisionCard } from "@/components/DecisionCard";
 import { SectionHeading } from "@/components/ui";
 
@@ -28,7 +33,11 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
       />
       <div className="space-y-6">
         {records.map((decision, i) => (
-          <DecisionCard key={i} decision={decision} />
+          <DecisionCard
+            key={i}
+            decision={decision}
+            askWhy={getAskWhy(mandateId, decision.cycle_index, decision.attempt_index)}
+          />
         ))}
       </div>
     </div>

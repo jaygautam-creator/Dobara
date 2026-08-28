@@ -1,4 +1,4 @@
-.PHONY: setup sim train eval sensitivity api web check demo demo-fixture money-chart clean
+.PHONY: setup sim train eval sensitivity api web check demo demo-fixture money-chart ask-why clean
 
 setup:
 	uv sync --extra dev
@@ -25,7 +25,7 @@ web:
 check:
 	uv run ruff check .
 	uv run ruff format --check .
-	uv run mypy agent models sim features eval api
+	uv run mypy agent models sim features eval api llm scripts
 	uv run pytest -q
 	uv run python -m scripts.check_artifact_freshness
 
@@ -37,6 +37,9 @@ demo-fixture:
 
 money-chart:
 	uv run python -m scripts.build_money_chart
+
+ask-why:
+	uv run python -m scripts.generate_ask_why
 
 clean:
 	rm -rf data/*.sqlite3 artifacts/*.parquet artifacts/*.json .pytest_cache .mypy_cache .ruff_cache

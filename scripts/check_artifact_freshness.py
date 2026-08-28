@@ -18,13 +18,24 @@ import subprocess
 import sys
 from pathlib import Path
 
-ARTIFACTS = [
-    Path("artifacts/summary.json"),
-    Path("artifacts/sensitivity.json"),
-    Path("artifacts/demo_batch.json"),
-    Path("artifacts/money_chart_data.json"),
-]
 WATCHED_PATHS = ["agent/", "models/", "eval/", "sim/"]
+
+# (artifact path, extra watched paths beyond WATCHED_PATHS above). The ask-why cache is
+# derived from agent/'s audit fields *and* from the narration code that turns them into
+# prose -- a change to either should mark it stale, but llm/ and scripts/generate_ask_why.py
+# have no bearing on any other artifact here, so they're scoped to just this one entry
+# rather than added to the global WATCHED_PATHS (which would flag every artifact stale on
+# any llm/ change, including ones with nothing to do with narration).
+ARTIFACTS: list[tuple[Path, list[str]]] = [
+    (Path("artifacts/summary.json"), []),
+    (Path("artifacts/sensitivity.json"), []),
+    (Path("artifacts/demo_batch.json"), []),
+    (Path("artifacts/money_chart_data.json"), []),
+    (
+        Path("artifacts/llm_cache/ask_why.json"),
+        ["llm/", "scripts/generate_ask_why.py"],
+    ),
+]
 
 
 def _run(args: list[str]) -> str:
@@ -39,7 +50,7 @@ def _is_ancestor(commit: str) -> bool:
     return result.returncode == 0
 
 
-def check_one(path: Path) -> bool:
+def check_one(path: Path, extra_watched: list[str]) -> bool:
     if not path.exists():
         print(f"SKIP  {path} (not present)")
         return True
@@ -54,12 +65,13 @@ def check_one(path: Path) -> bool:
             f"unverifiable (local/rebased history), not treated as stale"
         )
         return True
-    later = _run(["log", f"{commit}..HEAD", "--oneline", "--", *WATCHED_PATHS]).strip()
+    watched = [*WATCHED_PATHS, *extra_watched]
+    later = _run(["log", f"{commit}..HEAD", "--oneline", "--", *watched]).strip()
     if later:
         stale_commits = later.splitlines()
         print(
             f"FAIL  {path}: generated at {commit[:12]}, but {len(stale_commits)} later "
-            f"commit(s) touched {'/'.join(WATCHED_PATHS)}:"
+            f"commit(s) touched {'/'.join(watched)}:"
         )
         for line in stale_commits:
             print(f"        {line}")
@@ -69,12 +81,18 @@ def check_one(path: Path) -> bool:
 
 
 def main() -> None:
-    ok = all(check_one(p) for p in ARTIFACTS)
+    # A list comprehension, not all(genexpr) -- all() short-circuits on the first False,
+    # which silently skipped checking (and printing a result for) every artifact after
+    # the first failure. Discovered when a real, unrelated summary.json staleness meant
+    # this script never even evaluated whether the newly added ask_why.json was fresh.
+    results = [check_one(p, extra) for p, extra in ARTIFACTS]
+    ok = all(results)
     if not ok:
         print(
-            "\nOne or more evidence artifacts are stale relative to agent/models/eval/sim. "
-            "Regenerate with `make eval`, `python -m eval.sensitivity`, `make "
-            "demo-fixture`, and/or `make money-chart` before committing."
+            "\nOne or more evidence artifacts are stale relative to agent/models/eval/sim "
+            "(or, for the ask-why cache, llm/). Regenerate with `make eval`, `python -m "
+            "eval.sensitivity`, `make demo-fixture`, `make money-chart`, and/or "
+            "`make ask-why` before committing."
         )
     sys.exit(0 if ok else 1)
 

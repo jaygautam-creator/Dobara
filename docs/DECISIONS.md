@@ -2061,3 +2061,67 @@ callout numbers, and the warning-toned abstain banner all stayed legible and
 distinguishable against the light surface. The `dobara`/`razorpay_default` lines
 render very close together on the money chart in both themes — that's the headline's
 real (small) margin, not a color-contrast defect.
+
+## [2026-08-28] `/audit` "ask why" box built; free-tier LLM batches are not one provider's problem
+
+Built `llm/provider.py` (`GeminiProvider`, `GroqProvider`, both behind the same
+`LLMProvider` protocol per `docs/03-TECH-STACK.md`), `llm/narrate.py` (the prompt --
+explain the structured record, never invent or second-guess it), and
+`scripts/generate_ask_why.py` (`make ask-why`), which narrates every decision in
+`artifacts/demo_batch.json` and caches the result to `artifacts/llm_cache/ask_why.json`,
+committed. The frontend (`AskWhyBox.tsx`) reads the cache as a static asset and renders
+nothing for a decision it has no entry for -- never a broken empty state. States plainly
+in the UI that the narrative was generated ahead of time from the audit record, by a
+model that never touched the money decision -- the architecture's central claim, made
+visible rather than merely asserted, per the user's explicit instruction.
+
+**Generating the full ~1,300-decision batch took most of an evening and six provider/model
+switches**, none of them the same failure twice:
+
+1. `gemini-3.6-flash`: free tier is **20 requests/day**, not per-minute. Exhausted at 19.
+2. `gemini-3.5-flash-lite`: fresh bucket, **500 requests/day**. Exhausted at ~499.
+3. A first retry-classifier bug: matched the word "billing" to detect unrecoverable
+   billing exhaustion, but Google's *every* 429 body contains boilerplate mentioning
+   billing -- false-positive-aborted a real, retryable RPM=15 limit. Fixed to require the
+   exact phrase "prepayment credits are depleted".
+4. `gemini-3.1-flash-lite`: another fresh 500/day bucket. Exhausted at ~494 more.
+5. `gemini-3-flash-preview`: fresh, but shares the *full* "flash" tier's 20/day bucket,
+   not the lite tier's 500/day -- exhausted after 13.
+6. A false "reset" sighting: past UTC midnight, one smoke-test call to
+   `gemini-3.5-flash-lite` returned 200, read as the daily quota clearing. It was a
+   one-off; the very next real call in the batch still 429'd. Don't trust a single
+   probe to mean a quota window reset -- confirm with the batch itself.
+7. Switched provider entirely to **Groq** (`docs/03-TECH-STACK.md` had already named it
+   as an anticipated swap target). `openai/gpt-oss-20b`: fast (~1s/call), good quality,
+   but its 429 body said "tokens per day (TPD)" -- Gemini-specific non-retryable
+   detection (`"perday"` in a `quotaId` field) didn't catch Groq's prose shape, and the
+   generic `retry-after` header (75s) looked like an ordinary short rate limit. It
+   wasn't: the script spent ~7 minutes stuck retrying a 200k/200k TPD ceiling that
+   wasn't going to clear. Fixed by adding Groq's phrasing ("tokens per day", "requests
+   per day") to the non-retryable marker list.
+8. `openai/gpt-oss-120b`: separate fresh TPD bucket, exhausted after ~130 more (each
+   model's TPD budget is independent, confirmed by trying several before finding one
+   with headroom -- `groq/compound-mini` turned out to internally route through
+   `gpt-oss-120b` and shared its exhausted bucket).
+9. `qwen/qwen3.6-27b`: fresh bucket, but emitted a visible `<think>...</think>` reasoning
+   block before the actual answer, unprompted -- would have corrupted the cache with a
+   chain-of-thought dump instead of a short narrative. Not used; `llm/narrate.py` now
+   strips `<think>` blocks defensively regardless of model, so a future swap that
+   reintroduces this doesn't require catching it by eye.
+10. `qwen/qwen3.8-27b`: fresh bucket, no thinking output, finished the remaining 37.
+
+**Result**: 1,296/1,296 decisions narrated, 0 failures, `<think>`-block sweep confirms
+none leaked into the committed cache. Every model switch was verified against a real
+audit record (an abstain case and a schedule_debit case) for narrative quality and
+faithfulness before being adopted, not assumed.
+
+**Also fixed while here**: `scripts/check_artifact_freshness.py`'s `main()` used
+`all(check_one(...) for ...)`, which short-circuits on the first `False` -- a real,
+pre-existing `summary.json` staleness (from commit `1c6286f`, unrelated to this work)
+meant the script silently never even checked whether the newly added `ask_why.json` was
+fresh. Changed to a list comprehension so every artifact is always checked and reported.
+Running it after the fix surfaced that staleness for the first time: `summary.json`,
+`sensitivity.json`, `demo_batch.json`, and `money_chart_data.json` all predate `1c6286f`,
+which touched `eval/runner.py`'s per-cycle tracking -- **not fixed here**, out of scope
+for tonight's ask-why work and requires a full `make eval` rerun (~100 minutes for the
+30-seed harness). `artifacts/llm_cache/ask_why.json` itself reports fresh.

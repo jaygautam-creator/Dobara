@@ -1,4 +1,10 @@
-import { getApprovals, getCounters, getQueueRows, getTopCaseFull } from "@/lib/server-data";
+import {
+  getApprovals,
+  getAskWhy,
+  getCounters,
+  getQueueRows,
+  getTopCaseFull,
+} from "@/lib/server-data";
 import { ControlRoomClient } from "@/components/control-room/ControlRoomClient";
 import { SectionHeading } from "@/components/ui";
 
@@ -30,6 +36,11 @@ export default function ControlRoomPage() {
         rows={rows}
         counters={counters}
         topCaseDecision={topCase.decision}
+        topCaseAskWhy={getAskWhy(
+          topCase.mandate_id,
+          topCase.decision.cycle_index,
+          topCase.decision.attempt_index,
+        )}
         approvals={approvals}
       />
       <p className="border-t border-border pt-4 text-xs text-text-muted">

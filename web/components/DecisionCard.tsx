@@ -1,6 +1,7 @@
 import type { DecisionOut, RejectedAlternativeOut } from "@/lib/types";
 import { formatInr, formatInrPrecise, formatPct } from "@/lib/format";
 import { Badge, Card } from "@/components/ui";
+import { AskWhyBox } from "@/components/AskWhyBox";
 
 const TIED_PATTERN = /^(\d+) candidates tied at this E\[net\]$/;
 
@@ -69,11 +70,12 @@ export function AbstentionBanner({ decision }: { decision: DecisionOut }) {
   );
 }
 
-export function DecisionCard({ decision, bankId, method, amount }: {
+export function DecisionCard({ decision, bankId, method, amount, askWhy }: {
   decision: DecisionOut;
   bankId?: string;
   method?: string;
   amount?: number;
+  askWhy?: string | null;
 }) {
   const rm = decision.rupee_math;
   return (
@@ -164,6 +166,8 @@ export function DecisionCard({ decision, bankId, method, amount }: {
           ))}
         </div>
       </div>
+
+      <AskWhyBox narrative={askWhy ?? null} />
 
       <details className="text-xs">
         <summary className="cursor-pointer text-text-muted hover:text-text-secondary">

@@ -4,9 +4,10 @@
 // [2026-08-26]) never reaches the browser bundle. Pages extract only the trimmed fields a
 // client component actually needs before passing them down as props.
 import "server-only";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type {
+  AskWhyCache,
   DemoBatchJson,
   HazardModelReport,
   MoneyChartData,
@@ -113,4 +114,31 @@ export function getQueueItemSummaryByMandate(mandateId: number) {
 export function getTopCaseFull() {
   const batch = getDemoBatch();
   return batch.queue[0] ?? null;
+}
+
+let _askWhyCache: AskWhyCache | null | undefined = undefined;
+
+/** `make ask-why` is a separate, optional, rate-limited step (see
+ * scripts/generate_ask_why.py) -- a fresh clone or a build that skipped it has no
+ * cache file at all, and even a completed run only covers whatever finished before the
+ * script exited. Returns null in both cases so AskWhyBox can render an honest empty
+ * state instead of the page failing to build. */
+function getAskWhyCache(): AskWhyCache | null {
+  if (_askWhyCache !== undefined) return _askWhyCache;
+  const p = path.join(DATA_DIR, "llm_cache", "ask_why.json");
+  _askWhyCache = existsSync(p) ? (JSON.parse(readFileSync(p, "utf-8")) as AskWhyCache) : null;
+  return _askWhyCache;
+}
+
+/** Looks up the pre-generated "ask why" narrative for one decision, keyed exactly as
+ * scripts/generate_ask_why.py::decision_key() writes it. Returns null when the cache is
+ * absent or doesn't (yet) have this decision. */
+export function getAskWhy(
+  mandateId: number,
+  cycleIndex: number,
+  attemptIndex: number,
+): string | null {
+  const cache = getAskWhyCache();
+  if (!cache) return null;
+  return cache.narratives[`${mandateId}:${cycleIndex}:${attemptIndex}`] ?? null;
 }

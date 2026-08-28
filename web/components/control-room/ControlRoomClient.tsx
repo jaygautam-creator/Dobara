@@ -23,11 +23,13 @@ export function ControlRoomClient({
   rows,
   counters,
   topCaseDecision,
+  topCaseAskWhy,
   approvals,
 }: {
   rows: QueueRow[];
   counters: CounterOut;
   topCaseDecision: DecisionOut;
+  topCaseAskWhy: string | null;
   approvals: DecisionOut[];
 }) {
   const [revealed, setRevealed] = useState(0);
@@ -218,7 +220,7 @@ export function ControlRoomClient({
         <div className="lg:sticky lg:top-20 lg:self-start">
           <h3 className="mb-3 text-sm font-semibold text-text-primary">Active case</h3>
           {activeDecision ? (
-            <DecisionCard decision={activeDecision} />
+            <DecisionCard decision={activeDecision} askWhy={topCaseAskWhy} />
           ) : (
             <Card>
               <p className="text-sm text-text-secondary">

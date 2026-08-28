@@ -278,6 +278,13 @@ export interface DemoBatchJson {
   approvals: DecisionOut[];
 }
 
+/** `artifacts/llm_cache/ask_why.json`, generated offline by `make ask-why`
+ * (scripts/generate_ask_why.py) -- see components/AskWhyBox.tsx for how a missing key
+ * is handled (the cache can be partial: the batch call is resumable and rate-limited). */
+export interface AskWhyCache {
+  narratives: Record<string, string>;
+}
+
 /** Trimmed queue row for the Control Room's list view -- no audit_text/rejected_alternatives,
  * which are only fetched on demand for the case actually opened. */
 export interface QueueRow {

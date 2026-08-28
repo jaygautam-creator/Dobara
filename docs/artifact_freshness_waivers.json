@@ -23,5 +23,30 @@
     "artifact": "artifacts/llm_cache/ask_why.json",
     "commit": "bfa52dc24c55727f54b023671114e8016b45b5a4",
     "reason": "bfa52dc's eval/ change (content_hash() addition) is not imported by llm/ or scripts/generate_ask_why.py's narration path -- generate_ask_why.py calls content_hash() only when *writing* the cache (to stamp demo_batch_content_hash), not as part of narrating a decision, so the narrated text is unaffected. content_hash()'s own behavior for this artifact's actual dependency is separately covered by the HASH_DEPENDENCIES content check below, which passes."
+  },
+  {
+    "artifact": "artifacts/summary.json",
+    "commit": "ad1e671e1d445fd230add703dced78974c96264a",
+    "reason": "ad1e671's only change under a watched path is eval/runner.py's opt-in per-beat trace: a new AttemptEvent dataclass, a MandateResult.events list defaulting to empty, and a `trace: bool = False` parameter threaded through run_arm/_run_cadence_arm/_run_dobara_arm/_draw_attempt. Every append is guarded by `if trace`, no draw, ordering or scored field is touched, and the only caller that passes trace=True is the new scripts/build_home_demo.py. Proven, not just argued: tests/test_runner_trace.py runs aggressive_8x and dobara with and without the trace over a shared world and asserts the two result lists are equal after clearing `events` -- so any field this artifact reports would have to differ for that test to pass. eval/run.py calls run_arm without `trace`, taking the default."
+  },
+  {
+    "artifact": "artifacts/sensitivity.json",
+    "commit": "ad1e671e1d445fd230add703dced78974c96264a",
+    "reason": "ad1e671's only change under a watched path is eval/runner.py's opt-in per-beat trace: a new AttemptEvent dataclass, a MandateResult.events list defaulting to empty, and a `trace: bool = False` parameter threaded through run_arm/_run_cadence_arm/_run_dobara_arm/_draw_attempt. Every append is guarded by `if trace`, no draw, ordering or scored field is touched, and the only caller that passes trace=True is the new scripts/build_home_demo.py. Proven, not just argued: tests/test_runner_trace.py runs aggressive_8x and dobara with and without the trace over a shared world and asserts the two result lists are equal after clearing `events` -- so any field this artifact reports would have to differ for that test to pass. eval/sensitivity.py calls run_arm without `trace`, taking the default."
+  },
+  {
+    "artifact": "artifacts/demo_batch.json",
+    "commit": "ad1e671e1d445fd230add703dced78974c96264a",
+    "reason": "ad1e671's only change under a watched path is eval/runner.py's opt-in per-beat trace: a new AttemptEvent dataclass, a MandateResult.events list defaulting to empty, and a `trace: bool = False` parameter threaded through run_arm/_run_cadence_arm/_run_dobara_arm/_draw_attempt. Every append is guarded by `if trace`, no draw, ordering or scored field is touched, and the only caller that passes trace=True is the new scripts/build_home_demo.py. Proven, not just argued: tests/test_runner_trace.py runs aggressive_8x and dobara with and without the trace over a shared world and asserts the two result lists are equal after clearing `events` -- so any field this artifact reports would have to differ for that test to pass. scripts/build_demo_fixture.py goes through api/demo.py's live decide() path and never calls run_arm at all."
+  },
+  {
+    "artifact": "artifacts/money_chart_data.json",
+    "commit": "ad1e671e1d445fd230add703dced78974c96264a",
+    "reason": "ad1e671's only change under a watched path is eval/runner.py's opt-in per-beat trace: a new AttemptEvent dataclass, a MandateResult.events list defaulting to empty, and a `trace: bool = False` parameter threaded through run_arm/_run_cadence_arm/_run_dobara_arm/_draw_attempt. Every append is guarded by `if trace`, no draw, ordering or scored field is touched, and the only caller that passes trace=True is the new scripts/build_home_demo.py. Proven, not just argued: tests/test_runner_trace.py runs aggressive_8x and dobara with and without the trace over a shared world and asserts the two result lists are equal after clearing `events` -- so any field this artifact reports would have to differ for that test to pass. scripts/build_money_chart.py calls run_arm without `trace`, taking the default."
+  },
+  {
+    "artifact": "artifacts/llm_cache/ask_why.json",
+    "commit": "ad1e671e1d445fd230add703dced78974c96264a",
+    "reason": "ad1e671's only change under a watched path is eval/runner.py's opt-in per-beat trace: a new AttemptEvent dataclass, a MandateResult.events list defaulting to empty, and a `trace: bool = False` parameter threaded through run_arm/_run_cadence_arm/_run_dobara_arm/_draw_attempt. Every append is guarded by `if trace`, no draw, ordering or scored field is touched, and the only caller that passes trace=True is the new scripts/build_home_demo.py. Proven, not just argued: tests/test_runner_trace.py runs aggressive_8x and dobara with and without the trace over a shared world and asserts the two result lists are equal after clearing `events` -- so any field this artifact reports would have to differ for that test to pass. The cache narrates artifacts/demo_batch.json's decisions, which are unchanged by this commit (the HASH_DEPENDENCIES content check confirms it independently); llm/ and scripts/generate_ask_why.py are untouched here."
   }
 ]

@@ -52,7 +52,13 @@ not pushed**, so the review still gates what lands on `main`.
    compliance-rules`) so the page cannot drift from the gate it describes — and the seven
    stopping reasons.
 5. **Two new artifacts registered in the freshness gate** (`home_demo.json`,
-   `compliance_rules.json`) and in `web/scripts/sync-data.mjs`.
+   `compliance_rules.json`) and in `web/scripts/sync-data.mjs`. Verified **post-commit**
+   per the protocol rule added last session: the gate went red on the Session C commit
+   exactly as that rule predicts (`eval/runner.py` is a watched path), and the five
+   affected artifacts were waived in a follow-up commit with the specific reason — the
+   trace is opt-in, no generator passes `trace=True`, and `tests/test_runner_trace.py`
+   proves the scored fields are identical either way. `home_demo.json` and
+   `compliance_rules.json` needed no waiver: the self-regeneration exclusion covers them.
 6. **A real hydration mismatch, found and fixed.** `lib/motion.ts`'s `staticRender` reads
    `window`, so reading it *during render* makes server and client markup disagree — the
    dev overlay caught it on `/architecture`. The diagram's entrance stagger was removed

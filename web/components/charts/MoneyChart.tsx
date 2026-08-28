@@ -13,7 +13,19 @@ import {
 } from "recharts";
 import type { MoneyChartData } from "@/lib/types";
 import { formatInr } from "@/lib/format";
-import { ARM_LABEL, armColor } from "@/components/ui";
+import { armColor } from "@/components/ui";
+import { staticRender } from "@/lib/motion";
+import {
+  axisLabelStyle,
+  axisLineStyle,
+  axisTick,
+  gridStyle,
+  legendFormatter,
+  legendWrapperStyle,
+  tooltipContentStyle,
+  tooltipLabelStyle,
+} from "@/components/charts/chartTheme";
+import { ARM_LABEL } from "@/components/ui";
 
 const ARMS = ["dobara", "razorpay_default", "aggressive_8x", "oracle", "do_nothing"] as const;
 
@@ -31,7 +43,7 @@ export function MoneyChart({ data }: { data: MoneyChartData }) {
   return (
     <div className="viz-root">
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-xs text-text-muted">
+        <div className="font-mono text-xs text-text-muted">
           Single seed {data.seed}, n={data.n_customers.toLocaleString("en-IN")} mandates —
           held out from both training and the 30-seed harness
         </div>
@@ -60,33 +72,28 @@ export function MoneyChart({ data }: { data: MoneyChartData }) {
       </div>
       <ResponsiveContainer width="100%" height={380}>
         <LineChart data={rows} margin={{ top: 8, right: 24, bottom: 24, left: 8 }}>
-          <CartesianGrid stroke="var(--gridline)" vertical={false} />
+          <CartesianGrid stroke={gridStyle.stroke} vertical={false} />
           <Legend
             verticalAlign="top"
             align="center"
-            wrapperStyle={{ fontSize: 12, color: "var(--text-secondary)", paddingBottom: 12 }}
-            formatter={(value: string) => ARM_LABEL[value] ?? value}
+            wrapperStyle={legendWrapperStyle}
+            formatter={legendFormatter}
           />
           <XAxis
             dataKey="cycle"
-            stroke="var(--baseline)"
-            tick={{ fill: "var(--text-muted)", fontSize: 12 }}
-            label={{ value: "Cycle", position: "insideBottom", offset: -14, fill: "var(--text-muted)", fontSize: 12 }}
+            stroke={axisLineStyle.stroke}
+            tick={axisTick()}
+            label={{ value: "Cycle", position: "insideBottom", offset: -14, ...axisLabelStyle() }}
           />
           <YAxis
-            stroke="var(--baseline)"
-            tick={{ fill: "var(--text-muted)", fontSize: 12 }}
+            stroke={axisLineStyle.stroke}
+            tick={axisTick()}
             tickFormatter={(v: number) => formatInr(v, { compact: true })}
             width={70}
           />
           <Tooltip
-            contentStyle={{
-              background: "var(--surface-2)",
-              border: "1px solid var(--border)",
-              borderRadius: 8,
-              fontSize: 12,
-            }}
-            labelStyle={{ color: "var(--text-primary)" }}
+            contentStyle={tooltipContentStyle}
+            labelStyle={tooltipLabelStyle}
             formatter={(value, name) => [
               formatInr(Number(value), { compact: true }),
               ARM_LABEL[String(name)] ?? String(name),
@@ -101,7 +108,7 @@ export function MoneyChart({ data }: { data: MoneyChartData }) {
               stroke={armColor(arm)}
               strokeWidth={arm === "dobara" ? 3 : 2}
               dot={false}
-              isAnimationActive={false}
+              isAnimationActive={!staticRender}
               name={arm}
             />
           ))}

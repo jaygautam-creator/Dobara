@@ -93,8 +93,8 @@ export default function EvidencePage() {
           — significant, in the losing direction.
         </p>
         <p className="mt-3 max-w-3xl text-xs leading-relaxed text-text-muted">
-          Rerun {formatTimestamp(summary.provenance.generated_at)} at commit{" "}
-          <code>{summary.provenance.git_commit.slice(0, 12)}</code>, after{" "}
+          Rerun <span className="tabular-nums">{formatTimestamp(summary.provenance.generated_at)}</span> at commit{" "}
+          <code className="tabular-nums">{summary.provenance.git_commit.slice(0, 12)}</code>, after{" "}
           <code>agent/decide.py</code>&apos;s tie-break fix (
           <a
             href="#tie-break-honesty"
@@ -450,13 +450,13 @@ function ProvenanceFooter({
   return (
     <div className="border-t border-border pt-4 text-[11px] text-text-muted">
       <p>
-        <code>summary.json</code> generated {formatTimestamp(summary.provenance.generated_at)}{" "}
-        at commit <code>{summary.provenance.git_commit.slice(0, 12)}</code>.{" "}
+        <code>summary.json</code> generated <span className="tabular-nums">{formatTimestamp(summary.provenance.generated_at)}</span>{" "}
+        at commit <code className="tabular-nums">{summary.provenance.git_commit.slice(0, 12)}</code>.{" "}
         {!same && (
           <>
             <code>sensitivity.json</code> generated{" "}
-            {formatTimestamp(sensitivity.provenance.generated_at)} at commit{" "}
-            <code>{sensitivity.provenance.git_commit.slice(0, 12)}</code>.{" "}
+            <span className="tabular-nums">{formatTimestamp(sensitivity.provenance.generated_at)}</span> at commit{" "}
+            <code className="tabular-nums">{sensitivity.provenance.git_commit.slice(0, 12)}</code>.{" "}
           </>
         )}
         Checked by <code>make check</code>&apos;s <code>check_artifact_freshness</code>{" "}

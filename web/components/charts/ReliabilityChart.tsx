@@ -12,6 +12,8 @@ import {
 } from "recharts";
 import type { ReliabilityDiagram } from "@/lib/types";
 import { formatPct } from "@/lib/format";
+import { staticRender } from "@/lib/motion";
+import { axisLineStyle, axisTick, gridStyle, tooltipContentStyle } from "@/components/charts/chartTheme";
 
 /** A calibration reliability diagram: predicted probability (x) vs observed frequency
  * (y), against the perfect-calibration diagonal. dataviz: sequential/identity color, one
@@ -29,13 +31,13 @@ export function ReliabilityChart({ diagram }: { diagram: ReliabilityDiagram }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <ComposedChart margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
-        <CartesianGrid stroke="var(--gridline)" />
+        <CartesianGrid stroke={gridStyle.stroke} />
         <XAxis
           type="number"
           dataKey="prob_pred"
           domain={[0, 1]}
-          stroke="var(--baseline)"
-          tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+          stroke={axisLineStyle.stroke}
+          tick={axisTick(11)}
           tickFormatter={(v: number) => formatPct(v, 0)}
           label={{
             value: "Predicted probability",
@@ -49,20 +51,12 @@ export function ReliabilityChart({ diagram }: { diagram: ReliabilityDiagram }) {
           type="number"
           dataKey="prob_true"
           domain={[0, 1]}
-          stroke="var(--baseline)"
-          tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+          stroke={axisLineStyle.stroke}
+          tick={axisTick(11)}
           tickFormatter={(v: number) => formatPct(v, 0)}
           width={44}
         />
-        <Tooltip
-          contentStyle={{
-            background: "var(--surface-2)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            fontSize: 12,
-          }}
-          formatter={(value) => formatPct(Number(value), 1)}
-        />
+        <Tooltip contentStyle={tooltipContentStyle} formatter={(value) => formatPct(Number(value), 1)} />
         <Line
           data={diagonal}
           dataKey="prob_true"
@@ -71,14 +65,14 @@ export function ReliabilityChart({ diagram }: { diagram: ReliabilityDiagram }) {
           dot={false}
           activeDot={false}
           legendType="none"
-          isAnimationActive={false}
+          isAnimationActive={!staticRender}
           name="perfect calibration"
         />
         <Scatter
           data={points}
           fill="var(--arm-dobara)"
           line={{ stroke: "var(--arm-dobara)", strokeWidth: 2 }}
-          isAnimationActive={false}
+          isAnimationActive={!staticRender}
         />
       </ComposedChart>
     </ResponsiveContainer>

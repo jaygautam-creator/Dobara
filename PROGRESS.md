@@ -7,11 +7,95 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-28. **The `/audit` "ask why" LLM narrative box is built and
-ground-verified across its full corpus.** Phase 6 continues next; a frontend redesign
-spec (`docs/10-REDESIGN.md`) now exists but has not been executed — see its own session
-plan for the six-session breakdown (A bookkeeping close-out / B foundations / C–F
-per-route rebuilds + ship).
+**Last updated:** 2026-08-28, later same day. **`docs/10-REDESIGN.md` Session B
+(foundations) is done and pushed.** `motion` and `shadcn/ui` are installed, the type
+scale and shadcn token bridge are in `globals.css`, `ui.tsx` is rebuilt with `Card`
+surface variants and `StatTile` size tiers, `lib/motion.ts` and
+`components/charts/chartTheme.ts` exist, and every existing route still builds
+unchanged. Session C (`/` rebuild + `/architecture`) is next — do not start it before
+reading the diff summary below; per the redesign spec's own sequencing note, Session B
+is load-bearing and determines whether C–F are assembly or rework.
+
+**What shipped this session (Session B only — no route was redesigned, per the
+session's explicit scope):**
+- `npm install motion`; `npx shadcn@latest init` (had to be corrected by hand afterward
+  — its non-interactive `init` overwrote `--border` and appended a second,
+  `.dark`-class-based color system on top of the project's existing
+  `:root`/`prefers-color-scheme`/`[data-theme]` tokens, exactly the risk
+  `docs/10-REDESIGN.md` §3.5 flagged. Reverted, then added a small "shadcn/ui token
+  bridge" block to `globals.css` by hand that points shadcn's expected variable names
+  (`--background`, `--card`, `--primary`, `--muted`, `--border`, `--ring`, …) at the
+  project's own tokens via `var()`, so they inherit the existing light/dark/toggle
+  layering automatically instead of introducing a second palette). Installed the ten
+  primitives §3.5 names (`tabs`, `tooltip`, `dialog`, `scroll-area`, `separator`,
+  `table`, `badge`, `button`, `accordion`, `hover-card`, `command`) into
+  `components/ui/` — available for C–F, none wired into a route yet. `TooltipProvider`
+  wraps the root layout so a future session's first `Tooltip` usage doesn't need to
+  discover that requirement itself.
+- Instrument Serif added via `next/font/google` (`app/layout.tsx`), alongside the
+  existing Geist Sans/Mono, exposed as `--font-serif` through `@theme`.
+- The §3.1 fluid type scale (`--step--1` … `--step-6`) added to `globals.css`, exposed
+  as Tailwind `text-step-*` utilities via `@theme`.
+- `components/ui.tsx` rebuilt: `Card` gained a `variant` prop (`plain`/`inset`/`raised`/
+  `feature`, §3.2) defaulting to `raised` — the project's pre-redesign look — so every
+  existing `<Card>` call site renders unchanged; `StatTile` gained a `size` prop
+  (`hero`/`default`/`compact`, §3.3) defaulting to `default` for the same reason. Both
+  additive, not breaking. **Did not add the hard "refuse to render without a CI/source"
+  enforcement** originally attempted — three live call sites in
+  `ControlRoomClient.tsx` (running counters like "Notifications sent") legitimately have
+  no statistical CI, and a hard throw there would break the build; left as a documented
+  convention in `StatTile`'s docstring instead, matching the CLAUDE.md rule as it was
+  already being followed, not tightening it unilaterally mid-foundations-session.
+- `web/lib/motion.ts`: the `staticRender` gate exactly as specified in §5. All three
+  chart components switched from `isAnimationActive={false}` to
+  `isAnimationActive={!staticRender}`.
+- `components/charts/chartTheme.ts`: the repeated axis/legend/tooltip styling extracted
+  from `MoneyChart`/`SensitivityChart`/`ReliabilityChart`; each chart's tick/tooltip
+  styling now also sets `fontFamily: var(--font-geist-mono)` from one place.
+- **Every number moves to Geist Mono (§2/§3.1)**, not just stat values: rather than
+  hand-adding `font-mono` at ~30 separate call sites, extended the project's existing
+  `.tabular-nums` utility (already the convention marking a numeric node everywhere —
+  table cells, CIs, stat values) to also set `font-family: var(--font-mono)`, so marking
+  something numeric and setting its face are now one action. Hand-added `tabular-nums`
+  to the handful of numeric/ID/timestamp spots that weren't already marked (provenance
+  commit hashes and rerun timestamps on `/evidence`, mandate/attempt/cycle IDs and
+  notice dates on `/mandate/[id]`, clause-ID badges and the confidence-band line on
+  `DecisionCard`).
+- Screenshot recipe update owed by §5 ("update the screenshot recipe in `PROGRESS.md`
+  when this lands") — **not done this session**: no new headless screenshot pass was
+  run, so there is no recipe invocation to update yet. Flagged for whichever session
+  next runs a screenshot pass (`?static=1` must be appended, per §5) — likely Session
+  F's final a11y/perf pass.
+
+**Verified, not just asserted**: `npx tsc --noEmit`, `npm run lint`, and `npm run build`
+(Turbopack, static export, all 306 pages) all clean after every change, including after
+installing the ten shadcn primitives. Served the static `out/` build locally
+(`npx serve out`) and confirmed `/`, `/evidence`, `/control-room`, and a sampled
+`/mandate/[id]`/`/audit/[id]` all return 200 with no runtime error, and that
+`.tabular-nums`/Geist Mono is present broadly on `/evidence`'s rendered HTML.
+
+**`make check` is currently red, for a reason unrelated to this session's `web/`-only
+changes** — this session touched no Python file. `scripts/check_artifact_freshness.py`
+flags `artifacts/llm_cache/ask_why.json` stale: its top-level `provenance.git_commit`
+stamp is `f199e87`, but `40b4a12` (also this session's predecessor, the stale-artifact
+rerun) touched `artifacts/demo_batch.json` — one of the cache's watched paths — after
+that stamp, even though `40b4a12`'s own commit message confirms the touch was
+content-neutral (decision content byte-identical, confirmed empirically). The checker
+is doing exactly its documented job (any post-stamp touch to a watched path fails,
+unconditionally) — this isn't a checker bug, it's a real gap between "provably
+inconsequential" and "the freshness gate can tell that automatically." Not fixed here:
+out of a foundations-session's scope, and the fix is a judgment call (rerun `make
+ask-why` to bump the stamp — costs LLM quota for zero content change — or teach the
+checker to special-case a content-identical touch) that the next session touching
+Python/`eval/` should make deliberately, not as a side effect of frontend work.
+
+---
+
+**Last updated:** 2026-08-28, earlier same day. **The `/audit` "ask why" LLM narrative
+box is built and ground-verified across its full corpus.** Phase 6 continues next; a
+frontend redesign spec (`docs/10-REDESIGN.md`) now exists but has not been executed —
+see its own session plan for the six-session breakdown (A bookkeeping close-out / B
+foundations / C–F per-route rebuilds + ship).
 
 **What shipped, in order (2026-08-27 later, 2026-08-28):**
 
@@ -867,3 +951,4 @@ Append one line per session: date · what was done · what is next.
 - **2026-08-26** — Day 6 continued, break-even strengthened + remaining sensitivity axes + spec corrections. User: judging the hazard break-even against the declared `sensitivity_range` alone uses the weaker (guessed) object to judge the stronger (NPCI-calibrated) one. `eval/sensitivity.py` now records `razorpay_default_revocation_per_execution_ratio` at every swept point and interpolates it at the break-even hazard: **the break-even corresponds to a ≈1.91% revocation ratio, ~24% below NPCI's published ≈2.5%** — a materially stronger statement than the raw 33% hazard-value margin (kept alongside it, not replaced, per instruction). Then swept the remaining three declared axes via a new generic `sweep_other_axes`: `date_change_offer.response_rate` [0.0, 0.15] incl. the required 0% run — robust; `notification.cost_inr.whatsapp` [0.2, 0.6] — no measurable effect; `ltv.margin_factor` [0.4, 0.9] (substituted for `horizon_cycles`, which has no declared range, substitution stated not hidden) — a second break-even at ≈0.48, calibrated 0.7 ~46% above it, no external anchor available to strengthen further. All published in README. Also corrected `docs/07-EVAL-SPEC.md`'s money-chart section and `docs/09-DEMO-SCRIPT.md`'s evidence beat to state the actual finding (no crossover, `aggressive_8x` trails from cycle 1, loses its own gross lead past cycle 4) instead of the shape assumed before the chart existed — user's explicit "never bend a finding to match a spec I wrote before the data existed." Incidentally fixed a second, unrelated stale line caught while editing the same demo-script beat: "Graceful failure" still described `Abstain` falling back to Razorpay's default, stale since the 2026-08-25 fix. `make check` green throughout (79 tests unaffected; ruff/mypy clean on the refactored `eval/sensitivity.py`). Full account in `docs/DECISIONS.md` [2026-08-26] (two more entries). Phase 4 is now fully complete, all checkboxes closed except the non-blocking test-set-count honesty marker. Next: the `SBI` abstention-response question, or Phase 5/6 — user's call.
 - **2026-08-27, later same day** — Headless-Chrome visual pass against `/evidence`, `/control-room`, `/mandate/[id]` found and fixed five defects: legend/axis collision on two charts; Recharts mount animation frozen mid-draw under headless capture (`isAnimationActive={false}` everywhere, also makes screenshots deterministic); a ~1,700px layout void plus clipped cycle cards on `/mandate/[id]`; the Control Room queue never showing STOP/ABSTAIN outcomes (`QueueRow.terminal_action_type` added); a `₹ at risk` vs `₹ recovered` scope mismatch relabeled with explicit source captions rather than changed. Closed the `money_chart_data.json` staleness gap flagged the session before: `scripts/build_money_chart.py` committed, wired into `make check`'s artifact-freshness gate. `make check` (95 tests) and the web build (306 pages) green. Full account in `docs/DECISIONS.md` [2026-08-27] "Visual pass fixes".
 - **2026-08-27, later still / 2026-08-28** — Built the `/audit` "ask why" LLM narrative box end to end: `llm/provider.py`/`llm/narrate.py`, `scripts/generate_ask_why.py` narrating all 1,296 cached decisions after six provider/model quota switches in one evening (Gemini x3, Groq, Qwen), `AskWhyBox.tsx` reading the cache statically. Followed with per-entry `{text, provider, model, generated_at}` provenance, a numeric-grounding checker wired into `make check`, an embedded architecture diagram, and a CI scope fix (mypy was missing `eval`/`api`/`llm`/`scripts`, no artifact-freshness gate, no web build job — silently masking a real `ThemeToggle.tsx` ESLint error). Then reran the full stale-artifact chain (byte-identical decision content confirmed, no README changes needed) and ran the grounding checker against the full 1,296-narrative corpus: 22 flagged, triaged individually — 14 real hallucinations regenerated, 8 checker false positives whitelisted with per-case reasoning, final state 0 flagged. A separate hand-read of ten narratives caught one more real defect the automated checker structurally can't (a STOP case falsely claiming an escalation) and fixed it. `docs/10-REDESIGN.md`, a six-session frontend redesign spec, was authored and committed but not executed. Full account in `docs/DECISIONS.md` [2026-08-28] (three entries). Next: execute `docs/10-REDESIGN.md` Session B (foundations) onward.
+- **2026-08-28, later same day — Session B (foundations)**, per `docs/10-REDESIGN.md` §7: `motion` and `shadcn/ui` installed (had to hand-correct `shadcn init`'s non-interactive overwrite of `--border` and injection of a second `.dark`-class color system; replaced with a small token-bridge block pointing shadcn's variables at the project's existing tokens); Instrument Serif added alongside Geist Sans/Mono; the §3.1 fluid type scale added to `globals.css` and exposed via Tailwind `@theme`; `ui.tsx` rebuilt with `Card` surface variants and `StatTile` size tiers, both additive and backward-compatible so no existing route broke; `lib/motion.ts`'s `staticRender` gate added and wired into all three chart components; `chartTheme.ts` extracted from the three charts' repeated axis/legend/tooltip styling; every number moved to Geist Mono by extending the existing `.tabular-nums` convention rather than hand-touching ~30 call sites. `npx tsc --noEmit`, `npm run lint`, `npm run build` (306 pages) all green; served the static export locally and spot-checked four routes return 200. `make check` is currently red for a reason unrelated to this session (a pre-existing `check_artifact_freshness.py` gap from the prior session's `40b4a12`, flagged not fixed — see `## CURRENT STATE`). Next: Session C (`/` rebuild + `/architecture`) — hold for the user's diff review first, per their explicit request.

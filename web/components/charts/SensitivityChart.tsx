@@ -14,6 +14,15 @@ import {
 import type { SensitivityPoint } from "@/lib/types";
 import { formatInr } from "@/lib/format";
 import { ARM_LABEL, armColor } from "@/components/ui";
+import { staticRender } from "@/lib/motion";
+import {
+  axisLineStyle,
+  axisTick,
+  gridStyle,
+  legendFormatter,
+  legendWrapperStyle,
+  tooltipContentStyle,
+} from "@/components/charts/chartTheme";
 
 export function SensitivityChart({
   points,
@@ -34,17 +43,17 @@ export function SensitivityChart({
   return (
     <ResponsiveContainer width="100%" height={340}>
       <LineChart data={rows} margin={{ top: 8, right: 24, bottom: 24, left: 8 }}>
-        <CartesianGrid stroke="var(--gridline)" vertical={false} />
+        <CartesianGrid stroke={gridStyle.stroke} vertical={false} />
         <Legend
           verticalAlign="top"
           align="center"
-          wrapperStyle={{ fontSize: 12, color: "var(--text-secondary)", paddingBottom: 12 }}
-          formatter={(value: string) => ARM_LABEL[value] ?? value}
+          wrapperStyle={legendWrapperStyle}
+          formatter={legendFormatter}
         />
         <XAxis
           dataKey="hazard"
-          stroke="var(--baseline)"
-          tick={{ fill: "var(--text-muted)", fontSize: 12 }}
+          stroke={axisLineStyle.stroke}
+          tick={axisTick()}
           tickFormatter={(v: number) => v.toFixed(3)}
           label={{
             value: "revocation.hazard_per_failure_notification",
@@ -55,18 +64,13 @@ export function SensitivityChart({
           }}
         />
         <YAxis
-          stroke="var(--baseline)"
-          tick={{ fill: "var(--text-muted)", fontSize: 12 }}
+          stroke={axisLineStyle.stroke}
+          tick={axisTick()}
           tickFormatter={(v: number) => formatInr(v, { compact: true })}
           width={64}
         />
         <Tooltip
-          contentStyle={{
-            background: "var(--surface-2)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            fontSize: 12,
-          }}
+          contentStyle={tooltipContentStyle}
           formatter={(value, name) => [formatInr(Number(value)), ARM_LABEL[String(name)] ?? String(name)]}
           labelFormatter={(l) => `hazard = ${Number(l).toFixed(3)}`}
         />
@@ -92,7 +96,7 @@ export function SensitivityChart({
             stroke={armColor(arm)}
             strokeWidth={arm === "dobara" ? 3 : 2}
             dot={{ r: 3 }}
-            isAnimationActive={false}
+            isAnimationActive={!staticRender}
             name={arm}
           />
         ))}

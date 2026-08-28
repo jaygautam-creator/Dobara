@@ -76,7 +76,7 @@ export default async function MandateTimelinePage({
                       }`}
                     />
                     <div className="rounded-md border border-border bg-surface-1 p-2">
-                      <div className="text-[11px] font-medium text-text-primary">
+                      <div className="tabular-nums text-[11px] font-medium text-text-primary">
                         attempt {r.attempt_index}
                       </div>
                       <Badge>{r.chosen.action_type}</Badge>
@@ -84,7 +84,7 @@ export default async function MandateTimelinePage({
                         {formatInr(r.expected_net)}
                       </div>
                       {r.chosen.notice_at && (
-                        <div className="mt-0.5 break-words text-[10px] text-text-muted">
+                        <div className="tabular-nums mt-0.5 break-words text-[10px] text-text-muted">
                           notice {new Date(r.chosen.notice_at).toLocaleDateString("en-IN")}
                         </div>
                       )}

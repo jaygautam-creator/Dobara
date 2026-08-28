@@ -82,7 +82,7 @@ export function DecisionCard({ decision, bankId, method, amount, askWhy }: {
     <Card className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-xs uppercase tracking-wide text-text-muted">
+          <div className="tabular-nums text-xs uppercase tracking-wide text-text-muted">
             Mandate #{decision.mandate_id} · cycle {decision.cycle_index} · attempt{" "}
             {decision.attempt_index}
           </div>
@@ -116,7 +116,7 @@ export function DecisionCard({ decision, bankId, method, amount, askWhy }: {
             emphasize={rm.expected_net >= 0 ? "good" : "critical"}
           />
         </div>
-        <div className="mt-1.5 text-[11px] text-text-muted">
+        <div className="tabular-nums mt-1.5 text-[11px] text-text-muted">
           95% confidence band on E[net]: [{formatInr(decision.confidence_band[0])},{" "}
           {formatInr(decision.confidence_band[1])}]
         </div>
@@ -148,7 +148,7 @@ export function DecisionCard({ decision, bankId, method, amount, askWhy }: {
             <span
               key={c.id}
               title={c.citation}
-              className="inline-flex items-center gap-1 rounded-full bg-status-good/15 px-2 py-0.5 text-[11px] font-medium text-status-good"
+              className="tabular-nums inline-flex items-center gap-1 rounded-full bg-status-good/15 px-2 py-0.5 text-[11px] font-medium text-status-good"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-status-good" />
               {c.id}
@@ -158,7 +158,7 @@ export function DecisionCard({ decision, bankId, method, amount, askWhy }: {
             <span
               key={c.id}
               title={c.citation}
-              className="inline-flex items-center gap-1 rounded-full bg-status-critical/15 px-2 py-0.5 text-[11px] font-medium text-status-critical"
+              className="tabular-nums inline-flex items-center gap-1 rounded-full bg-status-critical/15 px-2 py-0.5 text-[11px] font-medium text-status-critical"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-status-critical" />
               {c.id}

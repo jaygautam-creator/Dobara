@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* Design tokens -- dobara/dataviz palette (references/palette.md), dark-first per
    docs/08-FRONTEND-SPEC.md's "Dark, dense, precise. Operations-console register."
@@ -33,6 +34,41 @@
   --status-good-text: #006300;
 
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* shadcn/ui token bridge -- points every shadcn primitive at the tokens above instead
+     of shadcn's own default palette, so `npx shadcn init` never gets to introduce a
+     second color system. These re-resolve automatically with the existing
+     :root / prefers-color-scheme / [data-theme="dark"] layering above -- no dark-mode
+     duplication needed here. */
+  --background: var(--surface-0);
+  --foreground: var(--text-primary);
+  --card: var(--surface-1);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-2);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--arm-dobara);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--status-critical);
+  --input: var(--border);
+  --ring: var(--arm-dobara);
+  --radius: 0.5rem;
+
+  /* fluid type scale, docs/10-REDESIGN.md §3.1 -- --step-6 is reserved for the one
+     hero metric per page. */
+  --step--1: clamp(0.75rem, 0.73rem + 0.10vw, 0.8125rem);
+  --step-0: clamp(0.875rem, 0.85rem + 0.12vw, 0.9375rem);
+  --step-1: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-2: clamp(1.25rem, 1.18rem + 0.35vw, 1.5rem);
+  --step-3: clamp(1.625rem, 1.5rem + 0.6vw, 2rem);
+  --step-4: clamp(2rem, 1.8rem + 1vw, 2.75rem);
+  --step-5: clamp(2.5rem, 2.1rem + 2vw, 4rem);
+  --step-6: clamp(3.25rem, 2.5rem + 3.6vw, 6rem);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -109,7 +145,41 @@
   --color-status-serious: var(--status-serious);
   --color-status-critical: var(--status-critical);
 
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
   --font-sans: var(--font-sans);
+  --font-serif: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --text-step--1: var(--step--1);
+  --text-step-0: var(--step-0);
+  --text-step-1: var(--step-1);
+  --text-step-2: var(--step-2);
+  --text-step-3: var(--step-3);
+  --text-step-4: var(--step-4);
+  --text-step-5: var(--step-5);
+  --text-step-6: var(--step-6);
 }
 
 * {
@@ -122,6 +192,13 @@ body {
   font-family: var(--font-sans);
 }
 
+/* docs/10-REDESIGN.md §2/§3.1: every number on the site -- stat values, table cells,
+   axis ticks, CIs, timestamps, IDs -- renders in Geist Mono, never a proportional face.
+   `.tabular-nums` was already the project's existing convention for marking a numeric
+   node; extending it here (rather than hand-adding `font-mono` at each of the ~30 call
+   sites that already use it) makes the two rules travel together by construction --
+   marking a value as numeric now always sets its face too. */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
 }

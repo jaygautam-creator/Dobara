@@ -2271,3 +2271,87 @@ pass against a small sample stays necessary even with the automated gate in plac
 specifically for the class of error where every digit is right but the described action
 isn't. `make check` (95 tests, artifact freshness, ask-why grounding) and the web build
 (306 static pages) green throughout.
+
+## [2026-08-28] Redesign Session B: shadcn init overwrote project tokens, corrected by hand
+
+**Found**: `npx shadcn@latest init -d` (non-interactive, as `docs/10-REDESIGN.md` §3.5
+explicitly warned against letting happen) rewrote `app/globals.css`'s `--border` token
+from `rgba(11, 11, 11, 0.1)` to a hardcoded `oklch(0.922 0 0)`, and appended a full
+second color system keyed off a `.dark` class selector (`--background`, `--card`,
+`--primary`, etc., each redefined again under `.dark`) alongside the project's existing
+`:root` / `prefers-color-scheme` / `[data-theme="dark"]` layering. Left in place, this
+would have given the project two independent, unsynchronized theme systems — shadcn
+primitives would render one palette, hand-rolled components another, and the light-mode
+verification already done in `docs/DECISIONS.md`'s `[2026-08-27]` entry would no longer
+cover shadcn-rendered surfaces at all.
+
+**Fixed**: reverted `globals.css` to the pre-init version, then added a small,
+by-hand "shadcn/ui token bridge" block: every variable name shadcn's generated
+components expect (`--background`, `--foreground`, `--card`, `--popover`, `--primary`,
+`--secondary`, `--muted`, `--accent`, `--destructive`, `--input`, `--ring`) is defined
+once, as a `var()` reference to the project's own existing tokens (`--surface-0`,
+`--text-primary`, `--arm-dobara`, `--status-critical`, …). Because those underlying
+tokens already re-resolve across `:root` / `prefers-color-scheme` / `[data-theme]`, the
+bridge needs no `.dark`-class duplication of its own — a shadcn `Tooltip` or `Table`
+now inherits the exact same light/dark behavior as every hand-rolled component, by
+construction, not by a second maintained copy.
+
+**Why this matters beyond this one init run**: `docs/10-REDESIGN.md` names the risk
+explicitly ("shadcn init MUST point at the existing tokens ... do not let it overwrite
+the palette") because a CLI init is not idempotent-safe against a project with its own
+already-designed token system — it assumes it owns `globals.css`. Any future `npx
+shadcn add <component>` is safe (it only adds a new file under `components/ui/`), but
+another `shadcn init` (or an `--overwrite` on an existing primitive) would need the same
+by-hand check against `globals.css` before trusting its diff.
+
+**How to apply**: when a future session runs any shadcn CLI command that touches
+`globals.css`, diff it before accepting — the CLI's default behavior is to install its
+own palette, not detect and preserve an existing one, regardless of how the token names
+happen to collide.
+
+## [2026-08-28] Redesign Session B: StatTile's CI/source rule stays a convention, not a hard gate
+
+**Considered**: making `StatTile` throw when rendered with neither `ciText` nor
+`source`, to give CLAUDE.md's "every number reported must have a confidence interval
+and a stated source" a structural enforcement point, the same way
+`tests/test_no_llm_in_money_path.py` structurally enforces the LLM-boundary rule.
+
+**Rejected, for now**: three live call sites in `components/control-room/
+ControlRoomClient.tsx` (`Notifications sent`, and two others) are live fixture counters
+with no meaningful statistical CI — they're exact counts from the demo population, not
+point estimates with uncertainty. A hard throw at those call sites would break the
+build over a case the rule was never meant to catch, and Session B's charter is
+foundations that don't break anything, not a stricter reinterpretation of an existing
+CLAUDE.md rule made unilaterally mid-session.
+
+**Left as**: a docstring on `StatTile` documenting the rule and naming live-counter
+values as the one legitimate no-CI exception (which still needs a `source`), with
+enforcement deferred to whichever session actually touches those three call sites (most
+likely Session D, `/control-room`) — at which point the source field on all three should
+be added and, at that point, revisit whether a structural gate is worth adding.
+
+## [2026-08-28] Redesign Session B: `make check` red for a pre-existing, unrelated reason
+
+Session B touched only `web/` — confirmed via `git status`/`git diff` scoping before
+committing, no Python file changed. `make check` nonetheless fails at the very last
+step, `check_artifact_freshness.py`, on `artifacts/llm_cache/ask_why.json`: its
+top-level `provenance.git_commit` stamp is `f199e87`, but the immediately following
+commit, `40b4a12` (the stale-artifact rerun two sessions before this one), touched
+`artifacts/demo_batch.json` — a path the ask-why cache's freshness check watches,
+per the `[2026-08-28]` "grounding checker design" entry's sibling work. `40b4a12`'s own
+commit message confirms the touch was content-neutral (decision content byte-identical
+before/after), but `check_artifact_freshness.py` has no mechanism to know that — it
+fails on any post-stamp touch to a watched path, unconditionally, which is exactly its
+documented design (see the module docstring: "the check only fails on the case it
+exists to catch: real, landed commits ... since the artifact was generated" — it cannot
+distinguish a landed-but-inconsequential commit from a landed-and-consequential one
+without re-deriving the content diff itself).
+
+**Not fixed here**: two real options exist — (1) rerun `make ask-why` to bump the
+stamp, which costs LLM quota (per the `[2026-08-28]` "ask why box built" entry's
+six-provider quota saga) for zero actual content change, or (2) teach the checker to
+compare content hashes rather than just commit ancestry for this one artifact, which is
+a real design change to a script every other artifact also depends on. Both are
+judgment calls belonging to whichever session next does Python/`eval/` work, not a
+side effect of a frontend foundations session. Flagged in `PROGRESS.md`'s `##
+CURRENT STATE` rather than silently worked around.

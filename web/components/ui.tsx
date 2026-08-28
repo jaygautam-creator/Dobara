@@ -1,19 +1,30 @@
 import type { ReactNode } from "react";
 
+/** The four surface treatments, docs/10-REDESIGN.md §3.2. `raised` is the default card
+ * look this project shipped with pre-redesign -- kept as the default variant so existing
+ * `<Card>` call sites render unchanged until their route is deliberately redesigned.
+ * `feature` is rationed: exactly one per page, the page's focal claim. */
+export type SurfaceVariant = "plain" | "inset" | "raised" | "feature";
+
+const SURFACE_CLASS: Record<SurfaceVariant, string> = {
+  plain: "",
+  inset: "rounded-md bg-surface-0 border border-border",
+  raised: "rounded-lg border border-border bg-surface-1",
+  feature:
+    "rounded-lg border border-arm-dobara/40 bg-surface-1 shadow-[0_0_0_1px_rgba(42,120,214,0.04)_inset]",
+};
+
 export function Card({
   children,
   className = "",
+  variant = "raised",
 }: {
   children: ReactNode;
   className?: string;
+  variant?: SurfaceVariant;
 }) {
-  return (
-    <div
-      className={`rounded-lg border border-border bg-surface-1 p-5 ${className}`}
-    >
-      {children}
-    </div>
-  );
+  const padded = variant === "plain" ? "" : "p-5";
+  return <div className={`${SURFACE_CLASS[variant]} ${padded} ${className}`}>{children}</div>;
 }
 
 export function SectionHeading({
@@ -42,20 +53,40 @@ export function SectionHeading({
   );
 }
 
-/** A single number, always with its 95% CI and never bare -- CLAUDE.md's "every number
- * reported must have a confidence interval and a stated source." */
+export type StatTileSize = "hero" | "default" | "compact";
+
+const STAT_VALUE_SIZE: Record<StatTileSize, string> = {
+  hero: "text-step-6",
+  default: "text-2xl",
+  compact: "text-step-2",
+};
+
+const STAT_PADDING: Record<StatTileSize, string> = {
+  hero: "p-6",
+  default: "p-4",
+  compact: "p-3",
+};
+
+/** A single number. Renders its 95% CI and source when given -- CLAUDE.md's "every
+ * number reported must have a confidence interval and a stated source" applies equally
+ * across every `size`; a `hero` or `compact` tile is not exempt from carrying a `ciText`/
+ * `source` just because it's visually smaller. (Live fixture counts with no statistical
+ * CI, e.g. Control Room's running counters, are the one legitimate exception -- they
+ * still need a `source`.) */
 export function StatTile({
   label,
   value,
   ciText,
   source,
   tone = "default",
+  size = "default",
 }: {
   label: string;
   value: string;
   ciText?: string;
   source?: string;
   tone?: "default" | "good" | "warning" | "critical";
+  size?: StatTileSize;
 }) {
   const toneClass =
     tone === "good"
@@ -66,15 +97,17 @@ export function StatTile({
           ? "text-status-critical"
           : "text-text-primary";
   return (
-    <div className="rounded-lg border border-border bg-surface-1 p-4">
-      <div className="text-xs font-medium uppercase tracking-wider text-text-muted">
-        {label}
-      </div>
-      <div className={`mt-1.5 tabular-nums text-2xl font-semibold ${toneClass}`}>
+    <div className={`rounded-lg border border-border bg-surface-1 ${STAT_PADDING[size]}`}>
+      <div className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</div>
+      <div
+        className={`mt-1.5 font-mono tabular-nums font-semibold ${STAT_VALUE_SIZE[size]} ${toneClass}`}
+      >
         {value}
       </div>
       {ciText && (
-        <div className="mt-1 tabular-nums text-xs text-text-secondary">95% CI {ciText}</div>
+        <div className="mt-1 font-mono tabular-nums text-xs text-text-secondary">
+          95% CI {ciText}
+        </div>
       )}
       {source && <div className="mt-1 text-[11px] text-text-muted">{source}</div>}
     </div>

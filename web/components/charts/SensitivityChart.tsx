@@ -14,7 +14,7 @@ import {
 import type { SensitivityPoint } from "@/lib/types";
 import { formatInr } from "@/lib/format";
 import { ARM_LABEL, armColor } from "@/components/ui";
-import { staticRender } from "@/lib/motion";
+import { useStaticRender } from "@/lib/motion";
 import {
   axisLineStyle,
   axisTick,
@@ -33,6 +33,7 @@ export function SensitivityChart({
   calibratedValue: number;
   breakEvenValue?: number;
 }) {
+  const isStatic = useStaticRender();
   const rows = points.map((p) => ({
     hazard: p.hazard_per_failure_notification,
     dobara: p.dobara_mean_net_ltv,
@@ -88,15 +89,16 @@ export function SensitivityChart({
             label={{ value: "break-even", position: "top", fill: "var(--status-critical)", fontSize: 11 }}
           />
         )}
-        {(["dobara", "razorpay_default", "aggressive_8x"] as const).map((arm) => (
+        {(["dobara", "razorpay_default", "aggressive_8x"] as const).map((arm, i) => (
           <Line
             key={arm}
             type="monotone"
             dataKey={arm}
             stroke={armColor(arm)}
             strokeWidth={arm === "dobara" ? 3 : 2}
+            strokeDasharray={i === 0 ? undefined : i === 1 ? "6 3" : "2 3"}
             dot={{ r: 3 }}
-            isAnimationActive={!staticRender}
+            isAnimationActive={!isStatic}
             name={arm}
           />
         ))}

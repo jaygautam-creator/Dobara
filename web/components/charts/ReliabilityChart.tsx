@@ -12,13 +12,14 @@ import {
 } from "recharts";
 import type { ReliabilityDiagram } from "@/lib/types";
 import { formatPct } from "@/lib/format";
-import { staticRender } from "@/lib/motion";
+import { useStaticRender } from "@/lib/motion";
 import { axisLineStyle, axisTick, gridStyle, tooltipContentStyle } from "@/components/charts/chartTheme";
 
 /** A calibration reliability diagram: predicted probability (x) vs observed frequency
  * (y), against the perfect-calibration diagonal. dataviz: sequential/identity color, one
  * axis pair, direct labels over a legend for a single series. */
 export function ReliabilityChart({ diagram }: { diagram: ReliabilityDiagram }) {
+  const isStatic = useStaticRender();
   const points = diagram.prob_pred.map((p, i) => ({
     prob_pred: p,
     prob_true: diagram.prob_true[i],
@@ -65,14 +66,14 @@ export function ReliabilityChart({ diagram }: { diagram: ReliabilityDiagram }) {
           dot={false}
           activeDot={false}
           legendType="none"
-          isAnimationActive={!staticRender}
+          isAnimationActive={!isStatic}
           name="perfect calibration"
         />
         <Scatter
           data={points}
           fill="var(--arm-dobara)"
           line={{ stroke: "var(--arm-dobara)", strokeWidth: 2 }}
-          isAnimationActive={!staticRender}
+          isAnimationActive={!isStatic}
         />
       </ComposedChart>
     </ResponsiveContainer>

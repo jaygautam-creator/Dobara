@@ -14,7 +14,7 @@ import {
 import type { MoneyChartData } from "@/lib/types";
 import { formatInr } from "@/lib/format";
 import { armColor } from "@/components/ui";
-import { staticRender } from "@/lib/motion";
+import { useStaticRender } from "@/lib/motion";
 import {
   axisLabelStyle,
   axisLineStyle,
@@ -29,8 +29,20 @@ import { ARM_LABEL } from "@/components/ui";
 
 const ARMS = ["dobara", "razorpay_default", "aggressive_8x", "oracle", "do_nothing"] as const;
 
+// Colour is never the sole carrier of meaning (docs/10-REDESIGN.md §6) -- each arm also
+// gets its own dash pattern, so the lines are distinguishable in grayscale/colourblind
+// simulation and on a printed page.
+const ARM_DASH: Record<(typeof ARMS)[number], string | undefined> = {
+  dobara: undefined,
+  razorpay_default: "6 3",
+  aggressive_8x: "2 3",
+  oracle: "1 4",
+  do_nothing: "8 4 2 4",
+};
+
 export function MoneyChart({ data }: { data: MoneyChartData }) {
   const [metric, setMetric] = useState<"net" | "gross">("net");
+  const isStatic = useStaticRender();
 
   const rows = data.cycle_index.map((cycle, i) => {
     const row: Record<string, number> = { cycle };
@@ -107,8 +119,9 @@ export function MoneyChart({ data }: { data: MoneyChartData }) {
               dataKey={arm}
               stroke={armColor(arm)}
               strokeWidth={arm === "dobara" ? 3 : 2}
+              strokeDasharray={ARM_DASH[arm]}
               dot={false}
-              isAnimationActive={!staticRender}
+              isAnimationActive={!isStatic}
               name={arm}
             />
           ))}

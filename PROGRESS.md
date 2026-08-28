@@ -7,6 +7,66 @@
 
 ## CURRENT STATE
 
+**Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session E** (`/evidence`).
+`npx tsc --noEmit`, `npm run lint`, `npm run build` (static export, 307 pages) all green.
+`make check` green from repo root, run **after** committing per protocol (ruff, ruff
+format, mypy, artifact-freshness gate — no new reds beyond the already-waived 4 + the
+self-regenerating `home_demo.json`/`compliance_rules.json` — 103 pytest, ask-why
+grounding check). Static build served locally (`npx serve out`) and verified: `/evidence`
+returns 200, every rail anchor (`#headline` … `#honesty`, plus `#tie-break-honesty`)
+resolves in the shipped HTML. Headless `?static=1` screenshot at 1440×7500 inspected
+directly: all three charts fully drawn (no partial stroke-dasharray), no clipping,
+overlap, or dev-overlay badge. **Committed locally (`c4d09df`), deliberately NOT
+pushed** — still one diff review gating `ad1e671`+`b4e3c5e` (Session C) and `12ff577`
+(Session D) as well; see those sessions' entries below for what's in the queue.
+
+**What shipped this session:**
+
+1. **`/evidence` rebuilt as a two-column dossier** per §4: a sticky left rail
+   (`components/evidence/EvidenceRail.tsx`) with a 9-entry section index, `motion`-driven
+   reading-progress bar, and scroll-spy via `IntersectionObserver` (rootMargin biased
+   toward the upper third of the viewport, so the "active" entry matches what a reader is
+   actually looking at, not just whatever entered the bottom edge). Content lives at
+   `max-w-[68ch]` for prose; chart cards go full-bleed within the content column. Every
+   section got a real `id` + `scroll-mt-20` (same convention `Callout` already used for
+   `#tie-break-honesty`), so `/evidence#honesty` and friends are plain anchors that work
+   with zero JS on the static export — the scroll-spy only adds the active-state
+   highlight on top.
+2. **The headline section is now the page's one `feature` card and one `hero` StatTile**
+   (§4's requirement): "Net LTV lift per mandate" promoted to `size="hero"`; the
+   credibility anchor and the other two headline tiles live inside the same
+   `<Card variant="feature">` so the whole opening argument reads as one focal unit.
+3. **Charts gain a scroll-triggered draw-on-enter reveal that fires once**
+   (`components/charts/ChartReveal.tsx`, `motion`'s `useInView(..., { once: true })`
+   gating *mount*, not replaying Recharts' animation — see `docs/DECISIONS.md`
+   [2026-08-28] for why mount-gating was chosen over trying to retrigger Recharts, which
+   has no supported replay API). A `?static=1`/reduced-motion pass mounts immediately, so
+   the screenshot recipe never depends on scroll position.
+4. **Every chart now has a text-alternative data table** (§6:
+   `components/charts/ChartDataTable.tsx`, a native `<details>` disclosure around a
+   shadcn `Table`) — money chart net-LTV-by-cycle, both reliability diagrams'
+   predicted/observed pairs, and the sensitivity sweep's per-hazard-value arm means. Not
+   the honesty-panel accordion the spec forbids — this is each chart's own numeric
+   backing, kept keyboard-operable and in the accessibility tree at zero extra JS cost.
+5. **Colour is no longer the only carrier of meaning in any chart** (§6): each arm's
+   `Line` now also carries a distinct `strokeDasharray` (dobara solid, the others
+   progressively finer dashes), on top of the existing legend text labels.
+6. **Closed the latent hydration-mismatch-class bug flagged at session start.**
+   `MoneyChart`, `ReliabilityChart`, and `SensitivityChart` read the raw `staticRender`
+   module const (which reads `window`) directly during render — harmless today only
+   because Recharts is a client-only render path, but the same bug class Session C fixed
+   in `Demonstration.tsx`. All three now call `lib/motion.ts`'s `useStaticRender()` hook,
+   which Session D extracted for exactly this purpose. See `docs/DECISIONS.md`
+   [2026-08-28] "Session E also fixed a latent bug flagged at session start".
+7. **The honesty panel is untouched in prominence** — same four `Callout`s, same
+   `id="tie-break-honesty"` deep-link target, no accordion, per §4's explicit
+   instruction not to soften it.
+
+**Next: Session F** (`/mandate/[id]` timeline, `/audit/[id]` DecisionCard grid, final
+a11y + perf pass, deploy) — the last redesign session before the 5-minute pitch video.
+
+---
+
 **Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session D**
 (`/control-room`). `make check` green (verified post-commit); `npx tsc --noEmit`, `npm
 run lint` and `npm run build` (static export) green. **Committed locally, deliberately

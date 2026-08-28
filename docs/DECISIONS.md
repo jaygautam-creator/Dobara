@@ -2549,3 +2549,30 @@ props.
 **Because:** Two independent optionals let a call site omit both silently — exactly the
 gap docs/10-REDESIGN.md §4 asked Session D to close. The union makes "no CI" a decision
 the caller states, not an omission the compiler lets slide.
+
+## [2026-08-28] Chart mount gates a draw-on-enter reveal instead of retriggering Recharts animation
+**Chose:** A `ChartReveal` wrapper (`useInView(..., { once: true })` from `motion`) defers
+mounting a chart until it scrolls into view; Recharts' own existing
+`isAnimationActive={!isStatic}` mount animation then does the "draw" once the chart
+exists. A `?static=1`/reduced-motion pass mounts immediately, skipping the gate entirely.
+**Over:** Re-triggering Recharts' animation via a key change or an imperative replay API
+on each scroll-into-view.
+**Because:** Recharts has no supported "replay this animation" call — the only clean way
+to get a draw-on-enter is to control *mounting*, which naturally fires once and never
+re-fires on scroll-up (an unmounted-then-remounted chart would re-draw every time,
+exactly what §5 rules out). This also sidesteps re-introducing the frozen-mid-draw
+screenshot bug: the static branch never depends on scroll position at all.
+
+## [2026-08-28] Session E also fixed a latent bug flagged at session start, not just built new work
+**Chose:** `MoneyChart`/`ReliabilityChart`/`SensitivityChart` now call
+`useStaticRender()` instead of reading the `staticRender` module const directly during
+render.
+**Over:** Leaving it as `staticRender`, since Recharts is a client-only render path and
+the direct const read caused no visible bug today.
+**Because:** The user's session-start review named this as the same latent bug class
+Session C's `Demonstration.tsx` hydration mismatch was — reading a `window`-derived const
+during render disagrees between server and client markup for any component that *could*
+render during SSR, and there was no guarantee a future edit wouldn't make these chart
+components reachable from a server-rendered path. `lib/motion.ts`'s hook exists
+specifically so this pattern doesn't get re-derived a fourth time; using it here closes
+the gap instead of leaving it for Session F or later to rediscover.

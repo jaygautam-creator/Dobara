@@ -2612,3 +2612,61 @@ colour is wrong," and fixing only the text contexts avoids re-tuning marks that 
 already screenshot-verified and fine. Measured, real failures (light unless noted):
 text-muted 3.41:1 -> 5.15:1, status-warning 1.79:1 -> 5.77:1, arm-dobara 4.30:1 -> 6.12:1,
 dark status-critical 3.62:1 -> 5.22:1. All others measured and already passing.
+
+## [2026-08-29] Post-redesign drift sweep + demo script rewrite
+
+**Did:** the two follow-up tasks queued after Session F. (1) Swept every `web/lib/types.ts`
+interface's frontend-read fields against the real committed artifacts, looking for more
+instances of the `audit_text` bug class (a field declared and read but never actually
+serialized). (2) Rewrote `docs/09-DEMO-SCRIPT.md` against the post-redesign site.
+
+**Found (drift sweep):** no second `audit_text`-class instance in the frontend types --
+`clauses_blocked` is always empty in `demo_batch.json`'s sample, but that's a legitimate
+value (nothing was blocked on the winning action), not a serialization gap, and both call
+sites (`DecisionCard`, `ControlRoomClient`'s compliance-gate panel) already render the
+empty case correctly. A few artifact fields aren't declared in `types.ts`
+(`test_set_touched_note`, `headline_marginal_hazard`, `generated_by`, `schema_note`) but
+nothing reads them, so no bug.
+
+**Found instead, checking README numbers against `artifacts/summary.json` /
+`artifacts/sensitivity.json` (the README-freshness half of the task): a real, more
+consequential drift than anything in `types.ts`.** `README.md`'s break-even section
+asserted a break-even against `razorpay_default` at hazard≈0.074, and a second break-even
+in the `ltv.margin_factor` sweep at ≈0.48 (source of the "needs 48%+ gross margin" scope
+claim). The `artifacts/sensitivity.json` currently checked in shows `dobara` winning at
+*every* tested point on both axes (`break_even_vs_razorpay_default.found: false`,
+`ranking_ever_changes: false` on `ltv.margin_factor`) -- both README claims are stale
+against a prior regeneration and do not hold against the current artifact. Rewrote both
+sections to state the current (stronger, not weaker) finding and explicitly retracted the
+48%-margin scope claim, since no threshold can currently be derived from a sweep with no
+losing region in the tested range. Left a note in both places that this is a live number
+tied to the next `make eval` / `python -m eval.sensitivity` rerun and must be re-read
+against the artifact, not carried forward. All other spot-checked README numbers (5-arm
+table, holdout populations 135,299/14,701, SBI slice, ask-why cache count 1,296) matched
+the current artifacts exactly.
+
+**Added:** `tests/test_artifact_frontend_fields.py` -- a small (~90 line) durable guard,
+not a schema-generation project, that loads the committed artifacts directly and asserts
+the fields the frontend actually reads are present and non-empty, plus that `DecisionOut`
+in `types.ts` never re-declares `audit_text`. Picked up by `make check`'s existing pytest
+run with no new config.
+
+**Demo script:** rewritten against the routes and beats that exist post-redesign (the
+two-lane `/` demonstration as centrepiece, `/architecture`'s LLM-boundary diagram,
+`/control-room`'s compliance-gate panel and command palette, `/evidence`'s sticky rail,
+`/audit/[id]`'s SAW/THOUGHT/ALT/GATE/DID/WHY grid). Corrected one drafted inaccuracy before
+finalizing: the shown `home_demo.json` case has Dobara firing *more* notifications than
+`aggressive_8x` (9 vs 5), not fewer -- the real case is about continuing exactly as long as
+each retry stays a positive bet, not "always retry less." Flagged, not scripted around: no
+live batch run against Razorpay test mode exists on the static-export deploy, and no
+compliance-gate property test is shown on any screen (it lives in the Python suite).
+Every case pick (mandate/cycle for the audit and abstain beats) is flagged as
+unverified-until-re-checked against the fixture present at record time, not treated as
+permanently pinned the way the pre-redesign script treated its picks.
+
+**Because:** `docs/10-REDESIGN.md`'s Session F found `audit_text` by accident while
+building the audit grid; CLAUDE.md's non-negotiable that every number carries a source and
+must never be hand-typed applies equally to prose numbers in README as to JSX -- a stale
+break-even claim silently contradicting the checked-in artifact is exactly the kind of gap
+that non-negotiable exists to catch, and this session found one by treating the sweep's
+scope broadly rather than narrowly re-checking only `types.ts`.

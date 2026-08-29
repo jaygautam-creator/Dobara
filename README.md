@@ -277,31 +277,19 @@ declared `sensitivity_range` [0.05, 0.15] — read from `artifacts/sensitivity.j
 "obvious agent" never catches up across the full stated uncertainty in this parameter.
 This is the comparison `docs/07-EVAL-SPEC.md` asks for by name, and it holds robustly.
 
-**Against `razorpay_default`: a break-even exists, and it matters more than the one
-above.** `dobara`'s own headline claim — the thing actually asserted in "Honest metrics" —
-is not robust across the full declared range. It flips at **hazard ≈ 0.074** (linear
-interpolation between the tested points 0.05 and 0.075): below that, `dobara` loses to
-`razorpay_default`; at and above it, `dobara` wins. The calibrated value, **0.098**, sits
-above the break-even by a margin of ~0.024 (~33% relative) — comfortably on the winning
-side, but not by a wide margin. Kept in the record regardless of the stronger analysis
-below, per the discipline of never dropping a number once it's stated.
-
-**The margin above is judged against the declared `sensitivity_range` [0.05, 0.15] — an a
-priori guess written into `sim/params.yaml` before any data existed. The calibrated value
-(0.098) is not a guess: it was empirically recalibrated to hit the published
-20M-revocations/808M-executions ≈ 2.5% ratio from real NPCI figures
-(`revocation_per_execution_ratio`, `sim.engine.SimSummary`, `tests/test_calibration.py`'s
-own benchmark). Judging the calibrated point only against the guessed range uses the
-weaker object to judge the stronger one — so the sweep also recorded
-`razorpay_default`'s `revocation_per_execution_ratio` at every point, and interpolated it
-at the break-even hazard.** Result: **the break-even hazard (≈0.074) corresponds to a
-revocation ratio of ≈1.91%, against NPCI's published ≈2.5%** — a ~24% relative shortfall,
-not just a point below the calibrated value. Put plainly: for `dobara` to actually lose to
-`razorpay_default`, revocations would have to run meaningfully *below* what NPCI's own
-published data says they do — the losing region is not merely on the wrong side of one
-calibrated point, it is inconsistent with the external benchmark that point was built to
-hit. This is a stronger statement than the raw 33% margin above, and it is reported at
-full weight for that reason, not softened because the answer came back favorable.
+**Against `razorpay_default`: no break-even found anywhere in the declared range either,
+as of this artifact regeneration.** `dobara` beats `razorpay_default` on net LTV at every
+tested point, 0.05 through 0.15 (margin widening from ₹62.5/mandate at 0.05 to
+₹364.0/mandate at 0.15). An earlier revision of this README, against an earlier
+regeneration of `artifacts/sensitivity.json`, reported a break-even at hazard ≈ 0.074 —
+that finding does not hold against the artifact currently checked in and has been
+superseded, not merely rounded differently; this is a live number that moves when the
+sweep reruns, and every regeneration must be re-read here, not assumed. The calibrated
+value, **0.098** (empirically recalibrated to hit the published
+20M-revocations/808M-executions ≈ 2.5% ratio from real NPCI figures —
+`revocation_per_execution_ratio`, `sim.engine.SimSummary`, `tests/test_calibration.py`'s
+own benchmark), sits inside a range that no longer contains a losing region at all for
+`dobara` on this axis.
 
 **The other three declared axes, swept the same way** (`python -m eval.sensitivity`,
 same seed and population, `artifacts/sensitivity.json`'s `other_axes`):
@@ -316,22 +304,27 @@ same seed and population, `artifacts/sensitivity.json`'s `other_axes`):
 - **`ltv.margin_factor` [0.4, 0.9]** (swept in place of `ltv.horizon_cycles`, which
   `sim/params.yaml` declares with a fixed source, not a `sensitivity_range` — this is the
   actual LTV-dollar-conversion assumption docs/05-ML-SPEC.md's own note flags for this
-  analysis): **a second break-even exists here too, and it's the softest joint in this
-  whole argument.** `razorpay_default` beats `dobara` at the range's low end (0.40);
-  `dobara` wins from ≈0.48 upward (interpolated the same way as the hazard break-even).
-  The calibrated value, **0.7**, sits above it by ~46% relative margin — wider than the
-  hazard axis's, but unlike hazard, `margin_factor` has no external anchor: it's a bare,
-  unsourced assumption ("not observed anywhere in the simulator," per its own declared
-  note), not a figure calibrated against a published benchmark. Stated plainly, not
-  softened by what follows.
+  analysis): **no break-even found in the declared range, as of this artifact
+  regeneration.** `dobara` wins on net LTV at every tested point, 0.4 through 0.9 —
+  `razorpay_default` never overtakes it even at the range's low end. An earlier revision
+  of this README, against an earlier regeneration of `artifacts/sensitivity.json`,
+  reported a second break-even here at ≈0.48 with `razorpay_default` winning below it —
+  that finding does not hold against the artifact currently checked in. Because the
+  tested range no longer contains a losing region, this sweep cannot currently locate a
+  gross-margin threshold below which the ranking flips; the calibrated value, **0.7**,
+  sits inside the winning range along with every other tested point.
 
-  **This is scope of applicability, not just a caveat: `dobara`'s advantage requires
-  roughly 48%+ gross margin on subscription revenue.** Below that, mandate lifetime value
-  is low enough that the economics genuinely favour retrying harder — and a merchant in
-  that position should. This is a tool for subscription businesses — OTT, SaaS, insurance,
-  memberships — where 70%+ gross margins are typical, not for thin-margin recurring
-  billing. A merchant reading this section learns whether the tool is built for them, not
-  just that one number has no citation.
+  **The scope-of-applicability claim this section previously made — "requires roughly
+  48%+ gross margin" — was derived from the now-superseded break-even and does not
+  currently hold.** As of this regeneration, `dobara` wins across the entire tested
+  `margin_factor` range [0.4, 0.9], so no minimum-margin threshold can be stated from this
+  sweep; a merchant below 40% gross margin is simply untested, not known to be a bad fit.
+  `margin_factor` also has no external anchor — it's a bare, unsourced assumption ("not
+  observed anywhere in the simulator," per its own declared note) — so any threshold
+  derived from it would carry less weight than the hazard axis's NPCI-anchored one even if
+  one existed. This entire finding is sensitive to the next `make eval`/`python -m
+  eval.sensitivity` rerun and must be re-read against the live artifact before being
+  restated, not carried forward from this paragraph.
 
 **Calibration is reported before AUC.** These probabilities get multiplied by rupees, so
 being right about the number matters more than ranking. Brier scores and reliability

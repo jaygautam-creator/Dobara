@@ -1,54 +1,71 @@
 # 09 — Five-Minute Pitch Video
 
-Structure is fixed; wording is refined on the day. Record after `make eval` has produced
-final numbers so every figure spoken aloud matches `artifacts/summary.json`.
+> Rewritten 2026-08-28 against the post-redesign site (`docs/10-REDESIGN.md`, Sessions
+> A–F, commits `ad1e671`…`05b6ffb`). The previous version of this script was written
+> before the redesign and referenced screens, routes and layouts that no longer exist
+> (a wrap-container `/mandate/[id]`, a paragraph-only `/`, no `/architecture`). This
+> version is written against the actual site.
 
-| Time | Beat | Content |
-|---|---|---|
-| 0:00–0:30 | **The hook** | "Twenty million UPI AutoPay mandates are revoked in India every month, because the customer didn't have the balance when the debit ran. The failed debit isn't the loss. It's the trigger." |
-| 0:30–1:10 | **The mechanism** | The regulatory fact. Every retry in India legally requires its own 24-hour pre-debit notification; retries that skip it are rejected outright, not soft-declined. So eight retries is eight mandatory messages. "The Western dunning playbook is, under Indian regulation, a legally-mandated harassment machine." |
-| 1:10–1:30 | **The thesis** | "Every retry is a bet with downside. Dobara prices that bet." Motto on screen. |
-| 1:30–2:30 | **Live demo** | Control Room, batch running against Razorpay test mode. Counters climbing — including **attempts not made**. |
-| 2:30–3:20 | **One case, opened** | `/audit/89`, scrolled to **cycle 6** — not whatever the Control Room's default active case shows. Verified against `artifacts/demo_batch.json`: the first-cycle decision for every mandate in the demo batch is dominated by generic "N candidates tied at this E[net]" rows, which don't visibly support the "retrying twice scores negative" line. Mandate #89 cycle 6 is the one case in the fixture whose rejected alternatives include a concrete, named negative-E[net] retry ("retry via whatsapp", −₹985) — pin that scroll position before recording. Both calibrated probabilities with CIs, the rupee arithmetic term by term, compliance clauses lighting green. |
-| 3:20–3:50 | **Graceful failure** | `/audit/144`, scrolled to **cycle 7–8** — mandate #144 is a `regime_shift_bank` case, but cycles 1–6 still show ordinary `schedule_debit`; the abstain (`stopping_reason: insufficient_confidence`) only appears at cycle 7. Landing on an earlier cycle undercuts the beat. The agent detects the change-point, abstains, names the reason, and **stops** — it does not fall back to a guessed attempt (CLAUDE.md: "when in doubt, the agent stops"; `docs/DECISIONS.md` [2026-08-25] "Abstain must stop, not fall back to an attempt" overrules this doc's original fall-back design). "It doesn't guess. It says it doesn't know." |
-| 3:50–4:40 | **The evidence** | `/evidence`. **Overrun risk, flagged by rough take, confirm with a stopwatch before cutting anything**: reading the on-screen numbers aloud (headline card, five-arm table, break-even statement, scope-of-applicability line) runs ~70–90s at natural pace — this beat may not fit in 50s as scripted. The **five-arm table stays in the spoken pass** — it's the one frame where a judge sees the whole argument at once (dobara recovers less gross, more net LTV, CI on every cell) and narrating over it silently would waste the only moment we get for the differentiator. Instead, cut the **rerun-provenance paragraph** and the **credibility-anchor box** from speech — both stay visible on screen, unnarrated; a judge who cares pauses to read them, one who doesn't won't miss them. If it still runs long after that cut, the fix is changing the page (e.g. moving the rerun paragraph off this page, or extending this beat and trimming elsewhere), not silently dropping the five-arm table. Content, unchanged: Five arms with 95% CIs. **The money chart** — not the crossover we expected when we wrote this script: `aggressive_8x` never has a honeymoon. It loses on net LTV from **cycle 1**, because in India the cost lands immediately — every retry is a legally mandated notification. And past cycle 4 it loses on **gross** recovery too, underperforming even the metric it exists to maximise, because it burns mandates faster than it collects from them. The break-even statement, both directions: `dobara` beats `aggressive_8x` across the entire declared hazard range, but only beats `razorpay_default` above hazard≈0.074 — against a calibrated, NPCI-anchored value of 0.098, a real but not enormous margin. **Scope of applicability**: this needs roughly 48%+ gross margin on subscription revenue to hold — built for OTT, SaaS, insurance, memberships, not thin-margin recurring billing. Calibration led before AUC. |
-| 4:40–5:00 | **Close** | Architecture in one frame. Then **what we deliberately did not build**: no individual cash-flow inference, no probing debits, no LLM on the money path. "The agent's best outcome is making itself unnecessary for that customer." |
+Structure is fixed; wording is refined on the day. Record after `make eval` has
+produced final numbers so every figure spoken aloud matches `artifacts/summary.json`,
+and record against the pushed deploy, not `localhost` — what a judge can click on
+after the video is what should be on screen during it.
+
+## Shot list
+
+| Time | Beat | Route / shot | Say |
+|---|---|---|---|
+| 0:00–0:45 | **The hook + the mechanism** | `/` — hero, then scroll to the three-fact band (20M / 24h / 8×) | "Twenty million UPI AutoPay mandates are revoked in India every month — not because customers don't want to pay, but because the debit failed and the merchant kept retrying. Here's why that's worse than it sounds: Indian regulation requires every retry on a mandate to carry its own 24-hour pre-debit notification. No exceptions, no silent retry. So the standard dunning playbook — retry, retry, retry, up to eight times — is, under Indian law, a mandated stream of messages telling a customer their merchant keeps failing to take their money." |
+| 0:45–1:05 | **The thesis** | `/` — hero line + motto, on screen already from 0:00 | "Every retry is a bet against the mandate surviving. Dobara prices that bet, and knows when to stop." (Read the motto off the page: *"Recover the payment. Keep the mandate."*) |
+| 1:05–2:00 | **The demonstration** | `/` — scroll to the two-lane demonstration (`components/home/Demonstration.tsx`) | Let the aggressive lane fire its notifications on screen, one beat at a time, into the revocation event and the greyed-out lane. Then the Dobara lane. "Same mandate, same simulated customer, same clock — one policy keeps retrying past the point of no return, the other one doesn't." **Check the actual numbers on screen before speaking them — they are case-specific, not a fixed script.** As of this session's `artifacts/home_demo.json` the shown case is: aggressive fires 5 notifications, gets 0 successful debits, and the mandate is revoked at cycle 1 (₹0 recovered, net LTV negative); Dobara fires 9 notifications spread across the mandate's life, gets 6 successful debits, and the mandate survives (never revoked, net LTV positive). Dobara sends *more* notifications here, not fewer — the point isn't "always retry less," it's "keep retrying exactly as long as the bet stays positive, and no further." Say the real counts, not an illustrative "8 vs 2." Read the caption's own honesty line aloud: this is the **median** case across the candidate set the aggressive policy lost and Dobara kept, not the best one — advantage on this set runs from the p25 to p75 figures shown, CIs included. Do not round past what the page states. |
+| 2:00–2:50 | **Live case, opened** | `/control-room` briefly (batch counters, "attempts not made" as the `feature` tile), then `/audit/89` scrolled to **cycle 6** | On Control Room: point at the **attempts not made** counter — "that's the thesis counter, not a vanity metric: it's Dobara declining to send a notification it calculated wasn't worth the mandate risk." Open mandate #89, scroll to cycle 6 — the one case in the fixture whose rejected-alternatives comparison names a concrete losing option (retry via WhatsApp, negative expected net) rather than a wall of tied candidates. Walk the SAW → THOUGHT → ALT → GATE → DID → WHY grid left to right: what the agent saw, the calibrated probabilities with CIs, the rejected alternative and why it scored negative, the compliance clauses lighting green, the worked rupee equation with this decision's real numbers substituted in, the action taken. |
+| 2:50–3:20 | **Graceful failure** | `/audit/144`, scrolled to **cycle 7–8** | Mandate #144 is a `regime_shift_bank` case; cycles 1–6 look ordinary, the abstain (`stopping_reason: insufficient_confidence`) only appears at cycle 7 — land there, not earlier. "When the model's own calibration says it doesn't know, the agent doesn't guess and it doesn't fall back to an attempt. It stops and says why." |
+| 3:20–4:20 | **The evidence** | `/evidence` — headline `hero` stat, the five-arm table, the money chart, the break-even statement | Read the headline stat with its CI. On the five-arm table: "Dobara doesn't recover the most gross rupees — the aggressive arm does, for a while. It recovers the most **net** lifetime value, because it isn't paying for that gross with mandates it destroys." On the money chart: aggressive_8x loses on net LTV from cycle 1 — the cost of a mandated notification lands immediately, win or lose the attempt — and past cycle 4 it loses on gross recovery too, because it burns mandates faster than it collects from them. State the break-even result both directions, with the numbers on screen — check `/evidence` at record time, since this has moved: as of 2026-08-28's `artifacts/sensitivity.json`, dobara beats **both** aggressive_8x and razorpay_default at every tested hazard point in the swept range [0.05, 0.15], against a calibrated value of 0.098 — no break-even point currently exists in the tested range. Say it that way, not as a crossover, and re-verify against whatever `/evidence` shows on the day of recording, since this number moves with `make eval` reruns. State the scope-of-applicability line verbatim: this needs roughly 48%+ gross margin to hold; built for OTT, SaaS, insurance, memberships, not thin-margin recurring billing. |
+| 4:20–4:50 | **The architecture / what we didn't build** | `/architecture` — the LLM-boundary diagram, the compliance gate sequence | "Money decisions never pass through a language model — that's not a policy, it's a wall a test enforces; the LLM only narrates, on the other side. Every candidate action is generated, then the compliance gate removes anything that would breach an RBI, TRAI or NPCI rule, before anything gets scored." Then, spoken directly: what we deliberately did not build — no individual cash-flow inference, no probing debits, no LLM anywhere near the money path. |
+| 4:50–5:00 | **Close** | `/` or `/architecture`, hold on the motto | "The agent's best outcome is making itself unnecessary for that customer. Recover the payment. Keep the mandate." |
+
+Total: 5:00. The demonstration (1:05–2:00) is the single highest-value asset on the
+site per `docs/10-REDESIGN.md` §4 and gets the most air time of any beat after the
+hook.
 
 ## Rules for the recording
 
-- **Say the honest numbers out loud**, CIs included. If a result is not significant, say so.
-- Say the data is simulated, and say why (no public dataset exists), and say what it is
-  calibrated against — inside the first two minutes, not buried at the end.
-- Never claim a licence, partnership, or endorsement. Say "Razorpay test mode" explicitly.
-- Show the CI green badge and the property test that proves the compliance gate holds.
-- Screen recording at 1080p minimum; readable font sizes; no dead air while things load —
-  pre-warm the demo.
-- **Pre-select the cases before recording** (see the case picks above) — do not let the
-  Control Room's default active case or an arbitrary regime-shift mandate stand in for
-  the beat; the fixture's cases are not interchangeable and the wrong one visibly
-  contradicts the line being spoken over it.
+- **Say the honest numbers out loud, CIs included.** Every figure spoken must be one
+  the page displays at that moment — no number is narrated from memory or from this
+  script's draft values. If a result is not statistically significant, say so.
+- Say the data is simulated, why (no public dataset of Indian AutoPay mandate outcomes
+  exists), and what it's calibrated against — inside the first 90 seconds, not buried
+  at the end. The three-fact band and the demonstration's caption both carry sourcing;
+  read at least one source aloud.
+- Never claim a licence, partnership, or endorsement with Razorpay or any bank/NPCI.
+- Screen recording at 1080p minimum, readable font sizes, no dead air while things
+  load — pre-warm every route before recording (visit each once so build-time data and
+  fonts are cached).
+- **Pre-select and pre-scroll every case before recording** — `/audit/89` to cycle 6,
+  `/audit/144` to cycle 7–8. Do not rely on Control Room's default active case or an
+  arbitrary regime-shift mandate; the fixture's cases are not interchangeable and the
+  wrong one visibly contradicts the line spoken over it.
+- Control Room's streaming reveal is click-to-skip (`docs/10-REDESIGN.md` §4) — use
+  that; never make a judge, or this recording, wait through it at full speed.
+- Record in one theme (dark is the default and reads better at video bitrate under
+  compression) — do not toggle themes mid-recording, it adds nothing to the pitch.
 
-## Rough-take findings (27 Aug 2026, against https://dobara-one.vercel.app)
+## What the site cannot currently do (flagged, not scripted around)
 
-A throwaway pass — headless renders of each beat's target page at 1920×1080 plus word-count
-timing against this script, not an actual recorded/narrated take (the in-session browser
-extension was unresponsive). Findings that changed the script above are not repeated here.
-
-- **Landing page already covers 0:00–1:30 in one screen, in script order** — hook stat cards,
-  the failed-debit-is-the-trigger paragraph, the objective-function callout. No change
-  needed; this page should open the recording exactly as planned.
-- **The Control Room's "rejected alternatives" list is mostly noise at video bitrate**: rows
-  read as repeated `N candidates tied at this E[net]` lines rather than nameable retry
-  options. Legible in a static screenshot, but will read as clutter under a moving cursor.
-  Fix: **collapse tied rows behind an expandable count** (`9 candidates tied at ₹5,105 ▸`),
-  not dimming — the ties were surfaced deliberately after the audit trail was found
-  misrepresenting them as reasoned rejections, so hiding them via opacity would partly undo
-  that fix. Collapsing keeps the information present and honest while removing the clutter.
-- **Theme toggle and the `/audit` "ask why" box are still unbuilt** — neither is referenced by
-  any scripted beat, so their absence doesn't block a recording today, but they should land
-  before the final take since a judge who clicks around outside the narrated path will hit
-  their absence.
-- **Not yet verified by an actual spoken pass**: audio pacing, whether the Control Room's
-  streaming-reveal animation (150 cases at 45ms/case ≈ 6.75s) is worth showing at full speed
-  on camera, and whether 5 minutes holds once beats are re-timed per the notes above. Do one
-  real recorded pass once the case picks and the `/evidence` narration cut are locked in.
+- **No live batch run against Razorpay test mode.** `docs/10-REDESIGN.md`'s hard
+  constraint is `output: "export"` — a static site reading pre-baked
+  `artifacts/*.json`, with no server runtime, no API route, no live request at
+  request time (see `docs/DECISIONS.md` [2026-08-26] "Data-shipping architecture").
+  The original script's 1:30–2:30 beat ("Control Room, batch running against Razorpay
+  test mode") describes a capability that does not exist on the deployed site and was
+  cut, not narrated around. What Control Room shows is a real, recorded batch replayed
+  client-side — say exactly that, not "live."
+- **No compliance-gate property test shown on screen.** The original script's "show
+  the property test that proves the compliance gate holds" beat has no corresponding
+  UI — the property test lives in the Python test suite, not the frontend. The
+  `/architecture` compliance-gate sequence shows the gate's structure and real rule
+  set (`artifacts/compliance_rules.json`); it does not show a test run. Say the gate is
+  structural and enforced by a test in the repo, but do not stage a test run that
+  doesn't exist on-site.
+- **Theme toggle and `?theme=` query param exist but add nothing to the pitch** — skip
+  narrating them; a judge who explores the deployed site after watching will find both.

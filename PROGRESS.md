@@ -7,18 +7,52 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-28, end of `docs/10-REDESIGN.md` **Session F** — the last
-redesign session. **The redesign (Sessions A-F) is feature-complete.** `npx tsc
---noEmit`, `npm run lint`, `npm run build` (static export, 307 pages) all green. `make
-check` green from repo root, run **after** committing per protocol (ruff, ruff format,
-mypy, artifact-freshness gate — same waived artifacts as before, no new reds — 103
-pytest, ask-why grounding: 1,296/1,296 clean). **Committed locally (`bb758ab`),
-deliberately NOT pushed** — this is now the sixth unpushed local commit, stacked on
-`ad1e671`+`b4e3c5e` (Session C), `12ff577` (Session D), `c4d09df`+`f24e34e` (Session E).
-**Deploy is the one remaining item and it needs the push decision** — Vercel builds
-from the remote, so nothing here reaches production until that review clears and
-someone pushes. After that: the 5-minute pitch video (`docs/09-DEMO-SCRIPT.md`). Ship
-target 3 Sep 2026, hard deadline 5 Sep 2026.
+**Last updated:** 2026-08-29, post-redesign follow-up session (drift sweep + demo script
+rewrite, not part of the numbered `docs/10-REDESIGN.md` sessions). **The redesign
+(Sessions A-F) is still feature-complete** and this session made no visual/frontend
+route changes — it only (1) swept `web/lib/types.ts` and `README.md` against the real
+committed artifacts for the `audit_text` bug class, and (2) rewrote
+`docs/09-DEMO-SCRIPT.md` against the post-redesign site. `make check` green from repo
+root (ruff, ruff format, mypy, artifact-freshness gate — same waivers as before, no new
+reds — **107 pytest** [103 + 4 new in `tests/test_artifact_frontend_fields.py`], ask-why
+grounding: 1,296/1,296 clean). Not yet committed as of this state block — commit is the
+next step this session. **Still stacked on the same six unpushed local commits**
+(`ad1e671`, `b4e3c5e`, `12ff577`, `c4d09df`, `f24e34e`, `bb758ab`, `05b6ffb`) — this
+session adds one more on top, still not pushed. **Deploy is still the one remaining item
+and it still needs the push decision** — Vercel builds from the remote. Ship target 3 Sep
+2026, hard deadline 5 Sep 2026.
+
+**What shipped this session:**
+
+1. **Drift sweep found no second `audit_text`-class bug in `types.ts`**, but did find a
+   real, more consequential one in `README.md`: the break-even section's two headline
+   claims (hazard≈0.074 break-even vs `razorpay_default`; ≈0.48 break-even on
+   `ltv.margin_factor`, source of the "needs 48%+ gross margin" scope line) do not hold
+   against the `artifacts/sensitivity.json` currently checked in — `dobara` now wins at
+   every tested point on both axes. Rewrote both sections to state the current finding
+   and retracted the unsupported margin-threshold claim. See `docs/DECISIONS.md`
+   [2026-08-29] for the full account, including which fields were checked and cleared.
+2. **Added `tests/test_artifact_frontend_fields.py`** — loads committed artifacts
+   directly, asserts frontend-read fields are present/non-empty, asserts `DecisionOut`
+   never re-declares `audit_text`. Runs under the existing `make check` pytest pass, no
+   new config.
+3. **`docs/09-DEMO-SCRIPT.md` rewritten** against the actual post-redesign routes
+   (`/` two-lane demonstration as centrepiece, `/architecture`, `/control-room`'s
+   compliance-gate panel, `/evidence`'s sticky rail, `/audit/[id]`'s SAW/THOUGHT/ALT/
+   GATE/DID/WHY grid). Corrected a drafted inaccuracy: the shown `home_demo.json` case
+   has Dobara firing *more* notifications than `aggressive_8x` (9 vs 5), not fewer.
+   Flags two things the site cannot currently do (a live batch run, an on-screen
+   compliance-gate test) rather than scripting around them. All case picks (mandate/cycle
+   for the audit/abstain beats) are marked unverified-until-re-checked at record time,
+   not permanently pinned.
+
+**Next:** commit this session's changes (not pushed), then the diff review + push
+decision on all seven local commits, then record the 5-minute pitch video per the
+rewritten script — re-verify every number and case pick against `artifacts/*.json` at
+record time, since several of this session's findings show those numbers move between
+regenerations.
+
+---
 
 **What shipped this session:**
 

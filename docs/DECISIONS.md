@@ -2670,3 +2670,65 @@ must never be hand-typed applies equally to prose numbers in README as to JSX --
 break-even claim silently contradicting the checked-in artifact is exactly the kind of gap
 that non-negotiable exists to catch, and this session found one by treating the sweep's
 scope broadly rather than narrowly re-checking only `types.ts`.
+
+## [2026-08-30] Extended break-even search: widening past the declared sensitivity_range
+
+**Problem:** the prior session's retraction of README's break-even claims (both hazard and
+`ltv.margin_factor`) was honest but left the evidence weaker than before -- "dobara wins at
+every tested point in the declared range" answers a different question than "we found the
+boundary." A sensitivity sweep that never inverts has only described the interior of a
+range, not located where the conclusion actually flips. A judge would reasonably ask
+whether the declared range was wide enough, and the artifact at the time had no answer.
+
+**Did:** added `eval/sensitivity.py`'s `search_break_even_vs_razorpay_default` -- a
+*separate* pass (distinct from `sweep_hazard_per_failure_notification`/`sweep_other_axes`,
+under its own `extended_break_even_search_vs_razorpay_default` artifact key) that widens
+each of the four declared axes outward from its declared range, toward a physical or
+economic bound (`PHYSICAL_SEARCH_BOUND`: hazard increment can't sensibly exceed 1.0 or go
+below 0; `ltv.margin_factor` floor at 2% gross margin, below which no subscription
+business is viable; WhatsApp notification cost floor at Rs.0 (free); `date_change_offer
+.response_rate`'s declared floor of 0% already equals its physical floor, nothing to
+search), using bisection (6 steps) once a bracketing sign change is located. Ran the
+regeneration in the background (`nohup ... &`, unbuffered `-u`, 4-way `Parallel` across
+axes) after an earlier attempt stalled for 10+ hours on a `tee`-piped stdout buffer that
+filled while nothing was reading it across a long gap between user turns -- restarting
+with plain file redirection and no pipe fixed it. The full regeneration (base sweep +
+extended search) took roughly 3.5 hours wall-clock on this run, far past the ~10-minute
+estimate for the base sweep alone; flagged here since a future session scheduling this
+should not assume the old estimate holds once the extended search is included.
+
+**Found:**
+- **`revocation.hazard_per_failure_notification`: a real break-even exists at hazard ≈
+  0.0371**, found by widening from the declared floor (0.05) down toward 0. The
+  calibrated value (0.098) sits **2.64x** above it -- wider than the previously-reported
+  in-range margin (hazard≈0.074, ~33%). Anchored against the published NPCI ratio
+  (`razorpay_default_revocation_per_execution_ratio_at_break_even`, computed via a new
+  `_revocation_ratio_at` helper at the located break-even, same definition
+  `SweepPoint` already used): **≈1.23%**, against NPCI's published ≈2.5% -- real-world
+  revocations would need to run at roughly half the published rate for `dobara` to lose.
+  This single field was computed once via the pipeline's own function (deterministic,
+  verified to reproduce bit-for-bit on a second independent call) and patched into the
+  already-written `artifacts/sensitivity.json` rather than re-running the full 3.5-hour
+  regeneration a second time -- the code that produces it now lives in
+  `eval/sensitivity.py` for full reproducibility on the next `python -m eval.sensitivity`.
+- **`ltv.margin_factor`: no break-even found down to the 2% economic floor.** Retracts the
+  prior session's already-retracted "second break-even at ≈0.48" -- there is now no
+  threshold to state at all in either direction; `dobara` wins across the entire
+  economically meaningful range tested. This axis still has no external anchor (a bare,
+  unsourced assumption), so even this stronger finding carries less weight than the
+  hazard result.
+- **`notification.cost_inr.whatsapp`: no break-even found down to Rs.0 (free).** Confirms
+  and extends the declared-range finding.
+- **`date_change_offer.response_rate`: nothing to search** -- its declared floor already
+  is its physical floor.
+
+**Updated:** `README.md`'s break-even section and `/evidence`'s break-even section
+(`web/app/evidence/page.tsx`) both rewritten from the regenerated artifact, replacing the
+retraction-only language with the new, stronger findings above. `web/lib/types.ts` gained
+the `extended_break_even_search_vs_razorpay_default` shape.
+
+**Because:** naming the condition under which the result flips, and how far the
+calibrated value sits from it, is `docs/07-EVAL-SPEC.md`'s own stated bar for credibility
+-- a search that stops at an a priori guessed range and finds nothing does not clear that
+bar even when phrased honestly; only a search that reaches the edge of what the parameter
+can physically mean does.

@@ -133,6 +133,30 @@ export interface SensitivityJson {
     razorpay_default_revocation_per_execution_ratio_at_break_even?: number;
   };
   other_axes: Record<string, OtherAxis>;
+  /** `eval/sensitivity.py`'s `search_break_even_vs_razorpay_default` -- widens each axis
+   * PAST its declared `sensitivity_range` toward a physical/economic bound (see
+   * `PHYSICAL_SEARCH_BOUND` there), since a sweep that never inverts inside the declared
+   * range has only described the interior, not found the boundary. Kept structurally
+   * separate from `sensitivity_range`/`other_axes` above -- those stay the honest
+   * plausible range; this is a separate search pass. Added 2026-08-29/30, see
+   * docs/DECISIONS.md. */
+  extended_break_even_search_vs_razorpay_default: {
+    note: string;
+    axes: Record<
+      string,
+      {
+        declared_range: [number, number];
+        calibrated_value: number;
+        search_bound: number;
+        found: boolean;
+        break_even_value: number | null;
+        ratio_calibrated_to_break_even: number | null;
+        bracket: [number, number] | null;
+        razorpay_default_revocation_per_execution_ratio_at_break_even: number | null;
+        note: string;
+      }
+    >;
+  };
   provenance: Provenance;
 }
 

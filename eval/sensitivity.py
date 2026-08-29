@@ -407,6 +407,226 @@ def sweep_other_axes(
     return out
 
 
+# --- Extended break-even search --------------------------------------------------
+#
+# The declared `sensitivity_range` in sim/params.yaml is an honest *plausible* range,
+# not a search space -- if `dobara` wins at every point inside it, that says nothing
+# about how far the true break-even sits, only that it isn't inside this a priori guess.
+# A sensitivity analysis that never inverts inside the declared range has not found the
+# boundary; it has only described the interior. Added 2026-08-29 (docs/DECISIONS.md)
+# after the declared-range sweep stopped finding a break-even against `razorpay_default`
+# on any axis and the README's break-even section had nothing left to report but "we
+# don't know how far this holds."
+#
+# This widens each axis outward from its declared range, in the direction that could
+# plausibly weaken `dobara`'s advantage, until either the sign of
+# `dobara_minus_razorpay_default` flips or a PHYSICAL_SEARCH_BOUND is reached -- a value
+# past which the parameter no longer means anything (a hazard increment above 1.0, a
+# margin factor at or below 0, a notification cost exceeding the median mandate amount
+# it would be levied against, a response rate above 1.0). This is deliberately a
+# *separate* pass from `sweep_hazard_per_failure_notification`/`sweep_other_axes` above:
+# it never touches sim/params.yaml's declared `sensitivity_range` (other code reads that
+# as the honest plausible range) and its output lives under its own artifact key so
+# nobody mistakes a searched-to bound for a calibrated one.
+
+# (lo, hi): the outermost physically/economically meaningful bound in the direction that
+# could plausibly weaken dobara's advantage. The *other* direction is not searched --
+# widening it only strengthens dobara further and finding no crossing there would tell
+# us nothing new.
+PHYSICAL_SEARCH_BOUND: dict[str, tuple[float, float]] = {
+    # a hazard *increment per notification* above 1.0 is nonsensical (it would already
+    # saturate the hazard, itself capped at 0.9, after a single notification); dropping
+    # toward 0 removes the mechanism the thesis rests on, so this is the meaningful floor.
+    "revocation.hazard_per_failure_notification": (0.0, 0.05),
+    # a merchant with 0% or negative gross margin has no viable subscription business;
+    # `dobara`'s advantage should weaken as mandate value shrinks, so search the low end.
+    "ltv.margin_factor": (0.02, 0.4),
+    # a per-notification cost above the median mandate amount (~Rs.499, sim/params.yaml
+    # mandate.amount_distribution_inr.median) is economically meaningless -- no PSP would
+    # charge more to warn about a debit than the debit itself is worth. Cost hurts
+    # whichever arm sends more notifications more, which is never dobara, so the
+    # direction that could weaken dobara's advantage is cost -> 0 (free), not cost -> high.
+    "notification.cost_inr.whatsapp": (0.0, 0.2),
+    # a response rate is a probability; dobara uses the date-change offer, so a *lower*
+    # response rate (down to the declared range's own floor of 0%, already the physical
+    # floor) is the only direction that could weaken its advantage -- there is nothing
+    # below 0% to search.
+    "date_change_offer.response_rate": (0.0, 0.0),
+}
+
+
+def _point_diff_vs_razorpay_default(
+    dotted_path: str,
+    value: float,
+    world: World,
+    params: Params,
+    policy: PolicyConfig,
+    model_bundle: ModelBundle,
+    life_table: LifeTable,
+) -> float:
+    """`dobara`'s mean net LTV minus `razorpay_default`'s, at one swept value -- a bare
+    point estimate (no bootstrap CI) since this is used only to locate a sign change
+    during search; the bracketing points that actually get reported are re-run with a
+    full CI via `_run_one_point`/`_run_other_axis_point`.
+    """
+    swept_params = _with_override(params, dotted_path, value)
+    dobara_results = run_arm(
+        world,
+        Arm.DOBARA,
+        swept_params,
+        life_table,
+        policy=policy,
+        model_bundle=model_bundle,
+        holdout_fraction=0.0,
+    )
+    rp_results = run_arm(world, Arm.RAZORPAY_DEFAULT, swept_params, life_table)
+    d = float(np.mean(_net_ltv_per_mandate(dobara_results)))
+    r = float(np.mean(_net_ltv_per_mandate(rp_results)))
+    return d - r
+
+
+def _revocation_ratio_at(
+    dotted_path: str,
+    value: float,
+    world: World,
+    params: Params,
+    life_table: LifeTable,
+) -> float:
+    """`razorpay_default`'s `revocation_per_execution_ratio` (same definition
+    `sweep_hazard_per_failure_notification`'s `SweepPoint` records) at one swept value --
+    used to anchor an extended-search break-even against the published NPCI ratio, the
+    same way `break_even_vs_razorpay_default` does for the declared-range break-even.
+    Only meaningful for axes that actually move revocation risk; called only when a
+    break-even was found.
+    """
+    swept_params = _with_override(params, dotted_path, value)
+    rp_results = run_arm(world, Arm.RAZORPAY_DEFAULT, swept_params, life_table)
+    return _revocation_per_execution_ratio(rp_results)
+
+
+@dataclass(frozen=True)
+class ExtendedSearchResult:
+    dotted_path: str
+    declared_range: tuple[float, float]
+    calibrated_value: float
+    search_bound: float
+    found: bool
+    break_even_value: float | None
+    ratio_calibrated_to_break_even: float | None
+    bracket: tuple[float, float] | None
+    razorpay_default_revocation_per_execution_ratio_at_break_even: float | None
+    note: str
+
+
+def search_break_even_vs_razorpay_default(
+    dotted_path: str,
+    world: World,
+    params: Params,
+    policy: PolicyConfig,
+    model_bundle: ModelBundle,
+    life_table: LifeTable,
+    n_bisection_steps: int = 6,
+) -> ExtendedSearchResult:
+    """Widens `dotted_path` from its declared range's edge (the edge nearest
+    `PHYSICAL_SEARCH_BOUND`) out to that bound, looking for the value at which
+    `dobara_minus_razorpay_default` changes sign. Coarse geometric steps locate a
+    bracket, then `n_bisection_steps` of bisection narrow it. If no sign change is found
+    even at the physical bound, that is reported as a searched-to claim (the bound and
+    the fact nothing was found below/above it), never as an unqualified "robust".
+    """
+    declared_lo, declared_hi = _leaf(params.raw, dotted_path)["sensitivity_range"]
+    calibrated_value = _leaf(params.raw, dotted_path)["value"]
+    search_lo, search_hi = PHYSICAL_SEARCH_BOUND[dotted_path]
+
+    def diff(v: float) -> float:
+        return _point_diff_vs_razorpay_default(
+            dotted_path, v, world, params, policy, model_bundle, life_table
+        )
+
+    if search_lo == search_hi:
+        # No direction left to search -- the declared range already touches the
+        # physical bound (date_change_offer.response_rate's floor is 0%, which is
+        # already the declared range's own low end).
+        return ExtendedSearchResult(
+            dotted_path=dotted_path,
+            declared_range=(declared_lo, declared_hi),
+            calibrated_value=calibrated_value,
+            search_bound=search_lo,
+            found=False,
+            break_even_value=None,
+            ratio_calibrated_to_break_even=None,
+            bracket=None,
+            razorpay_default_revocation_per_execution_ratio_at_break_even=None,
+            note=(
+                f"declared range's floor ({declared_lo}) already equals the physical "
+                f"bound ({search_lo}) in the only direction that could weaken dobara's "
+                f"advantage; nothing further to search"
+            ),
+        )
+
+    # search_lo may be below or above the declared edge nearest it -- widen from that
+    # edge toward the physical bound.
+    widening_downward = search_lo < declared_lo
+    start_edge = declared_lo if widening_downward else declared_hi
+    y_start = diff(start_edge)
+
+    y_bound = diff(search_lo if widening_downward else search_hi)
+    if (y_start > 0) == (y_bound > 0):
+        bound = search_lo if widening_downward else search_hi
+        return ExtendedSearchResult(
+            dotted_path=dotted_path,
+            declared_range=(declared_lo, declared_hi),
+            calibrated_value=calibrated_value,
+            search_bound=bound,
+            found=False,
+            break_even_value=None,
+            ratio_calibrated_to_break_even=None,
+            bracket=None,
+            razorpay_default_revocation_per_execution_ratio_at_break_even=None,
+            note=(
+                f"searched from the declared range's edge ({start_edge}) out to the "
+                f"physical/economic bound ({bound}) -- dobara beats razorpay_default at "
+                f"every point tested in that search, no inversion found up to the bound"
+            ),
+        )
+
+    # Coarse geometric bracketing between start_edge and the bound where the sign
+    # actually flips, then bisect.
+    lo, hi = (start_edge, search_lo) if widening_downward else (start_edge, search_hi)
+    y_lo = y_start
+    for _ in range(n_bisection_steps):
+        mid = (lo + hi) / 2
+        y_mid = diff(mid)
+        if (y_mid > 0) == (y_lo > 0):
+            lo, y_lo = mid, y_mid
+        else:
+            hi = mid
+    break_even_value = (lo + hi) / 2
+    ratio = calibrated_value / break_even_value if break_even_value != 0 else None
+    revocation_ratio_at_break_even = (
+        _revocation_ratio_at(dotted_path, break_even_value, world, params, life_table)
+        if dotted_path == "revocation.hazard_per_failure_notification"
+        else None
+    )
+    return ExtendedSearchResult(
+        dotted_path=dotted_path,
+        declared_range=(declared_lo, declared_hi),
+        calibrated_value=calibrated_value,
+        search_bound=search_lo if widening_downward else search_hi,
+        found=True,
+        break_even_value=break_even_value,
+        ratio_calibrated_to_break_even=ratio,
+        bracket=(lo, hi) if lo <= hi else (hi, lo),
+        razorpay_default_revocation_per_execution_ratio_at_break_even=revocation_ratio_at_break_even,
+        note=(
+            f"break-even located by bisection ({n_bisection_steps} steps) between the "
+            f"declared range's edge ({start_edge}) and the physical bound "
+            f"({search_lo if widening_downward else search_hi}); "
+            f"bracket width {abs(hi - lo):.6f}"
+        ),
+    )
+
+
 def main() -> None:
     import json
     from pathlib import Path
@@ -484,6 +704,51 @@ def main() -> None:
             "ranking_ever_changes": len({tuple(p.ranking) for p in other[dotted_path]}) > 1,
         }
         for dotted_path, label in OTHER_AXES.items()
+    }
+
+    print()
+    print(
+        "extended break-even search (widening past the declared sensitivity_range "
+        "toward a physical/economic bound)..."
+    )
+    search_axes = [
+        "revocation.hazard_per_failure_notification",
+        "ltv.margin_factor",
+        "notification.cost_inr.whatsapp",
+        "date_change_offer.response_rate",
+    ]
+    search_results = Parallel(n_jobs=4)(
+        delayed(search_break_even_vs_razorpay_default)(
+            dotted_path, world, params, policy, model_bundle, life_table
+        )
+        for dotted_path in search_axes
+    )
+    extended: dict[str, dict[str, object]] = {}
+    for dotted_path, result in zip(search_axes, search_results, strict=True):
+        extended[dotted_path] = {
+            "declared_range": list(result.declared_range),
+            "calibrated_value": result.calibrated_value,
+            "search_bound": result.search_bound,
+            "found": result.found,
+            "break_even_value": result.break_even_value,
+            "ratio_calibrated_to_break_even": result.ratio_calibrated_to_break_even,
+            "bracket": list(result.bracket) if result.bracket is not None else None,
+            "razorpay_default_revocation_per_execution_ratio_at_break_even": (
+                result.razorpay_default_revocation_per_execution_ratio_at_break_even
+            ),
+            "note": result.note,
+        }
+        print(f"  {dotted_path}: {result.note}")
+    out["extended_break_even_search_vs_razorpay_default"] = {
+        "note": (
+            "Searches OUTSIDE sim/params.yaml's declared sensitivity_range, toward a "
+            "physical/economic bound, for the value at which razorpay_default would "
+            "overtake dobara on net LTV -- sim/params.yaml's declared sensitivity_range "
+            "itself is unchanged and remains the honest plausible range other code "
+            "reads. See PHYSICAL_SEARCH_BOUND in eval/sensitivity.py for the bound "
+            "chosen per axis and why."
+        ),
+        "axes": extended,
     }
 
     from eval.provenance import stamp

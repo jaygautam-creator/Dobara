@@ -7,20 +7,70 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-29, post-redesign follow-up session (drift sweep + demo script
-rewrite, not part of the numbered `docs/10-REDESIGN.md` sessions). **The redesign
-(Sessions A-F) is still feature-complete** and this session made no visual/frontend
-route changes — it only (1) swept `web/lib/types.ts` and `README.md` against the real
+**Last updated:** 2026-08-30, second post-redesign follow-up session (extended
+break-even search, not part of the numbered `docs/10-REDESIGN.md` sessions). **The
+redesign (Sessions A-F) is still feature-complete**; this session made one small,
+targeted frontend change (`/evidence`'s break-even section) plus a substantive change to
+`eval/sensitivity.py` (new code, not a rewrite of existing sweep logic) and a regenerated
+`artifacts/sensitivity.json`. `make check` green from repo root (ruff, ruff format, mypy,
+artifact-freshness gate — `artifacts/sensitivity.json` now shows fresh at the new commit,
+no new reds — 107 pytest, ask-why grounding: 1,296/1,296 clean). `npx tsc --noEmit`,
+`npm run lint`, `npm run build` (307 pages) all green in `web/`. Not yet committed as of
+this state block — commit is the next step this session. **Still stacked on the same
+seven unpushed local commits** from before — this session adds one more on top, still not
+pushed. **Deploy is still the one remaining item and it still needs the push decision** —
+Vercel builds from the remote. Ship target 3 Sep 2026, hard deadline 5 Sep 2026.
+
+**What shipped this session:**
+
+1. **Added an extended break-even search** (`eval/sensitivity.py`'s
+   `search_break_even_vs_razorpay_default`) that widens each of the four sensitivity axes
+   *past* their declared `sensitivity_range` toward a physical/economic bound, since the
+   prior session's finding ("dobara wins at every tested point in the declared range") is
+   weaker evidence than a located boundary — a range that never inverts has only
+   described its interior, not found where the conclusion actually flips. Kept
+   structurally separate from the declared-range sweep: `sim/params.yaml`'s
+   `sensitivity_range` values are untouched, and results live under a new
+   `extended_break_even_search_vs_razorpay_default` artifact key.
+2. **Found a real break-even for `revocation.hazard_per_failure_notification` at ≈0.0371**
+   (widening down from the declared floor 0.05 toward 0) — the calibrated value (0.098)
+   sits **2.64x** above it, and at that break-even `razorpay_default`'s revocation ratio
+   is ≈1.23% against NPCI's published ≈2.5%: real-world revocations would need to run at
+   roughly half the published rate for `dobara` to lose. This is a stronger, more
+   credible result than the previously-retracted in-range claim (hazard≈0.074, ~33%
+   margin). For `ltv.margin_factor` and `notification.cost_inr.whatsapp`, no inversion
+   was found even at their physical/economic floors (2% gross margin; Rs.0/free) —
+   genuinely robust to the edge of what the parameter can mean, not just to the declared
+   guess. `date_change_offer.response_rate` had nothing left to search (its declared
+   floor already is its physical floor). Full detail in `docs/DECISIONS.md` [2026-08-30].
+3. **Rewrote `README.md`'s break-even section and `/evidence`'s break-even section**
+   (`web/app/evidence/page.tsx`) from the regenerated artifact with these findings.
+   `web/lib/types.ts` gained the `extended_break_even_search_vs_razorpay_default` shape.
+4. **Operational note for future sessions:** the full regeneration (base sweep +
+   extended search) took ~3.5 hours wall-clock this run, far past the base sweep's
+   ~10-minute estimate — budget for this before scheduling a rerun close to a deadline.
+   An early attempt also stalled 10+ hours on a `tee`-piped stdout buffer filling while
+   nothing read it across a long gap between turns; use plain file redirection
+   (`... > file.log 2>&1 &`, unbuffered `-u`) for any long background eval run, not a
+   piped `tee`.
+
+**Next:** commit this session's changes (not pushed), then the diff review + push
+decision on all eight local commits, then record the 5-minute pitch video per
+`docs/09-DEMO-SCRIPT.md` — re-verify every number and case pick against `artifacts/*.json`
+at record time, since several recent findings show those numbers move between
+regenerations.
+
+---
+
+**Last updated:** 2026-08-29, first post-redesign follow-up session (drift sweep + demo
+script rewrite, not part of the numbered `docs/10-REDESIGN.md` sessions). The redesign
+(Sessions A-F) was still feature-complete; this session made no visual/frontend route
+changes — it only (1) swept `web/lib/types.ts` and `README.md` against the real
 committed artifacts for the `audit_text` bug class, and (2) rewrote
-`docs/09-DEMO-SCRIPT.md` against the post-redesign site. `make check` green from repo
-root (ruff, ruff format, mypy, artifact-freshness gate — same waivers as before, no new
-reds — **107 pytest** [103 + 4 new in `tests/test_artifact_frontend_fields.py`], ask-why
-grounding: 1,296/1,296 clean). Not yet committed as of this state block — commit is the
-next step this session. **Still stacked on the same six unpushed local commits**
-(`ad1e671`, `b4e3c5e`, `12ff577`, `c4d09df`, `f24e34e`, `bb758ab`, `05b6ffb`) — this
-session adds one more on top, still not pushed. **Deploy is still the one remaining item
-and it still needs the push decision** — Vercel builds from the remote. Ship target 3 Sep
-2026, hard deadline 5 Sep 2026.
+`docs/09-DEMO-SCRIPT.md` against the post-redesign site. `make check` green (107 pytest
+[103 + 4 new in `tests/test_artifact_frontend_fields.py`], ask-why grounding: 1,296/1,296
+clean). Committed as `a0b0af3`, stacked on the six prior unpushed local commits, still
+not pushed.
 
 **What shipped this session:**
 
@@ -32,6 +82,8 @@ and it still needs the push decision** — Vercel builds from the remote. Ship t
    every tested point on both axes. Rewrote both sections to state the current finding
    and retracted the unsupported margin-threshold claim. See `docs/DECISIONS.md`
    [2026-08-29] for the full account, including which fields were checked and cleared.
+   **Superseded by the next session's extended search above** — those retractions have
+   since been replaced with located break-even values, not left as bare retractions.
 2. **Added `tests/test_artifact_frontend_fields.py`** — loads committed artifacts
    directly, asserts frontend-read fields are present/non-empty, asserts `DecisionOut`
    never re-declares `audit_text`. Runs under the existing `make check` pytest pass, no
@@ -45,12 +97,6 @@ and it still needs the push decision** — Vercel builds from the remote. Ship t
    compliance-gate test) rather than scripting around them. All case picks (mandate/cycle
    for the audit/abstain beats) are marked unverified-until-re-checked at record time,
    not permanently pinned.
-
-**Next:** commit this session's changes (not pushed), then the diff review + push
-decision on all seven local commits, then record the 5-minute pitch video per the
-rewritten script — re-verify every number and case pick against `artifacts/*.json` at
-record time, since several of this session's findings show those numbers move between
-regenerations.
 
 ---
 

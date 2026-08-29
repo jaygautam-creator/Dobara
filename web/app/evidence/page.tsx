@@ -50,6 +50,12 @@ export default function EvidencePage() {
 
   const breakEven = sensitivity.break_even_vs_razorpay_default;
   const marginAxis = sensitivity.other_axes["ltv.margin_factor"];
+  const extendedSearch = sensitivity.extended_break_even_search_vs_razorpay_default.axes;
+  const extendedHazard = extendedSearch["revocation.hazard_per_failure_notification"];
+  const extendedMargin = extendedSearch["ltv.margin_factor"];
+  const extendedWhatsapp = extendedSearch["notification.cost_inr.whatsapp"];
+  const extendedResponseRate = extendedSearch["date_change_offer.response_rate"];
+  const whatsappAxis = sensitivity.other_axes["notification.cost_inr.whatsapp"];
 
   const moneyChartRows = moneyChart.cycle_index.map((cycle, i) => [
     cycle,
@@ -407,41 +413,71 @@ export default function EvidencePage() {
                 <code>docs/07-EVAL-SPEC.md</code> asks for by name, and it holds robustly
                 across the full declared range [0.05, 0.15].
               </Callout>
-              <Callout tone="warning" title="vs razorpay_default: a break-even exists">
-                Flips at hazard ≈{" "}
-                <strong>{breakEven.hazard_per_failure_notification?.toFixed(3)}</strong>,
-                interpolated between 0.05–0.075. The calibrated value,{" "}
-                <strong>{sensitivity.calibrated_value}</strong>, sits above it by ~33%
-                relative — strengthened by the NPCI ratio anchor: the break-even hazard
-                corresponds to a revocation ratio of ≈
+              <Callout tone="good" title="vs razorpay_default: no break-even inside the declared range">
+                {breakEven.note} A range that never inverts hasn&apos;t found the
+                boundary, only described the interior — see the extended search below for
+                how far it actually holds.
+              </Callout>
+            </div>
+            <div className="mt-4 max-w-[68ch]">
+              <SectionHeading
+                eyebrow="Extended break-even search"
+                title="Widening past the declared range toward a physical bound"
+                description={
+                  <>
+                    A separate pass, run outside <code>sim/params.yaml</code>&apos;s
+                    declared <code>sensitivity_range</code> (that range is unchanged and
+                    stays the honest plausible range other code reads): each axis is
+                    widened toward the outermost value it can physically or economically
+                    mean anything at, looking for the point where{" "}
+                    <code>razorpay_default</code> overtakes <code>dobara</code>.
+                  </>
+                }
+              />
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Callout tone="warning" title="hazard_per_failure_notification: break-even found">
+                Widening from the declared range&apos;s floor (0.05) down toward 0, the
+                break-even is located at hazard ≈{" "}
+                <strong>{extendedHazard.break_even_value?.toFixed(4)}</strong>. The
+                calibrated value, <strong>{sensitivity.calibrated_value}</strong>, sits{" "}
+                <strong>{extendedHazard.ratio_calibrated_to_break_even?.toFixed(2)}×</strong>{" "}
+                above it — a wider margin than this section previously reported.
+                Anchored against the NPCI ratio: at this break-even,{" "}
+                <code>razorpay_default</code>&apos;s revocation ratio is ≈
                 {formatPct(
-                  breakEven.razorpay_default_revocation_per_execution_ratio_at_break_even ??
+                  extendedHazard.razorpay_default_revocation_per_execution_ratio_at_break_even ??
                     0,
                   2,
                 )}
-                , against NPCI&apos;s published ≈2.5% — a ~24% relative shortfall, not
-                just a point below the calibrated value.
+                , against NPCI&apos;s published ≈2.5% — real-world revocations would need
+                to run at roughly half the published rate for <code>dobara</code> to lose.
+              </Callout>
+              <Callout tone="good" title="ltv.margin_factor: no inversion to the economic floor">
+                Widened from the declared range&apos;s floor (
+                {marginAxis.sensitivity_range[0]}) down to{" "}
+                <strong>{extendedMargin.search_bound}</strong> — an extreme 2% gross
+                margin, below which a subscription business isn&apos;t economically
+                viable. <code>dobara</code> still wins at that floor; no break-even found.
+                Retracts an earlier version of this section, which stated a break-even at
+                ≈0.48 and a required 48%+ gross margin — that finding did not hold against
+                a later regeneration of this artifact and is not restated here. This axis
+                has no external anchor (a bare, unsourced assumption), so this robustness
+                carries less evidentiary weight than the hazard result even though it
+                reaches further (to the edge of what the parameter can mean, not just the
+                declared guess).
               </Callout>
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <Callout title="date_change_offer.response_rate [0, 0.15]">
-                Robust — dobara wins at every tested point, including exactly 0%. The
-                policy does not depend on the date-change mechanic working at all.
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Callout title="notification.cost_inr.whatsapp: no inversion down to free">
+                Widened from the declared floor ({whatsappAxis.sensitivity_range[0]}) down to{" "}
+                <strong>{extendedWhatsapp.search_bound}</strong> (free notifications) — no
+                measurable inversion. WhatsApp cost is too small a share of total spend
+                for this axis to move the ranking at any point tested.
               </Callout>
-              <Callout title="notification.cost_inr.whatsapp [0.2, 0.6]">
-                No measurable effect on ranking at any tested point — WhatsApp cost is too
-                small a share of spend for this range to matter.
-              </Callout>
-              <Callout tone="warning" title="ltv.margin_factor [0.4, 0.9] — the softest joint">
-                A second break-even, ≈0.48 (range {marginAxis.sensitivity_range.join("–")}).
-                Calibrated value 0.7 sits ~46% above it — wider margin than hazard&apos;s,
-                but this one has <strong>no external anchor</strong>: a bare, unsourced
-                assumption.
-                <span className="mt-2 block text-xs text-text-secondary">
-                  Scope of applicability, not just a caveat: dobara&apos;s advantage
-                  requires roughly 48%+ gross margin on subscription revenue — built for
-                  OTT/SaaS/insurance/memberships, not thin-margin recurring billing.
-                </span>
+              <Callout title="date_change_offer.response_rate: already at its floor">
+                {extendedResponseRate.note} — <code>dobara</code> does not depend on the
+                date-change mechanic working at all, down to and including 0% response.
               </Callout>
             </div>
           </section>

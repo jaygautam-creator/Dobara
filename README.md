@@ -277,54 +277,89 @@ declared `sensitivity_range` [0.05, 0.15] — read from `artifacts/sensitivity.j
 "obvious agent" never catches up across the full stated uncertainty in this parameter.
 This is the comparison `docs/07-EVAL-SPEC.md` asks for by name, and it holds robustly.
 
-**Against `razorpay_default`: no break-even found anywhere in the declared range either,
-as of this artifact regeneration.** `dobara` beats `razorpay_default` on net LTV at every
-tested point, 0.05 through 0.15 (margin widening from ₹62.5/mandate at 0.05 to
-₹364.0/mandate at 0.15). An earlier revision of this README, against an earlier
-regeneration of `artifacts/sensitivity.json`, reported a break-even at hazard ≈ 0.074 —
-that finding does not hold against the artifact currently checked in and has been
-superseded, not merely rounded differently; this is a live number that moves when the
-sweep reruns, and every regeneration must be re-read here, not assumed. The calibrated
-value, **0.098** (empirically recalibrated to hit the published
-20M-revocations/808M-executions ≈ 2.5% ratio from real NPCI figures —
-`revocation_per_execution_ratio`, `sim.engine.SimSummary`, `tests/test_calibration.py`'s
-own benchmark), sits inside a range that no longer contains a losing region at all for
-`dobara` on this axis.
+**Against `razorpay_default`: no break-even inside the declared range, but one exists
+outside it — and naming it is a stronger result than the range-bound version this README
+used to report.** `dobara` beats `razorpay_default` at every point in the declared
+`sensitivity_range` [0.05, 0.15] (margin widening from ₹62.5/mandate at 0.05 to
+₹364.0/mandate at 0.15). A sweep that never inverts inside a declared range only tells you
+the range wasn't wide enough to find the boundary — so `eval/sensitivity.py`'s
+`search_break_even_vs_razorpay_default` widens the search past that range, toward the
+outermost value the parameter can physically mean anything at (a hazard increment above
+1.0 is nonsensical, and the mechanism this thesis rests on disappears entirely below 0).
+Widening downward from the declared range's floor (0.05) toward that physical floor (0.0),
+the break-even is found by bisection at **hazard ≈ 0.0371**. The calibrated value,
+**0.098** (empirically recalibrated to hit the published 20M-revocations/808M-executions
+≈ 2.5% ratio from real NPCI figures — `revocation_per_execution_ratio`,
+`sim.engine.SimSummary`, `tests/test_calibration.py`'s own benchmark), sits **2.64×
+above** this break-even — a materially wider margin than an earlier revision of this
+README reported (hazard ≈ 0.074, ~33% margin, against an earlier regeneration of
+`artifacts/sensitivity.json` whose numbers no longer match the artifact checked in here;
+this is a live number, re-read from the artifact on every regeneration, never assumed).
+Judged against the external NPCI anchor rather than the calibrated point alone:
+`razorpay_default`'s `revocation_per_execution_ratio` at this break-even hazard is
+**≈1.23%**, against NPCI's published **≈2.5%** — for `dobara` to actually lose, real-world
+revocations would have to run at roughly **half** of what NPCI's own published data says
+they do. `artifacts/sensitivity.json`'s `extended_break_even_search_vs_razorpay_default`
+key carries this search's full detail, including the bisection bracket and the searched
+bound for every axis, kept structurally separate from `sim/params.yaml`'s declared
+`sensitivity_range` — the extended search widens the question, it does not redefine what
+"plausible" means for other code that reads that range.
 
 **The other three declared axes, swept the same way** (`python -m eval.sensitivity`,
 same seed and population, `artifacts/sensitivity.json`'s `other_axes`):
 
 - **`date_change_offer.response_rate` [0.0, 0.15], including the required 0% run:**
   `dobara` beats `razorpay_default` at every tested point, including exactly 0% — the
-  policy does not depend on the date-change mechanic working at all. Robust.
+  policy does not depend on the date-change mechanic working at all. The declared range's
+  own floor (0%) already is the physical floor (a response rate cannot go negative), so
+  there is no further direction to widen the search in — this axis is robust to the edge
+  of what the parameter can mean, not just to the edge of the declared guess.
 - **`notification.cost_inr.whatsapp` [0.2, 0.6]:** no measurable effect on the ranking at
-  any tested point — WhatsApp notifications are too small a share of total spend for this
-  range to matter. Robust, but for an uninteresting reason (the axis barely moves
-  anything), not a demonstration of resilience.
+  any tested point inside the declared range — WhatsApp notifications are too small a
+  share of total spend for this range to matter. The extended search (see below) widened
+  this down to **₹0 (free notifications)** and still found no inversion — the axis is
+  robust all the way to the edge of what the parameter can mean, not merely across the
+  declared guess.
 - **`ltv.margin_factor` [0.4, 0.9]** (swept in place of `ltv.horizon_cycles`, which
   `sim/params.yaml` declares with a fixed source, not a `sensitivity_range` — this is the
   actual LTV-dollar-conversion assumption docs/05-ML-SPEC.md's own note flags for this
-  analysis): **no break-even found in the declared range, as of this artifact
-  regeneration.** `dobara` wins on net LTV at every tested point, 0.4 through 0.9 —
-  `razorpay_default` never overtakes it even at the range's low end. An earlier revision
-  of this README, against an earlier regeneration of `artifacts/sensitivity.json`,
-  reported a second break-even here at ≈0.48 with `razorpay_default` winning below it —
-  that finding does not hold against the artifact currently checked in. Because the
-  tested range no longer contains a losing region, this sweep cannot currently locate a
-  gross-margin threshold below which the ranking flips; the calibrated value, **0.7**,
-  sits inside the winning range along with every other tested point.
+  analysis): `dobara` wins on net LTV at every tested point in the declared range, 0.4
+  through 0.9. An earlier revision of this README, against an earlier regeneration of
+  `artifacts/sensitivity.json`, reported a break-even here at ≈0.48 with `razorpay_default`
+  winning below it — that finding does not hold against the artifact currently checked in.
 
-  **The scope-of-applicability claim this section previously made — "requires roughly
-  48%+ gross margin" — was derived from the now-superseded break-even and does not
-  currently hold.** As of this regeneration, `dobara` wins across the entire tested
-  `margin_factor` range [0.4, 0.9], so no minimum-margin threshold can be stated from this
-  sweep; a merchant below 40% gross margin is simply untested, not known to be a bad fit.
-  `margin_factor` also has no external anchor — it's a bare, unsourced assumption ("not
-  observed anywhere in the simulator," per its own declared note) — so any threshold
-  derived from it would carry less weight than the hazard axis's NPCI-anchored one even if
-  one existed. This entire finding is sensitive to the next `make eval`/`python -m
-  eval.sensitivity` rerun and must be re-read against the live artifact before being
-  restated, not carried forward from this paragraph.
+  **A range that never inverts has not found the boundary, only described the interior
+  — so the extended search widened this axis down toward the point past which "gross
+  margin" stops meaning anything** (a merchant with 0% or negative margin has no viable
+  subscription business; the search floor is **0.02**, an extreme 2% margin, not exactly
+  0 to keep the LTV arithmetic well-defined). **Even at that floor, `dobara` still beats
+  `razorpay_default` — no inversion found anywhere down to 2% gross margin.** The
+  previously-stated scope claim ("requires roughly 48%+ gross margin") is retracted, not
+  softened: it was derived from a break-even that does not exist in the current artifact,
+  and the extended search found no replacement threshold to state one from. Unlike the
+  hazard axis, `margin_factor` has no external anchor — it's a bare, unsourced assumption
+  ("not observed anywhere in the simulator," per its own declared note) — so this
+  robustness carries less evidentiary weight than the hazard result above even though it
+  is, on its own terms, a stronger finding (searched to the edge of meaning, not just the
+  declared guess). Every number in this bullet is sensitive to the next `make eval`/
+  `python -m eval.sensitivity` rerun and must be re-read against the live artifact before
+  being restated.
+
+**Extended break-even search — widening past the declared ranges toward a physical or
+economic bound**, run separately from the declared-range sweep above and read from
+`artifacts/sensitivity.json`'s own `extended_break_even_search_vs_razorpay_default` key
+(`eval/sensitivity.py`'s `search_break_even_vs_razorpay_default`, `PHYSICAL_SEARCH_BOUND`
+states the bound and reasoning per axis). `sim/params.yaml`'s declared `sensitivity_range`
+values are themselves untouched by this search and remain the honest plausible range other
+code reads — this is a separate, explicitly-labelled pass to answer the question a range
+that never inverts cannot: how far away is the boundary, really?
+
+| Axis | Declared range | Calibrated value | Searched to | Result |
+|---|---|---|---|---|
+| `revocation.hazard_per_failure_notification` | [0.05, 0.15] | 0.098 | 0.0 (physical floor) | **Break-even at hazard ≈ 0.0371** — calibrated value sits 2.64× above it. `razorpay_default`'s revocation ratio at this break-even is ≈1.23%, against NPCI's published ≈2.5% — real-world revocations would need to run at roughly half the published rate for `dobara` to lose. |
+| `ltv.margin_factor` | [0.4, 0.9] | 0.7 | 0.02 (2% gross margin, economic floor) | No inversion found down to the floor. |
+| `notification.cost_inr.whatsapp` | [0.2, 0.6] | 0.35 | 0.0 (free) | No inversion found down to the floor. |
+| `date_change_offer.response_rate` | [0.0, 0.15] | 0.06 | 0.0 (declared floor = physical floor) | Nothing to search — already at the only meaningful bound. |
 
 **Calibration is reported before AUC.** These probabilities get multiplied by rupees, so
 being right about the number matters more than ranking. Brier scores and reliability

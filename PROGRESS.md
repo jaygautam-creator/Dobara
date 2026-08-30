@@ -7,7 +7,62 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-30, fourth post-redesign follow-up session (voice, orientation
+**Last updated:** 2026-08-30, fifth post-redesign follow-up session (mobile responsive
+repair pass -- no analysis, numbers, CIs, or desktop rendering touched; full account in
+`docs/DECISIONS.md` [2026-08-30] "Mobile responsive repair pass"). Owner reported the
+live site wasn't mobile-friendly. Measured first (Playwright at 390/414/768px, since the
+Claude-in-Chrome extension was unresponsive this session), found and fixed a real,
+page-wide horizontal-overflow bug (header nav had no mobile fallback) plus three
+narrower ones (two cramped `grid-cols-3` stat panels, one unbroken long identifier
+overflowing its box), added scroll affordances to two already-correctly-scrollable wide
+elements, and confirmed the two "suspect" UI patterns that turned out NOT to be bugs
+(hero text wraps cleanly, the demonstration's stacked mobile layout already reads).
+**Desktop rendering verified pixel-identical** (Playwright screenshot diff at 1440px,
+before vs. after, all 6 routes) -- the only 4px delta was confirmed to be pre-existing
+animation jitter, not a layout change. `make check` green (107 pytest, freshness gate
+clean, ask-why grounding 1,296/1,296). `npx tsc --noEmit`, `npm run lint`, `npm run
+build` (307 pages) all green in `web/`.
+
+**What shipped this session:**
+1. **Real bug, page-wide:** the header nav (`app/layout.tsx`) had no mobile fallback --
+   measured `document.scrollWidth` 439px vs. a 390/414px viewport on every route.
+   Added `components/MobileNav.tsx` (a hamburger + dropdown, `lg:hidden`), gated the
+   existing desktop nav behind `lg:flex` -- unchanged at `lg` and up.
+2. **Real bug:** `ControlRoomClient.tsx`'s "Revocations" stat tile and `ui.tsx`'s shared
+   `StatTile` both rendered a long unbroken source identifier
+   (`comparison_aggressive_8x_revocations`) that doesn't wrap by default, overflowing
+   its box by up to 63px at 390px width -- root cause of a second real overflow found
+   only after the nav fix stopped masking it. Added `break-words` to both.
+3. **Real bug, narrower than page-wide:** a `flex items-center justify-between` row
+   above the Control Room case queue (heading + segmented filter toggle) overflowed by
+   23px at 390px with no wrap. Added `flex-wrap gap-2`.
+4. **Cramped, not overflowing (suspect (c), confirmed via screenshot):** three unguarded
+   `grid grid-cols-3` stat panels (`ControlRoomClient.tsx`'s compliance-gate tile,
+   `evidence/page.tsx`'s two Brier/AUC model tiles) became `grid-cols-1 sm:grid-cols-3`
+   -- identical at `sm` (640px) and up, which already covers tablet and desktop.
+5. **Missing affordance (suspect (b), confirmed via code + screenshot):** `SystemDiagram`
+   (`min-w-[46rem]`) and `ArmComparisonTable` (`min-w-[860px]`) were already correctly
+   horizontally scrollable, but gave no visual signal that there was more to scroll to.
+   Added a `lg:hidden` text hint above each.
+6. **Confirmed NOT bugs, left unchanged:** suspect (a), the demonstration's two lanes
+   (`lg:grid-cols-2`) -- genuine side-by-side at 390px is impossible (measured: two
+   ~175px columns), but the stacked order already carries the argument (shared "run
+   twice" framing, labelled lanes, screenshot-verified legible) -- no fake comparison
+   needed. Suspect (d), the hero's `--step-6` heading -- wraps to 3 clean lines at
+   390px, no clipping, no fix needed.
+7. **Tooling note:** the Claude-in-Chrome extension never responded this session despite
+   a cleared permission prompt -- fell back to Python Playwright (already installed,
+   cached Chromium), which is how every number and screenshot above was actually
+   produced, not estimated.
+
+**Next:** record the 5-minute pitch video per `docs/09-DEMO-SCRIPT.md` and
+`docs/09A-REHEARSAL-PACK.md`. This session touched no figure, ID, or click target either
+doc depends on, and confirmed desktop rendering is pixel-identical to before, so no
+rehearsal-pack update was needed. Re-run its "How to re-verify" snippets one more time
+immediately before recording. No further scope planned before recording -- ship target
+3 Sep 2026, hard deadline 5 Sep 2026.
+
+**Prior session (2026-08-30, voice, orientation
 and attribution pass — no analysis, numbers, or CIs touched; full account in
 `docs/DECISIONS.md` [2026-08-30] "Voice, orientation, and attribution pass"). **The
 redesign (Sessions A-F) is still feature-complete and live.** `make check` green (107

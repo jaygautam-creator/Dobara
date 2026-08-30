@@ -288,7 +288,7 @@ export default function EvidencePage() {
                   </h3>
                   <span className="text-xs text-text-muted">n={recovery.n_test}</span>
                 </div>
-                <div className="mb-4 grid grid-cols-3 gap-3">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <MiniStat
                     label="Brier score"
                     value={recovery.lightgbm.calibrated.brier_score.point.toFixed(4)}
@@ -341,7 +341,7 @@ export default function EvidencePage() {
                   </h3>
                   <span className="text-xs text-text-muted">n={hazard.n_test}</span>
                 </div>
-                <div className="mb-4 grid grid-cols-3 gap-3">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <MiniStat
                     label="Brier score"
                     value={hazard.calibrated.brier_score.point.toFixed(4)}

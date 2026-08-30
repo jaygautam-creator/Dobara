@@ -121,7 +121,7 @@ function CaseComplianceGate({
       <div className="text-xs font-semibold uppercase tracking-wide text-text-muted">
         Compliance gate — mandate #{decision.mandate_id}
       </div>
-      <div className="grid grid-cols-3 gap-3 rounded-md bg-surface-0 p-3 text-center">
+      <div className="grid grid-cols-1 gap-3 rounded-md bg-surface-0 p-3 text-center sm:grid-cols-3">
         <div>
           <div className="tabular-nums text-lg font-semibold text-text-primary">
             {nCandidates}
@@ -411,7 +411,7 @@ export function ControlRoomClient({
           <div className="mt-1 text-xs italic text-text-muted">
             no CI — a live fixture count, not a statistical estimate
           </div>
-          <div className="mt-1 text-[11px] text-text-muted">
+          <div className="mt-1 text-[11px] break-words text-text-muted">
             counters.revocations / comparison_aggressive_8x_revocations
           </div>
         </div>
@@ -431,7 +431,7 @@ export function ControlRoomClient({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div onKeyDown={onQueueKeyDown} tabIndex={0} className="outline-none focus-visible:ring-2 focus-visible:ring-arm-dobara/40 rounded-lg">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-text-primary">
               Case queue, ranked by ₹ at risk
             </h3>
@@ -464,7 +464,7 @@ export function ControlRoomClient({
               </button>
             </div>
           </div>
-          <ScrollArea className="h-[720px] rounded-lg border border-border">
+          <ScrollArea className="h-[720px] w-full rounded-lg border border-border">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-surface-1">
                 <TableRow className="hover:bg-transparent">
@@ -523,7 +523,7 @@ export function ControlRoomClient({
                     <TableCell className="tabular-nums px-3 py-2 text-right font-medium text-text-primary">
                       {formatInr(row.amount)}
                     </TableCell>
-                    <TableCell className="px-3 py-2 text-right">
+                    <TableCell className="whitespace-normal px-3 py-2 text-right">
                       <Link
                         href={`/audit/${row.mandate_id}`}
                         onClick={(e) => e.stopPropagation()}

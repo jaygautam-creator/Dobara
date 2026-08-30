@@ -118,7 +118,7 @@ export function StatTile({
       {ci.noCi && (
         <div className="mt-1 text-xs italic text-text-muted">no CI — {ci.noCi}</div>
       )}
-      <div className="mt-1 text-[11px] text-text-muted">{source}</div>
+      <div className="mt-1 text-[11px] break-words text-text-muted">{source}</div>
     </div>
   );
 }

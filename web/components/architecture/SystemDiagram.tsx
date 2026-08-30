@@ -68,6 +68,7 @@ export function SystemDiagram() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <p className="text-[11px] text-text-muted lg:hidden">Scroll to see the full diagram →</p>
       <div className="overflow-x-auto rounded-lg border border-border bg-surface-1 p-3">
         <svg
           viewBox={`0 0 ${VIEWBOX.w} ${VIEWBOX.h}`}

@@ -2946,3 +2946,119 @@ session stopped and asked the user to check on the host side; access came back o
 own by the next turn (`com.apple.provenance` xattr on `web/` suggests a transient
 macOS TCC/Gatekeeper provenance check, not a real permission change). No file was
 touched during the blocked window.
+
+## [2026-08-30] Mobile responsive repair pass -- measured first, fixed only what broke
+
+Owner viewed the live site on a phone: not mobile-friendly. Scope was explicit and
+narrow -- measure real breakage, fix only that, never touch analysis/numbers/copy, and
+prove desktop rendering doesn't move (a pitch video was about to be recorded against the
+desktop site).
+
+**Tooling blocker, worked around, not routed through unverified guessing.** The
+Claude-in-Chrome extension never responded this session, even after the user cleared a
+pending permission prompt in Chrome's toolbar three times. Rather than fall back to pure
+CSS/breakpoint reasoning (asked for as a fallback, and genuinely weaker evidence), a
+working alternative was found: Python's `playwright` package was already installed
+(`/opt/anaconda3/lib/python3.13/site-packages/playwright`) with Chromium already cached
+locally. Every number and screenshot in this entry came from real rendering via that
+Playwright instance against `next dev` on `localhost:3000`, not estimation.
+
+**Method:** a `document.documentElement.scrollWidth` vs. `window.innerWidth` check
+across all 6 named routes (`/`, `/architecture`, `/control-room`, `/evidence`, a
+`/mandate/[id]`, an `/audit/[id]`) at three widths (390, 414, 768px), plus a
+min-font/tap-target scan and full-page screenshots, run before any change and after
+every fix.
+
+**Real bug #1, page-wide, the dominant cause -- not one of the four named suspects.**
+The header nav (`app/layout.tsx`) has four links plus a theme toggle in a `flex` row
+with no wrap and no mobile fallback. Measured: `scrollWidth` 439px against a
+390/414px viewport, on literally every route, because the header renders on every page.
+This is almost certainly what the owner actually saw. Fixed by adding
+`components/MobileNav.tsx` (a small client component: a `☰`/`✕` toggle button plus a
+dropdown of the same nav links) and gating the existing desktop nav behind `hidden
+lg:flex` -- the desktop nav's own markup and classes are untouched, it simply stops
+rendering below `lg` (1024px) in favour of the new mobile-only component.
+
+**Real bug #2, found only after bug #1 stopped masking it.** With the nav fixed,
+`/control-room` still overflowed (`scrollWidth` 416 vs. 390). Bisected by toggling
+`display:none` on candidate subtrees until the delta vanished: `ControlRoomClient.tsx`'s
+"Revocations" stat tile renders a source line
+`counters.revocations / comparison_aggressive_8x_revocations` -- one 37-character token
+with no spaces or hyphens, which CSS does not break by default
+(`overflow-wrap: normal`), so at 390px it overflowed its own box by up to 63px and
+dragged the whole page wider. The shared `StatTile` component (`components/ui.tsx`)
+renders its `source` prop the identical way and was silently safe only because every
+other call site's source string happens to contain enough spaces to wrap -- this was a
+latent bug waiting for a long enough identifier, not specific to this one tile. Fixed
+both: added `break-words` to `StatTile`'s source line and to this one hand-rolled
+duplicate.
+
+**Real bug #3, narrower.** The "Case queue, ranked by ₹ at risk" heading plus its
+segmented All/Restrained-only filter toggle sit in a `flex items-center
+justify-between` row with no wrap; overflowed by 23px at 390px. Added `flex-wrap
+gap-2` -- activates only when content doesn't fit, so desktop (where it already fits on
+one line) is unaffected by construction, not by luck.
+
+**Suspect (c), confirmed cramped by screenshot, not just code inspection.**
+`ControlRoomClient.tsx:124`'s compliance-gate stat panel (`grid-cols-3`, no breakpoint)
+rendered three ~100px-wide columns at 390px -- a 33-character label
+("candidates legal enough to score") wrapping to 3+ lines around a large number. Two
+structurally identical, previously-unflagged instances found by grep in
+`app/evidence/page.tsx` (the Brier/AUC model-stat tiles) were fixed the same way for
+consistency, though a targeted screenshot there showed them tight but still legible
+(shorter labels) -- the fix is zero-risk either way (`grid-cols-1 sm:grid-cols-3` is
+identical to today's rendering at 640px and up, which already covers tablet and
+desktop).
+
+**Suspect (b), confirmed correct-but-silent by code inspection, fixed as asked.**
+`SystemDiagram`'s `min-w-[46rem]` SVG and `ArmComparisonTable`'s `min-w-[860px]` table
+were already properly wrapped in `overflow-x-auto` -- genuinely scrollable, not
+overflowing the page (confirmed: their scroll containers' own `clientWidth` matched
+their rendered width; only their un-clipped *content* exceeded it, exactly as
+`overflow-x-auto` intends). But nothing signalled a mobile viewer that more existed
+off-screen. Added a one-line `lg:hidden` text hint above each ("Scroll to see the full
+diagram/table →") -- invisible at `lg` and up via `display:none`, so it does not enter
+the desktop grid's column count or layout in any way (verified: `lg:hidden` removes an
+element from grid auto-placement entirely, confirmed via the pixel-diff below, not
+assumed).
+
+**Suspect (a), verified NOT fixable by faking it, and not broken as stacked.** The
+home-page demonstration's two lanes (`Demonstration.tsx`, `lg:grid-cols-2`) cannot be
+genuine side-by-side below 1024px -- two ~175px-wide columns of timestamped event rows
+is not legible, confirmed by direct arithmetic on the existing row markup (`w-24` +
+`w-14` fixed columns alone consume 152px of a ~175px column). Screenshotted the stacked
+mobile rendering instead of guessing: the existing copy already carries the argument
+without any change needed -- "One mandate — ..., run twice" framing, labelled lane
+titles ("The standard playbook" / "Dobara"), and the lanes' existing top-to-bottom order
+(loser first, winner second) read clearly stacked. No fix applied; a fake side-by-side
+was correctly not built.
+
+**Suspect (d), measured, not a bug.** The hero's `--step-6` heading
+(`clamp(3.25rem, 2.5rem + 3.6vw, 6rem)`) computes to ≈54px at 390px width, one step
+above its floor. Screenshotted: "Every retry is a bet." wraps to two lines within
+itself before "Dobara knows when to stop." continues -- no clipping, no horizontal
+scroll, an acceptable fluid-type outcome. No fix applied.
+
+**What was deliberately NOT touched, and why.** `minFont` (as low as 9-11px, mostly
+SVG/caption text) and several nav-adjacent tap targets under 44px were flagged by the
+measurement script but are present *identically* at 768px and were present before any
+change this session -- pre-existing desktop-matching type-scale and target-size
+decisions, not a mobile regression, and touching them would violate the "desktop must
+not change" constraint. Left alone, noted here for a future accessibility pass.
+
+**Desktop verification, not assumed.** Captured full-page screenshots of all 6 routes
+at 1440px width before any change (via `git stash`) and after (via `git stash pop`),
+then diffed pixel-by-pixel. 5 of 6 routes were byte-identical. `/control-room` showed a
+4-pixel delta in a 1×4px region -- re-screenshotted the *same, unchanged* after-state
+twice more and found an even larger diff between those two identical runs (an animated
+counter/tooltip mid-tick), proving the original 4px delta was pre-existing render
+jitter, not a layout change from this session's edits.
+
+**Result:** all 18 width×route combinations show zero horizontal overflow
+(`scrollWidth === innerWidth`), confirmed after a full dev-server restart to rule out
+stale compilation. `make check` green (107 pytest, freshness gate clean, ask-why
+grounding 1,296/1,296 -- untouched, this session made no `agent/`/`models/`/`eval/`/
+`sim/` change). `npx tsc --noEmit`, `npm run lint`, `npm run build` (307 pages) all
+green. No number, CI, caveat, or existing copy changed anywhere -- the only new
+user-facing text is two scroll-hint labels and the mobile nav's own link labels (a
+verbatim copy of the existing desktop nav's labels).

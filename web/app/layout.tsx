@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { MobileNav } from "@/components/MobileNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
@@ -69,13 +70,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="bg-surface-0 text-text-primary">
         <TooltipProvider>
           <header className="sticky top-0 z-40 border-b border-border bg-surface-0/90 backdrop-blur">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+            <div className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
               <Link href="/" className="flex items-baseline gap-2">
                 <span className="text-sm font-semibold tracking-tight">
                   Dobara <span className="text-text-muted">दोबारा</span>
                 </span>
               </Link>
-              <nav className="flex items-center gap-1 text-sm">
+              <nav className="hidden items-center gap-1 text-sm lg:flex">
                 {NAV.map((item) => (
                   <Link
                     key={item.href}
@@ -87,6 +88,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 ))}
                 <ThemeToggle />
               </nav>
+              <div className="flex items-center gap-1 lg:hidden">
+                <ThemeToggle />
+                <MobileNav items={NAV} />
+              </div>
             </div>
           </header>
           <main>{children}</main>

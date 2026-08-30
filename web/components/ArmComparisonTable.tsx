@@ -6,7 +6,9 @@ const ARMS_IN_ORDER: ArmName[] = ["do_nothing", "razorpay_default", "aggressive_
 
 export function ArmComparisonTable({ summary }: { summary: SummaryJson }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div>
+      <p className="mb-1 text-[11px] text-text-muted lg:hidden">Scroll to see the full table →</p>
+      <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full min-w-[860px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-surface-2 text-left text-xs uppercase tracking-wide text-text-muted">
@@ -99,6 +101,7 @@ export function ArmComparisonTable({ summary }: { summary: SummaryJson }) {
         {formatNumber(summary.n_customers_per_seed)} mandates each. Paired comparisons on
         identical seeds. Source: <code>artifacts/summary.json</code>.
       </p>
+      </div>
     </div>
   );
 }

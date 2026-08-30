@@ -94,6 +94,41 @@ export default function ArchitecturePage() {
           ))}
         </Card>
       </section>
+
+      <section>
+        <SectionHeading
+          eyebrow="Note"
+          title="Built solo, for this buildathon"
+          description="A few sentences from the person who built it."
+        />
+        <p className="max-w-2xl text-sm leading-relaxed text-text-secondary">
+          I&apos;m Jay Gautam, and I built Dobara alone for this submission. The rewiring in{" "}
+          <a
+            href={`${GITHUB_BLOB}/agent/decide.py`}
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono underline decoration-dotted underline-offset-2"
+          >
+            agent/decide.py
+          </a>{" "}
+          on this page is the thing I&apos;m most honest about: 76% of decisions were tying
+          exactly at the argmax, silently resolved by loop order rather than any real rule.
+          I diagnosed it before touching the fix, found the real cause (a too-coarse
+          probability calibrator flattening a signal the model had genuinely learned), and
+          committed to reporting the headline number honestly either way before rerunning
+          — it moved by ₹0.28/mandate, not a regression, but I didn&apos;t know that going in.
+          Full account, dated, in{" "}
+          <a
+            href={`${GITHUB_BLOB}/docs/DECISIONS.md`}
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono underline decoration-dotted underline-offset-2"
+          >
+            docs/DECISIONS.md
+          </a>
+          .
+        </p>
+      </section>
     </div>
   );
 }

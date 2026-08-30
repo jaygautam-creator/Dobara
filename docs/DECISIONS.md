@@ -2883,3 +2883,66 @@ dependency neither `make check` nor `make setup` established.
 
 **Not yet re-verified against a live CI run** at write time -- pushing this fix and
 confirming the `CI` workflow (both jobs) goes green is the immediate next step.
+
+## [2026-08-30] Voice, orientation, and attribution pass -- no numbers touched
+
+The repo and site were technically finished and verified but read as authorless and
+institutional -- addressed to the builder, not to a judge. This session was explicitly a
+framing-layer pass: no re-run of `make eval`/`make sim`/`make train`, no number, CI,
+source, or caveat changed anywhere.
+
+**Attribution.** Added a first-person builder's note to the top of `README.md` and a
+matching, longer one to `/architecture` (below the compliance-gate section, not
+restructuring `SystemDiagram`). Both name the same corrected mistake as the strongest
+evidence a human did this work: the 76%-exact-tie-at-argmax bug (`[2026-08-27]` above),
+picked over the retracted 48%-margin claim, the `audit_text` drift, and the 3.5-hour
+sweep because it shows the most judgment -- diagnosed before fixing, committed to
+reporting the result honestly before knowing which way it would move. Rewrote the
+footer (`web/app/layout.tsx`) to add author + GitHub links alongside the required
+non-affiliation line, which previously carried no attribution at all. Swept the
+README's "we"/"our" down to "I"/"my" (a solo build) without touching the analytical
+sections' register.
+
+**Stopped citing internal paths to people who can't open them.** `/`'s two RBI-sourced
+fact cards cited `docs/01-REGULATORY.md` as their primary source; now they cite
+`https://rbi.org.in` (the same external anchor `agent/compliance.py`'s `RBI-PDN-24H`
+rule already uses) as primary, with the repo doc linked secondarily as "my working
+notes" via `GITHUB_BLOB`. The mechanism section's bare-text
+`tests/test_no_llm_in_money_path.py` became a real link the same way. Swept every
+judge-facing route (`/`, `/evidence`, `/architecture`, `/control-room`,
+`/audit/[id]`, `/mandate/[id]`) for the same class of leak via
+`grep -n 'source=.*"docs/\|source=.*"tests/\|...'`; found no other card-style bare-path
+citation. `/evidence`'s many inline `<code>docs/xxx</code>` mentions in prose (e.g.
+"after `agent/decide.py`'s tie-break fix") were left as-is -- those are self-referential
+methodology narration, not proof-point citations formatted as notes-to-self, and
+turning them all into links would have been the restructuring the brief explicitly
+ruled out.
+
+**Reordered `README.md`** for a first-time 90-second reader: added a "What I built"
+orientation block and the builder's note right after the title, moved "Run it" up
+(right after "How this was built," before the deep method), and added a one-line "The
+full method" transition before the pre-existing problem/mechanism/metrics/circularity/
+honesty sections -- which are otherwise untouched, in full, in their original order,
+still stating every existing hedge. Net README delta: +105/-44 lines (+61 net) --
+justified by four new required sections (orientation, builder's note, "how this was
+built," the one-line transition), not padding of existing content.
+
+**Added "How this was built"** to the README (stack + why, what was deliberately not
+built, what's next) grounded in `docs/03-TECH-STACK.md` and this file -- no invented
+effort or narrative.
+
+**Verification:** `make check` green (107 pytest, freshness gate clean via existing
+waivers, ask-why grounding 1,296/1,296). `npx tsc --noEmit`, `npm run lint`, `npm run
+build` (307 pages) all green in `web/`. Diffed `README.md` for any changed ₹/%/CI
+figure -- the only numeric strings in the diff are pre-existing, unchanged figures
+reused in new prose (39% revocation cut, 76% tie rate, ₹0.28/mandate), not new or
+altered claims.
+
+**A genuine mid-session blocker, resolved without a workaround:** partway through,
+every tool -- including a fresh subagent -- lost all filesystem access to `web/`
+specifically (`EPERM`/"Operation not permitted" on every read, list, and grep under it,
+while the repo root stayed readable) for one turn. Rather than route around it, the
+session stopped and asked the user to check on the host side; access came back on its
+own by the next turn (`com.apple.provenance` xattr on `web/` suggests a transient
+macOS TCC/Gatekeeper provenance check, not a real permission change). No file was
+touched during the blocked window.

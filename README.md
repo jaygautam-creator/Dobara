@@ -5,15 +5,100 @@
 An AI revenue-recovery agent for Indian recurring payments.
 Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 
+## What I built
+
+Every retry of a failed recurring payment in India legally requires its own 24-hour
+warning message. Dobara treats each retry as a priced bet against losing the mandate
+entirely, rather than a free action — and it beats Razorpay's own default retry policy
+on net value recovered while cutting mandate revocations by 39%, measured across 30
+simulated seeds with confidence intervals. It's a working system: a simulator, three
+trained/calibrated ML models, a structurally-enforced compliance gate, a full audit
+trail, and a batch evaluation harness — not a slide deck.
+
+**Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** — the three strongest
+reads for a judge short on time: [`/`](https://dobara-one.vercel.app) (the thesis and a
+real mandate's aggressive-vs-Dobara replay), [`/evidence`](https://dobara-one.vercel.app/evidence)
+(the full result, CIs, sensitivity and break-even), [`/architecture`](https://dobara-one.vercel.app/architecture)
+(the LLM boundary and the compliance gate, plus a short note from me). Two worked
+decisions if you want to go deeper: [`/audit/89`](https://dobara-one.vercel.app/audit/89)
+(rejected alternatives and all) and [`/audit/144`](https://dobara-one.vercel.app/audit/144)
+(an abstain — the agent declining to guess).
+
+The rest of this README goes deep on method, and volunteers its own limitations —
+[jump straight there](#the-mechanism-nobody-prices) if that's what you're here for, or
+keep reading for how it was built and how to run it.
+
+## A note from the builder
+
+I'm Jay Gautam, and I built this alone for this submission. The thing I'm most honest
+about: partway through, I found that 76% of the agent's decisions were landing on an
+exact tie at the top of its scoring — silently broken by loop order, not by any real
+rule, because an isotonic probability calibrator was too coarse to preserve a day-of-week
+signal the underlying model had genuinely learned. I diagnosed the actual cause before
+touching a fix, wrote down a commitment to report the headline result honestly either
+way *before* rerunning it, and then reran — the number moved by ₹0.28 per mandate, not a
+regression, but I didn't know that going in. Full account in
+[`docs/DECISIONS.md`](docs/DECISIONS.md) under `[2026-08-27]`, "Three findings from a
+static review."
+
+## How this was built
+
+**Stack, and why:** Python (uv, LightGBM + isotonic calibration, pandas) for the
+simulator, models, and agent — tabular and inspectable was a requirement, not a
+preference, so nothing here reaches for a neural net where a calibrated GBM does the
+job. Next.js (App Router, static export) for the frontend, because the deployed demo
+needed to run with no server and no API key — every route reads committed JSON
+artifacts, never a live model call. FastAPI exists for local development
+(`make api`) but the deployed site doesn't depend on it. Full reasoning for every choice,
+including what was rejected and why, is in
+[`docs/03-TECH-STACK.md`](docs/03-TECH-STACK.md).
+
+**Deliberately not built:** no real-time serving path (the demo is batch and
+artifact-driven — a real deployment would need one), no multi-merchant tenancy, no
+handling of actual funds movement (Dobara proposes, a licensed aggregator would
+execute), and no live LLM call in production (narratives are pre-generated offline; see
+the "ask why" section below for why).
+
+**What would come next with more time:** the `SBI`-slice finding in the metrics
+below — Dobara correctly detects a bank-specific failure-rate shift but currently
+responds by abstaining entirely rather than scaling back attempts, which is safe but
+leaves recoverable value on the table; deciding between those two responses is scoped
+out of this submission but flagged in `docs/DECISIONS.md` as the next real lever. Beyond
+that: a real (not simulated) calibration dataset, and testing the compliance gate
+against RBI's FREE-AI framework with an actual compliance reviewer rather than my own
+reading of the primary sources.
+
 > No number appears in this README that is not read from `artifacts/summary.json`.
 
-**Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** — the strongest reads
-for a judge short on time: [`/`](https://dobara-one.vercel.app) (thesis + a real
-mandate's aggressive-vs-Dobara replay), [`/architecture`](https://dobara-one.vercel.app/architecture)
-(the LLM boundary and the compliance gate), [`/evidence`](https://dobara-one.vercel.app/evidence)
-(five arms, CIs, the break-even result below), [`/audit/89`](https://dobara-one.vercel.app/audit/89)
-(a worked decision, rejected alternatives and all), [`/audit/144`](https://dobara-one.vercel.app/audit/144)
-(an abstain — the agent declining to guess).
+## Run it
+
+```bash
+git clone https://github.com/jaygautam-creator/Dobara && cd Dobara
+make setup
+make demo     # sim → train → eval → api + web
+```
+
+Works on a clean machine with **no API keys and no cloud account**. LLM outputs
+(`artifacts/llm_cache/ask_why.json`) are pre-generated and committed; the deployed demo
+and this clone both serve committed artifacts, never a live model call.
+
+Regenerating the ask-why cache itself is the one step that needs a key, and it's optional
+— everything else runs without it:
+
+```bash
+GROQ_API_KEY=... make ask-why   # or GEMINI_API_KEY=...
+```
+
+Resumable: only fills in decisions missing from the cache, so an interrupted run picks
+back up rather than re-spending calls already made.
+
+---
+
+## The full method
+
+Everything below is the detailed, falsifiable case for the headline result — including
+where it's weakest. Volunteering the limitations is the point: read on if you want to
+audit the claim rather than take it on faith.
 
 ---
 
@@ -70,7 +155,7 @@ taxonomy, then a policy over a bounded action set scored on expected net lifetim
 rules carry their citations; nothing above the sign-off threshold runs autonomously.
 
 **④ Measures** — five arms, thirty seeds, paired confidence intervals, sensitivity analysis,
-and a stated break-even condition under which our conclusion would flip.
+and a stated break-even condition under which my conclusion would flip.
 
 ### Architecture, in one frame
 
@@ -378,10 +463,10 @@ diagrams for both models are in `/evidence`.
 ## Honesty statement
 
 **The data is simulated, and here is why.** No public dataset of failed payments with retry
-outcomes exists — processors do not release it. So we built a simulator whose every
+outcomes exists — processors do not release it. So I built a simulator whose every
 parameter carries a `source:` field pointing at NPCI decline statistics, RBI e-mandate
 rules, Razorpay's published documentation, or a declared assumption with a sensitivity
-range. Parameters we could not source are listed in the assumptions table below.
+range. Parameters I could not source are listed in the assumptions table below.
 
 Critically, **the simulator holds latent state the agent can never observe** — each
 customer's balance process is hidden from every feature, enforced by test. Without that,
@@ -389,10 +474,10 @@ the agent would learn its own generator and the evaluation would be circular.
 
 The test set is touched once. The evaluation count is recorded in `artifacts/summary.json`.
 
-### Circularity and what our numbers can and cannot show
+### Circularity and what these numbers can and cannot show
 
-We caught ourselves making exactly the mistake the paragraph above exists to prevent, and
-we're naming it here rather than letting a reviewer find it first.
+I caught myself making exactly the mistake the paragraph above exists to prevent, and
+I'm naming it here rather than letting a reviewer find it first.
 
 The revocation hazard model's headline result — predicted hazard rising 0.113 → 0.130 →
 0.207 as same-cycle failure count goes 0 → 1 → 2 — **does not empirically confirm the
@@ -422,12 +507,12 @@ across the *full* declared `sensitivity_range` [0.05, 0.15] of
 `hazard_per_failure_notification`, Dobara beats the `aggressive_8x` arm on net lifetime
 value — plus the break-even value of that parameter below which `aggressive_8x` would win
 instead. That comparison is falsifiable by construction: it's checked across the whole
-plausible range of the one assumption doing the work, not at the single value we happened
-to calibrate to, and it states the point at which our claim stops holding.
+plausible range of the one assumption doing the work, not at the single value I happened
+to calibrate to, and it states the point at which the claim stops holding.
 
-**A concrete example of how we handle a sourcing conflict.** Press coverage disagrees on
+**A concrete example of how I handled a sourcing conflict.** Press coverage disagrees on
 AutoPay volume: one recurring figure is "over 120 million mandates created every month,"
-another is "50 million new mandates in July 2025." We pinned the latter — 50M new
+another is "50 million new mandates in July 2025." I pinned the latter — 50M new
 registrations / 808M executions, July 2025, NPCI data via Business Standard, dated and
 paired with a same-source year-on-year comparison — and rejected the 120M figure because
 no source traces it to a specific NPCI release or states whether it means new mandates,
@@ -459,9 +544,9 @@ which model wrote it, so heterogeneity doesn't mean uneven trust.
 
 ## What Dobara deliberately does not do
 
-- **No individual cash-flow inference.** We never model a specific person's balance or
-  income. Only declared preference, our own transaction history, and aggregate cohort
-  priors. We could have built the balance model. We chose not to. This is a **stated
+- **No individual cash-flow inference.** Dobara never models a specific person's balance
+  or income. Only declared preference, the merchant's own transaction history, and
+  aggregate cohort priors. I could have built the balance model. I chose not to. This is a **stated
   commitment**, held up by two different mechanisms: import isolation (`features/` has no
   import path to the simulator's hidden balance process, `sim/latent.py`, enforced by a
   test) and a name-based guard (`assert_no_banned_features` in `features/recovery.py`
@@ -490,30 +575,6 @@ rule table in [`docs/01-REGULATORY.md`](docs/01-REGULATORY.md).
 
 *Not legal advice. Engineering research from public sources. Where a rule is genuinely
 ambiguous we take the stricter reading and flag it.*
-
----
-
-## Run it
-
-```bash
-git clone https://github.com/jaygautam-creator/Dobara && cd Dobara
-make setup
-make demo     # sim → train → eval → api + web
-```
-
-Works on a clean machine with **no API keys and no cloud account**. LLM outputs
-(`artifacts/llm_cache/ask_why.json`) are pre-generated and committed; the deployed demo
-and this clone both serve committed artifacts, never a live model call.
-
-Regenerating the ask-why cache itself is the one step that needs a key, and it's optional
-— everything else runs without it:
-
-```bash
-GROQ_API_KEY=... make ask-why   # or GEMINI_API_KEY=...
-```
-
-Resumable: only fills in decisions missing from the cache, so an interrupted run picks
-back up rather than re-spending calls already made.
 
 ## Documentation
 

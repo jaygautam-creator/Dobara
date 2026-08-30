@@ -7,18 +7,46 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-30, third post-redesign follow-up session (deploy verification
-+ light-default + `/` mechanism section + README/demo-script/rehearsal-pack pass, not
-part of the numbered `docs/10-REDESIGN.md` sessions). **The redesign (Sessions A-F) is
-still feature-complete and now actually live** — see finding #1 below. `make check`
-green from repo root (107 pytest, freshness gate clean including two new waiver commits,
-ask-why grounding 1,296/1,296). `npx tsc --noEmit`, `npm run lint`, `npm run build`
-(307 pages) all green in `web/`. **All eight prior local commits plus this session's are
-pushed** — `origin/main` matches local `HEAD`. **Live deploy is now current AND
-auto-deploying**: `https://dobara-one.vercel.app` is Git-connected
-(`vercel git connect`, verified this session — a push with no manual `vercel --prod`
-call produced a `READY`, auto-aliased production deployment). Ship target 3 Sep 2026,
-hard deadline 5 Sep 2026.
+**Last updated:** 2026-08-30, fourth post-redesign follow-up session (voice, orientation
+and attribution pass — no analysis, numbers, or CIs touched; full account in
+`docs/DECISIONS.md` [2026-08-30] "Voice, orientation, and attribution pass"). **The
+redesign (Sessions A-F) is still feature-complete and live.** `make check` green (107
+pytest, freshness gate clean via existing waivers, ask-why grounding 1,296/1,296).
+`npx tsc --noEmit`, `npm run lint`, `npm run build` (307 pages) all green in `web/`.
+
+**What shipped this session:**
+1. Added a first-person builder's note (README top + `/architecture`) naming the
+   76%-exact-tie-at-argmax bug as the corrected mistake, and a "How this was built"
+   README section (stack/why, deliberately-not-built, what's next).
+2. Fixed the footer (`web/app/layout.tsx`) to carry author + GitHub attribution
+   alongside the required non-affiliation line.
+3. `/`'s two RBI fact cards and the mechanism section's bare `tests/...py` text now
+   link out — external RBI anchor as primary source, `GITHUB_BLOB`-linked repo doc as
+   secondary "my working notes." Swept all judge-facing routes for the same leak class;
+   found no others (evidence's inline `<code>docs/...</code>` prose mentions are
+   methodology narration, not proof-point citations, and were left alone per the
+   no-restructure constraint).
+4. Reordered `README.md`: orientation block + builder's note up top, "Run it" moved up
+   before the deep method, everything else (problem/mechanism/honest
+   metrics/circularity/honesty statement/what-it-doesn't-do/compliance) kept in full,
+   unmodified, just lower. Net delta +61 lines. Swept "we"/"our" → "I"/"my" outside the
+   analytical sections.
+5. Verified no headline number/CI/caveat moved — diffed the README, confirmed the only
+   numeric strings touched are pre-existing figures reused in new prose.
+
+**Next:** record the 5-minute pitch video per `docs/09-DEMO-SCRIPT.md` and
+`docs/09A-REHEARSAL-PACK.md`. This session did not touch any figure, ID, or click target
+those docs depend on, so no update to the rehearsal pack was needed. Re-run its "How to
+re-verify" snippets one more time immediately before recording. No further scope planned
+before recording — ship target 3 Sep 2026, hard deadline 5 Sep 2026.
+
+**Prior session (2026-08-30 earlier, deploy verification + light-default + `/`
+mechanism section):** fixed a stale production deploy (13 commits behind), connected
+Vercel's Git integration so pushes auto-deploy, made light theme the default, added the
+`/` mechanism section, corrected three drifted claims found while building the
+rehearsal pack. **All commits through this session are pushed** — `origin/main` matches
+local `HEAD`. **Live deploy is current and auto-deploying**:
+`https://dobara-one.vercel.app`. Ship target 3 Sep 2026, hard deadline 5 Sep 2026.
 
 **What shipped this session (all detail in `docs/DECISIONS.md` [2026-08-30]):**
 

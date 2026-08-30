@@ -92,8 +92,26 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main>{children}</main>
           <footer className="border-t border-border px-6 py-6 text-xs text-text-muted">
             <div className="mx-auto max-w-6xl">
-              Razorpay AI Buildathon — Track 03: AI Revenue Recovery. Test mode only. Not
-              affiliated with or endorsed by Razorpay.
+              Built by{" "}
+              <a
+                href="https://github.com/jaygautam-creator"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-text-secondary"
+              >
+                Jay Gautam
+              </a>{" "}
+              for the Razorpay AI Buildathon — Track 03: AI Revenue Recovery. Test mode
+              only. Not affiliated with or endorsed by Razorpay. Source on{" "}
+              <a
+                href="https://github.com/jaygautam-creator/Dobara"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-text-secondary"
+              >
+                GitHub
+              </a>
+              .
             </div>
           </footer>
         </TooltipProvider>

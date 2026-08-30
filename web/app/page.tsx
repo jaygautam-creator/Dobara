@@ -3,7 +3,7 @@ import { Demonstration } from "@/components/home/Demonstration";
 import { Equation } from "@/components/home/Equation";
 import { getHomeDemo, getComplianceRules } from "@/lib/server-data";
 import { formatInr } from "@/lib/format";
-import { NODES } from "@/components/architecture/nodes";
+import { GITHUB_BLOB, NODES } from "@/components/architecture/nodes";
 
 // docs/10-REDESIGN.md §4 `/` -- an editorial argument in five beats: the claim, the
 // mechanism (added 2026-08-30, docs/DECISIONS.md -- a stranger reading only `/` learns
@@ -74,7 +74,14 @@ export default function ThesisPage() {
         <p className="mt-6 max-w-3xl text-sm leading-relaxed text-text-secondary">
           Every candidate action is priced by three tabular, calibrated models — never an
           LLM, a boundary a test enforces (
-          <code className="text-xs text-text-muted">tests/test_no_llm_in_money_path.py</code>
+          <a
+            href={`${GITHUB_BLOB}/tests/test_no_llm_in_money_path.py`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-text-muted underline decoration-dotted underline-offset-2"
+          >
+            tests/test_no_llm_in_money_path.py
+          </a>
           ) — then run through{" "}
           <span className="tabular-nums">{rules.n_hard}</span> hard compliance rules
           (RBI, TRAI, NPCI) that remove any illegal candidate before scoring, not after.
@@ -146,14 +153,18 @@ export default function ThesisPage() {
           <Fact
             number="24h"
             claim="Minimum notice before every debit attempt, retries included. No exceptions, no silent retry."
-            source="RBI e-mandate framework — docs/01-REGULATORY.md"
-            href="/architecture"
+            source="RBI e-mandate framework"
+            href="https://rbi.org.in"
+            secondarySource="my working notes"
+            secondaryHref={`${GITHUB_BLOB}/docs/01-REGULATORY.md`}
           />
           <Fact
             number="8×"
             claim="Retries the standard playbook allows — which is eight mandatory messages about a merchant who keeps failing."
-            source="docs/01-REGULATORY.md"
-            href="/architecture"
+            source="RBI e-mandate framework"
+            href="https://rbi.org.in"
+            secondarySource="my working notes"
+            secondaryHref={`${GITHUB_BLOB}/docs/01-REGULATORY.md`}
           />
         </div>
       </section>
@@ -220,11 +231,15 @@ function Fact({
   claim,
   source,
   href,
+  secondarySource,
+  secondaryHref,
 }: {
   number: string;
   claim: string;
   source: string;
   href: string;
+  secondarySource?: string;
+  secondaryHref?: string;
 }) {
   const external = href.startsWith("http");
   return (
@@ -241,6 +256,19 @@ function Fact({
       >
         {source}
       </a>
+      {secondarySource && secondaryHref && (
+        <>
+          {" · "}
+          <a
+            href={secondaryHref}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block text-[11px] text-text-muted underline decoration-dotted underline-offset-2"
+          >
+            {secondarySource}
+          </a>
+        </>
+      )}
     </div>
   );
 }

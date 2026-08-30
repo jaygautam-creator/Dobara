@@ -2831,7 +2831,9 @@ let 13 commits of redesign sit unpublished for two sessions. The manual
 `vercel --prod --yes --archive=tgz` workaround remains valid as a fallback (e.g. to
 preview an uncommitted change) but should no longer be the *only* path to production.
 
-**Not yet independently verified**: an actual push-triggered auto-deploy has not been
-observed in this session, since no further push happened after connecting. The next
-session that pushes a change should confirm a new deployment appears without a manual
-`vercel --prod` call, and update this entry (or open a follow-up) if it does not.
+**Verified working in this same session**: the commit adding this entry
+(`4a81401`, `docs: record the Vercel Git-integration connection...`) was pushed and,
+with no manual `vercel --prod` call, Vercel started `dpl_FosYbNpDKsFKgxzAv7YKkpQgJgnD`
+automatically (`source: "git"`, `githubCommitSha` matching `4a81401`), which built,
+went `READY`, and was aliased to `dobara-one.vercel.app` on its own. All routes
+re-checked 200 afterward. Auto-deploy is confirmed live, not just configured.

@@ -14,19 +14,22 @@ still feature-complete and now actually live** — see finding #1 below. `make c
 green from repo root (107 pytest, freshness gate clean including two new waiver commits,
 ask-why grounding 1,296/1,296). `npx tsc --noEmit`, `npm run lint`, `npm run build`
 (307 pages) all green in `web/`. **All eight prior local commits plus this session's are
-pushed** — `origin/main` matches local `HEAD`. **Live deploy is now current**:
-`https://dobara-one.vercel.app` (aliased from `dpl_E38koGvTwgXLiwDyefYbRizH5mbi`), built
-from this session's final commit. Ship target 3 Sep 2026, hard deadline 5 Sep 2026.
+pushed** — `origin/main` matches local `HEAD`. **Live deploy is now current AND
+auto-deploying**: `https://dobara-one.vercel.app` is Git-connected
+(`vercel git connect`, verified this session — a push with no manual `vercel --prod`
+call produced a `READY`, auto-aliased production deployment). Ship target 3 Sep 2026,
+hard deadline 5 Sep 2026.
 
 **What shipped this session (all detail in `docs/DECISIONS.md` [2026-08-30]):**
 
-1. **Found and fixed a stale production deploy.** The live site was 13 commits behind
-   `main` — built from `40b4a12`, predating the entire frontend redesign. Root cause:
-   this Vercel project was never Git-connected (manual CLI deploys only), and nobody had
-   deployed since before the redesign. Fixed via `vercel --prod --yes --archive=tgz`.
-   **Git auto-deploy is still not connected** — a deliberate deferral, not a fix; the
-   next session that ships a frontend change must deploy manually the same way, or spend
-   a session wiring `vercel git connect` first.
+1. **Found and fixed a stale production deploy, then closed the root cause.** The live
+   site was 13 commits behind `main` — built from `40b4a12`, predating the entire
+   frontend redesign — because this Vercel project was never Git-connected (manual CLI
+   deploys only). Fixed the immediate staleness via `vercel --prod --yes --archive=tgz`,
+   then (user-approved) ran `vercel git connect --yes` and verified it actually works: a
+   subsequent push with no manual deploy call produced a `READY`, auto-aliased
+   production deployment on its own. Future pushes to `main` now deploy automatically —
+   `vercel --prod --yes --archive=tgz` is a fallback, no longer the only path.
 2. **Light theme is now the default** (was dark) — `ThemeToggle.tsx`,
    `layout.tsx`'s `THEME_INIT_SCRIPT`, and `globals.css`'s `prefers-color-scheme` block
    all changed in sync; dark is fully preserved as an opt-in via the toggle.

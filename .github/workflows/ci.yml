@@ -37,6 +37,16 @@ jobs:
         # eval/api/llm/scripts, all under the same strict config (pyproject.toml).
         run: uv run mypy agent models sim features eval api llm scripts
 
+      - name: Build training database
+        # data/ is gitignored (see .gitignore's "data/.gitkeep") -- tests/test_eval_invariants.py
+        # and tests/test_runner_trace.py read the default-seed sim database
+        # (data/dobara.sqlite3, TRAIN_DB_PATH) via models.ltv.build_life_table /
+        # agent.models.load_model_bundle, which nothing before this step creates on a
+        # clean checkout. The trained models themselves (artifacts/models/*.joblib) ARE
+        # committed, so this only needs to reproduce the raw sim output, not retrain --
+        # deterministic on the default seed (42), ~13s locally.
+        run: uv run python -m sim.run
+
       - name: Unit tests
         run: uv run pytest -q
 
@@ -66,6 +76,19 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Sync artifact data
+        # Route type-checking below needs generateStaticParams()'s data (via
+        # scripts/sync-data.mjs), and `next typegen` needs the route tree it produces.
+        run: npm run sync-data
+
+      - name: Generate route types
+        # `LayoutProps<"/">`/`PageProps<...>` (Next.js typed routes) are generated,
+        # not checked in -- `next build` normally produces them as a side effect, but
+        # the standalone type-check step below runs before any build step, so on a
+        # clean checkout (no .next/) tsc fails with "Cannot find name 'LayoutProps'".
+        # `next typegen` produces the same .next/types/ without a full build.
+        run: npx next typegen
 
       - name: Type check
         run: npx tsc --noEmit

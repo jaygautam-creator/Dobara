@@ -27,6 +27,11 @@ check:
 	uv run ruff format --check .
 	uv run mypy agent models sim features eval api llm scripts
 	uv run python -m scripts.check_artifact_freshness
+	@# data/dobara.sqlite3 is gitignored; tests/test_eval_invariants.py and
+	@# tests/test_runner_trace.py need it (via models.ltv.build_life_table /
+	@# agent.models.load_model_bundle) and nothing else creates it on a clean checkout.
+	@# Deterministic on the default seed, ~13s -- only regenerated if missing.
+	@test -f data/dobara.sqlite3 || uv run python -m sim.run
 	uv run pytest -q
 	uv run python -m scripts.check_ask_why_grounding
 

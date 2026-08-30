@@ -2837,3 +2837,49 @@ with no manual `vercel --prod` call, Vercel started `dpl_FosYbNpDKsFKgxzAv7YKkpQ
 automatically (`source: "git"`, `githubCommitSha` matching `4a81401`), which built,
 went `READY`, and was aliased to `dobara-one.vercel.app` on its own. All routes
 re-checked 200 afterward. Auto-deploy is confirmed live, not just configured.
+
+## [2026-08-30] Fixed two real, pre-existing GitHub Actions CI failures
+
+User flagged (with screenshots) that GitHub Actions' `CI` workflow had been failing on
+every push since at least 2026-08-28 -- both jobs, unrelated to this session's content
+changes. Root-caused and fixed both rather than dismissing them as environment noise.
+
+**`web` job: `error TS2304: Cannot find name 'LayoutProps'` in `app/layout.tsx`.**
+`LayoutProps<"/">` is a Next.js typed-route type generated into `.next/types/`, not
+checked into git -- normally produced as a side effect of `next build`, but CI's
+standalone "Type check" step (`npx tsc --noEmit`) always ran *before* any build step,
+so a clean checkout has no `.next/` and the type doesn't exist. This never surfaced
+locally because a working tree that has ever run `next build`/`next dev` already has
+`.next/types/` on disk. Fixed by adding `npm run sync-data` (the route tree `next
+typegen` needs) then `npx next typegen` -- generates the same types without a full
+build, ~seconds. Verified with `rm -rf .next data && npm run sync-data && npx next
+typegen && npx tsc --noEmit` (clean exit).
+
+**`python` job: `pandas.errors.DatabaseError: ... no such table: mandates`** in 9 tests
+across `tests/test_eval_invariants.py` and `tests/test_runner_trace.py`. Both files read
+a fixed path, `TRAIN_DB_PATH = "data/dobara.sqlite3"` (via `models.ltv.build_life_table`
+/ `agent.models.load_model_bundle`), which is gitignored (`data/.gitkeep` only) and
+nothing in CI ever created before `pytest` ran. This passed locally only because a dev
+machine's `data/` already has a populated `dobara.sqlite3` from earlier `make sim` runs
+-- a clean checkout has none. The trained models themselves
+(`artifacts/models/*.joblib`) ARE committed, so the fix does not need retraining, only
+regenerating the raw sim output: added `uv run python -m sim.run` (no args, default
+seed 42, deterministic, ~13s) as a CI step before "Unit tests". Verified: `rm -f
+data/dobara.sqlite3 && uv run python -m sim.run && uv run pytest -q
+tests/test_eval_invariants.py tests/test_runner_trace.py` -- 9/9 pass (was 9 errors).
+
+**Also fixed `make check`** (same gap: it never built `data/dobara.sqlite3` either,
+silently relying on it already existing from a prior `make sim`) -- added a
+`test -f data/dobara.sqlite3 ||` guard so a fresh clone's first `make check` regenerates
+it once rather than erroring, without re-paying the ~13s on every subsequent run.
+
+**Why this had gone unnoticed:** CLAUDE.md's session protocol says "run `make check`
+before you finish," and every session in this repo's history has done so on a
+long-lived local checkout that already had `data/dobara.sqlite3` -- so the gap only
+shows up in a from-scratch environment (CI, or a fresh `git clone`), which no session
+had exercised until the user checked GitHub's Actions tab directly. `make check`'s own
+green result was never wrong about the code it covers; it was blind to a build-order
+dependency neither `make check` nor `make setup` established.
+
+**Not yet re-verified against a live CI run** at write time -- pushing this fix and
+confirming the `CI` workflow (both jobs) goes green is the immediate next step.

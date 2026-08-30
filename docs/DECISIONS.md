@@ -2810,3 +2810,28 @@ artifacts) -- its only `eval/` change is the new, additive
 any function any existing generator script calls. Without the waiver, `make check`'s
 freshness gate failed on all five even though none of their generators import the new
 code.
+
+## [2026-08-30] Connected Vercel project to GitHub for auto-deploy
+
+The prior entry this same day flagged, but deliberately left open, that this Vercel
+project had no Git integration -- every deploy was a manual `vercel --prod --yes
+--archive=tgz`, meaning `git push` alone did not update the live site, and the tool
+uploads the local working tree rather than the pushed commit (a real risk of the live
+site drifting from what's in git if a deploy is ever run with uncommitted changes).
+User reviewed that risk and asked to close it before recording rather than defer it.
+
+Ran `vercel git connect --yes` from repo root, which linked the project to
+`github.com/jaygautam-creator/Dobara`. Verified this did **not** itself trigger a
+redeploy or otherwise change what's live: `list_deployments` immediately after shows the
+latest production deployment is still `dpl_55fEUntAD3WjqKSfvC9QUPB2sS4r`, built from
+commit `2869f7f` -- the same commit `origin/main` is at. From this point forward, a push
+to `main` should trigger an automatic production deployment on Vercel's own infrastructure
+(the standard behavior for a Git-connected project), removing the class of failure that
+let 13 commits of redesign sit unpublished for two sessions. The manual
+`vercel --prod --yes --archive=tgz` workaround remains valid as a fallback (e.g. to
+preview an uncommitted change) but should no longer be the *only* path to production.
+
+**Not yet independently verified**: an actual push-triggered auto-deploy has not been
+observed in this session, since no further push happened after connecting. The next
+session that pushes a change should confirm a new deployment appears without a manual
+`vercel --prod` call, and update this entry (or open a follow-up) if it does not.

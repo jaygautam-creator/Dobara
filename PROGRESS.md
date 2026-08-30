@@ -7,58 +7,63 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-30, second post-redesign follow-up session (extended
-break-even search, not part of the numbered `docs/10-REDESIGN.md` sessions). **The
-redesign (Sessions A-F) is still feature-complete**; this session made one small,
-targeted frontend change (`/evidence`'s break-even section) plus a substantive change to
-`eval/sensitivity.py` (new code, not a rewrite of existing sweep logic) and a regenerated
-`artifacts/sensitivity.json`. `make check` green from repo root (ruff, ruff format, mypy,
-artifact-freshness gate — `artifacts/sensitivity.json` now shows fresh at the new commit,
-no new reds — 107 pytest, ask-why grounding: 1,296/1,296 clean). `npx tsc --noEmit`,
-`npm run lint`, `npm run build` (307 pages) all green in `web/`. Not yet committed as of
-this state block — commit is the next step this session. **Still stacked on the same
-seven unpushed local commits** from before — this session adds one more on top, still not
-pushed. **Deploy is still the one remaining item and it still needs the push decision** —
-Vercel builds from the remote. Ship target 3 Sep 2026, hard deadline 5 Sep 2026.
+**Last updated:** 2026-08-30, third post-redesign follow-up session (deploy verification
++ light-default + `/` mechanism section + README/demo-script/rehearsal-pack pass, not
+part of the numbered `docs/10-REDESIGN.md` sessions). **The redesign (Sessions A-F) is
+still feature-complete and now actually live** — see finding #1 below. `make check`
+green from repo root (107 pytest, freshness gate clean including two new waiver commits,
+ask-why grounding 1,296/1,296). `npx tsc --noEmit`, `npm run lint`, `npm run build`
+(307 pages) all green in `web/`. **All eight prior local commits plus this session's are
+pushed** — `origin/main` matches local `HEAD`. **Live deploy is now current**:
+`https://dobara-one.vercel.app` (aliased from `dpl_E38koGvTwgXLiwDyefYbRizH5mbi`), built
+from this session's final commit. Ship target 3 Sep 2026, hard deadline 5 Sep 2026.
 
-**What shipped this session:**
+**What shipped this session (all detail in `docs/DECISIONS.md` [2026-08-30]):**
 
-1. **Added an extended break-even search** (`eval/sensitivity.py`'s
-   `search_break_even_vs_razorpay_default`) that widens each of the four sensitivity axes
-   *past* their declared `sensitivity_range` toward a physical/economic bound, since the
-   prior session's finding ("dobara wins at every tested point in the declared range") is
-   weaker evidence than a located boundary — a range that never inverts has only
-   described its interior, not found where the conclusion actually flips. Kept
-   structurally separate from the declared-range sweep: `sim/params.yaml`'s
-   `sensitivity_range` values are untouched, and results live under a new
-   `extended_break_even_search_vs_razorpay_default` artifact key.
-2. **Found a real break-even for `revocation.hazard_per_failure_notification` at ≈0.0371**
-   (widening down from the declared floor 0.05 toward 0) — the calibrated value (0.098)
-   sits **2.64x** above it, and at that break-even `razorpay_default`'s revocation ratio
-   is ≈1.23% against NPCI's published ≈2.5%: real-world revocations would need to run at
-   roughly half the published rate for `dobara` to lose. This is a stronger, more
-   credible result than the previously-retracted in-range claim (hazard≈0.074, ~33%
-   margin). For `ltv.margin_factor` and `notification.cost_inr.whatsapp`, no inversion
-   was found even at their physical/economic floors (2% gross margin; Rs.0/free) —
-   genuinely robust to the edge of what the parameter can mean, not just to the declared
-   guess. `date_change_offer.response_rate` had nothing left to search (its declared
-   floor already is its physical floor). Full detail in `docs/DECISIONS.md` [2026-08-30].
-3. **Rewrote `README.md`'s break-even section and `/evidence`'s break-even section**
-   (`web/app/evidence/page.tsx`) from the regenerated artifact with these findings.
-   `web/lib/types.ts` gained the `extended_break_even_search_vs_razorpay_default` shape.
-4. **Operational note for future sessions:** the full regeneration (base sweep +
-   extended search) took ~3.5 hours wall-clock this run, far past the base sweep's
-   ~10-minute estimate — budget for this before scheduling a rerun close to a deadline.
-   An early attempt also stalled 10+ hours on a `tee`-piped stdout buffer filling while
-   nothing read it across a long gap between turns; use plain file redirection
-   (`... > file.log 2>&1 &`, unbuffered `-u`) for any long background eval run, not a
-   piped `tee`.
+1. **Found and fixed a stale production deploy.** The live site was 13 commits behind
+   `main` — built from `40b4a12`, predating the entire frontend redesign. Root cause:
+   this Vercel project was never Git-connected (manual CLI deploys only), and nobody had
+   deployed since before the redesign. Fixed via `vercel --prod --yes --archive=tgz`.
+   **Git auto-deploy is still not connected** — a deliberate deferral, not a fix; the
+   next session that ships a frontend change must deploy manually the same way, or spend
+   a session wiring `vercel git connect` first.
+2. **Light theme is now the default** (was dark) — `ThemeToggle.tsx`,
+   `layout.tsx`'s `THEME_INIT_SCRIPT`, and `globals.css`'s `prefers-color-scheme` block
+   all changed in sync; dark is fully preserved as an opt-in via the toggle.
+3. **Added a compact mechanism section to `/`** (task 3, between the hero and the
+   demonstration) — problem → what Dobara does → how it decides → what it guarantees,
+   reusing `components/architecture/nodes.ts` rather than forking a second node list.
+4. **Corrected three drifted claims** discovered while building the new
+   `docs/09A-REHEARSAL-PACK.md`: the evidence beat's stale "no break-even exists" line,
+   a retracted "48%+ gross margin" scope claim, and `/audit/144`'s wrong abstain-reason
+   name (scripted as `insufficient_confidence`, actually `bank_health_changepoint`,
+   spanning cycles 7–8 not just 7). `/audit/89` cycle 6's WhatsApp-alternative claim was
+   verified true but only on the cycle's *second* attempt (a `stop` decision).
+5. **README** gained a "Live" line linking the deploy and its five strongest routes, and
+   a real `git clone` URL replacing the `<repo>` placeholder.
+6. **Waived `make check`'s artifact-freshness gate for commit `afe326f`** (five
+   artifacts) — its only `eval/` change is additive (the extended break-even search
+   function), verified via diff inspection that no generator script imports it.
 
-**Next:** commit this session's changes (not pushed), then the diff review + push
-decision on all eight local commits, then record the 5-minute pitch video per
-`docs/09-DEMO-SCRIPT.md` — re-verify every number and case pick against `artifacts/*.json`
-at record time, since several recent findings show those numbers move between
-regenerations.
+**Prior session (2026-08-30 earlier, extended break-even search — full account in
+`docs/DECISIONS.md` [2026-08-30] "Extended break-even search"):** added
+`eval/sensitivity.py`'s `search_break_even_vs_razorpay_default`, which widens each of
+the four sensitivity axes past their declared `sensitivity_range` toward a
+physical/economic bound. Found a real break-even for
+`revocation.hazard_per_failure_notification` at ≈0.0371 (calibrated value 0.098 sits
+2.64x above it); no inversion found for `ltv.margin_factor` or
+`notification.cost_inr.whatsapp` even at their physical floors. That run took ~3.5
+hours wall-clock (base sweep + extended search) — budget for this before scheduling a
+rerun close to a deadline, and use plain file redirection for any long background eval
+run, not a piped `tee` (it can stall 10+ hours if nothing reads the pipe across a gap
+between turns).
+
+**Next:** record the 5-minute pitch video per `docs/09-DEMO-SCRIPT.md` and
+`docs/09A-REHEARSAL-PACK.md` — the rehearsal pack has exact URLs, figures, IDs, and
+click targets already re-verified against the live site as of this session; re-run its
+"How to re-verify" snippets one more time immediately before recording, since any
+further artifact regeneration moves the numbers. No further scope is planned before
+recording — ship target 3 Sep 2026, hard deadline 5 Sep 2026.
 
 ---
 

@@ -2732,3 +2732,81 @@ calibrated value sits from it, is `docs/07-EVAL-SPEC.md`'s own stated bar for cr
 -- a search that stops at an a priori guessed range and finds nothing does not clear that
 bar even when phrased honestly; only a search that reaches the edge of what the parameter
 can physically mean does.
+
+## [2026-08-30] Deploy verification, light-default theme, `/` mechanism section, README/demo-script corrections
+
+**Deploy was stale by 13 commits.** Verified the Vercel project (`prj_OT91JFDV32Ql`)
+before touching anything else, per this session's task order. Found the production
+deployment (`dpl_8qzRF7bch...`) was built from commit `40b4a12`, which predates the
+*entire* frontend redesign (`bf47cdc`...`afe326f` -- docs/10-REDESIGN.md, `/architecture`,
+Sessions B-F, the break-even extended search). The Vercel CLI's own deploy output named
+the cause: `vercel git connect` appeared as a suggested next step, meaning this project
+was never connected to the GitHub repo for auto-deploy -- every prior deploy was a manual
+CLI push, and nobody had pushed since `40b4a12`. Fixed by running the documented
+`vercel --prod --yes --archive=tgz` workaround from repo root, which built and aliased
+`dobara-one.vercel.app` to current `main`. Did not run `vercel git connect` this session
+(a standing decision, not an oversight) -- the manual-push workflow is proven and
+`--archive=tgz` is already the documented default; connecting Git changes the deploy
+trigger model and deserves its own deliberate session, not a rider on this one.
+
+**Light theme is now the default**, superseding docs/08-FRONTEND-SPEC.md's "dark,
+dense... Operations-console register" framing for the *default* render only -- dark
+remains a fully supported, equally-tuned opt-in via the toggle, not deprecated. Changed
+three places kept in sync by contract: `ThemeToggle.tsx`'s `readStoredTheme()` fallback
+(`"dark"` -> `"light"`), `layout.tsx`'s inline `THEME_INIT_SCRIPT` (now opts *into* dark
+on a stored `"dark"` value, not into light), and `globals.css`'s
+`@media (prefers-color-scheme: dark)` block removed entirely -- dark now applies only
+under `[data-theme="dark"]`, never from OS preference. The light palette itself was
+untouched (already contrast-tuned per docs/10-REDESIGN.md's `--text-muted` and
+`--arm-dobara-text` comments); re-verified via `next build` (307/307 pages) rather than
+re-measuring contrast values that did not change. `docs/09-DEMO-SCRIPT.md`'s "record in
+dark" line corrected to light.
+
+**Added a mechanism section to `/`** (task 3) between the hero and the demonstration,
+answering "problem -> what Dobara does -> how it decides -> what it guarantees" in one
+screen. Deliberately reused `components/architecture/nodes.ts` (a 4-node subset: sim,
+models, gate, action) rather than forking a second node-copy list, per the task's
+explicit constraint. The one live number in it (`n_hard` compliance rule count) is read
+via the existing `getComplianceRules()` accessor, matching the "no hand-typed numbers"
+rule; it's a count, not a statistical estimate, so it carries a source but no CI, the
+same convention already used for the three-fact band's "8x retries" figure.
+
+**Corrected three drifted claims found while assembling the rehearsal pack
+(`docs/09A-REHEARSAL-PACK.md`, new file):**
+1. `docs/09-DEMO-SCRIPT.md`'s evidence beat still said "no break-even point currently
+   exists" -- stale since the prior session's extended search *found* one (hazard ≈
+   0.0371, 2.64x margin). Corrected to state it the way `/evidence` now does.
+2. The same beat's scope-of-applicability line ("needs roughly 48%+ gross margin") was
+   itself a retracted claim from an even earlier session -- `/evidence` no longer states
+   a margin threshold at all. Removed the specific number from the script rather than
+   let a retracted claim get spoken on camera.
+3. `/audit/144`'s abstain was scripted as `stopping_reason: insufficient_confidence`;
+   the artifact's actual field is `abstain_reason: bank_health_changepoint`, and the
+   abstain spans cycles 7 **and** 8, not just 7. `/audit/89` cycle 6's "concrete losing
+   WhatsApp alternative, negative expected net" claim was verified as still true, but
+   only on the cycle's *second* attempt (a `stop` decision) -- the first attempt's
+   WhatsApp alternative is a +₹0.35 near-tie. Corrected both, plus the home-page
+   demonstration's notification count (was "9", live data says 8).
+
+**Why the demo-script figures kept drifting:** every one of these three corrections
+came from a session that regenerated an artifact for an unrelated reason (the extended
+break-even search, the general redesign work) without a paired sweep of
+`docs/09-DEMO-SCRIPT.md`'s hand-picked case IDs and quoted numbers -- the artifact
+freshness gate catches drift in `web/` and `README.md` (via
+`tests/test_artifact_frontend_fields.py`) but has no equivalent check over prose demo
+scripts. `docs/09A-REHEARSAL-PACK.md` includes its own re-verification snippets for this
+reason, so the next rerun has a fast way to re-check before recording rather than
+re-deriving from scratch.
+
+**README** gained a "Live" line near the top linking `dobara-one.vercel.app` and its
+five strongest routes, and the `git clone <repo>` placeholder was replaced with the real
+clone URL. No headline number needed correction -- the break-even section written by the
+prior session already matched the current artifact.
+
+**Added `docs/artifact_freshness_waivers.json` entries for commit `afe326f`** (five
+artifacts) -- its only `eval/` change is the new, additive
+`search_break_even_vs_razorpay_default` function and its private helpers; verified via
+`git show afe326f -- eval/sensitivity.py` that the diff is pure addition with no edit to
+any function any existing generator script calls. Without the waiver, `make check`'s
+freshness gate failed on all five even though none of their generators import the new
+code.

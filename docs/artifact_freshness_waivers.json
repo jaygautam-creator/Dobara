@@ -1,6 +1,36 @@
 [
   {
     "artifact": "artifacts/summary.json",
+    "commit": "afe326fc393ae62c5f85656768b2ce267aa6506f",
+    "reason": "afe326f's only eval/ change is eval/sensitivity.py's new search_break_even_vs_razorpay_default (plus its private helpers _point_diff_vs_razorpay_default, _revocation_ratio_at, ExtendedSearchResult) -- additive functions, no edit to any existing function. Verified via `git show afe326f -- eval/sensitivity.py`: the diff is a pure addition (+265/-0 lines) appended after sweep_other_axes, and no other eval/, agent/, models/, or sim/ file changed in this commit. eval/run.py (summary.json's generator) does not import or call the new function."
+  },
+  {
+    "artifact": "artifacts/demo_batch.json",
+    "commit": "afe326fc393ae62c5f85656768b2ce267aa6506f",
+    "reason": "Same as artifacts/summary.json: afe326f's only eval/ change is the new, additive search_break_even_vs_razorpay_default in eval/sensitivity.py. scripts/build_demo_fixture.py does not import eval/sensitivity.py at all."
+  },
+  {
+    "artifact": "artifacts/money_chart_data.json",
+    "commit": "afe326fc393ae62c5f85656768b2ce267aa6506f",
+    "reason": "Same as artifacts/summary.json: afe326f's only eval/ change is the new, additive search_break_even_vs_razorpay_default in eval/sensitivity.py. scripts/build_money_chart.py does not import it."
+  },
+  {
+    "artifact": "artifacts/home_demo.json",
+    "commit": "afe326fc393ae62c5f85656768b2ce267aa6506f",
+    "reason": "Same as artifacts/summary.json: afe326f's only eval/ change is the new, additive search_break_even_vs_razorpay_default in eval/sensitivity.py. scripts/build_home_demo.py goes through api/demo.py's live decide() path and does not import eval/sensitivity.py."
+  },
+  {
+    "artifact": "artifacts/compliance_rules.json",
+    "commit": "afe326fc393ae62c5f85656768b2ce267aa6506f",
+    "reason": "afe326f made no change to agent/compliance.py or scripts/build_compliance_rules.py -- its only agent//models//eval//sim/ change is the additive search_break_even_vs_razorpay_default in eval/sensitivity.py, which the compliance-rules exporter does not import."
+  },
+  {
+    "artifact": "artifacts/llm_cache/ask_why.json",
+    "commit": "afe326fc393ae62c5f85656768b2ce267aa6506f",
+    "reason": "afe326f's only watched-path change is the additive search_break_even_vs_razorpay_default in eval/sensitivity.py; llm/ and scripts/generate_ask_why.py are untouched, and the cache narrates artifacts/demo_batch.json's decisions, which this commit does not affect (see that artifact's own waiver above)."
+  },
+  {
+    "artifact": "artifacts/summary.json",
     "commit": "bfa52dc24c55727f54b023671114e8016b45b5a4",
     "reason": "bfa52dc added eval/provenance.py::content_hash(), a new pure function. It is called only by scripts/check_artifact_freshness.py::check_hash_dependency() and by scripts/generate_ask_why.py::save_cache() (to stamp demo_batch_content_hash). Nothing in eval/run.py or its call graph invokes it, so artifacts/summary.json's generation is unaffected. Verified via `grep -rn content_hash eval/ scripts/` before recording this waiver."
   },

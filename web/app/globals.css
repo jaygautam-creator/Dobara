@@ -1,10 +1,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Design tokens -- dobara/dataviz palette (references/palette.md), dark-first per
-   docs/08-FRONTEND-SPEC.md's "Dark, dense, precise. Operations-console register."
-   Light values live on :root; dark values apply via prefers-color-scheme (OS default)
-   and are overridden again by [data-theme="dark"] so an explicit toggle always wins. */
+/* Design tokens -- dobara/dataviz palette (references/palette.md). Light is the
+   default (docs/DECISIONS.md [2026-08-30] "light-default for judges") regardless of OS
+   preference; dark is opt-in only via [data-theme="dark"], set by ThemeToggle or the
+   `?theme=dark` override. Light values live on :root; dark values apply only under
+   [data-theme="dark"], never from prefers-color-scheme. */
 
 :root {
   color-scheme: light;
@@ -80,37 +81,6 @@
   --step-4: clamp(2rem, 1.8rem + 1vw, 2.75rem);
   --step-5: clamp(2.5rem, 2.1rem + 2vw, 4rem);
   --step-6: clamp(3.25rem, 2.5rem + 3.6vw, 6rem);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --surface-0: #0d0d0d;
-    --surface-1: #1a1a19;
-    --surface-2: #202020;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #898781;
-    --gridline: #2c2c2a;
-    --baseline: #383835;
-    --border: rgba(255, 255, 255, 0.1);
-
-    --arm-dobara: #3987e5;
-    --arm-razorpay-default: #9085e9;
-    --arm-aggressive-8x: #d95926;
-    --arm-do-nothing: #898781;
-    --arm-oracle: #199e70;
-    --arm-dobara-text: #3987e5; /* 4.79:1 on dark surface-1 -- already passes */
-
-    --status-good: #0ca30c;
-    --status-warning: #fab219;
-    --status-serious: #ec835a;
-    --status-critical: #d03b3b;
-    --status-good-text: #0ca30c;
-    --status-warning-text: #fab219; /* 9.49:1 on dark surface-1 -- already passes */
-    --status-critical-text: #e8615a; /* measured 3.62:1 at --status-critical on dark
-      surface-1, below 4.5:1 -- brightened for text only. */
-  }
 }
 
 :root[data-theme="dark"] {

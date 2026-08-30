@@ -7,6 +7,14 @@ Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 
 > No number appears in this README that is not read from `artifacts/summary.json`.
 
+**Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** — the strongest reads
+for a judge short on time: [`/`](https://dobara-one.vercel.app) (thesis + a real
+mandate's aggressive-vs-Dobara replay), [`/architecture`](https://dobara-one.vercel.app/architecture)
+(the LLM boundary and the compliance gate), [`/evidence`](https://dobara-one.vercel.app/evidence)
+(five arms, CIs, the break-even result below), [`/audit/89`](https://dobara-one.vercel.app/audit/89)
+(a worked decision, rejected alternatives and all), [`/audit/144`](https://dobara-one.vercel.app/audit/144)
+(an abstain — the agent declining to guess).
+
 ---
 
 ## The problem
@@ -488,7 +496,7 @@ ambiguous we take the stricter reading and flag it.*
 ## Run it
 
 ```bash
-git clone <repo> && cd dobara
+git clone https://github.com/jaygautam-creator/Dobara && cd Dobara
 make setup
 make demo     # sim → train → eval → api + web
 ```

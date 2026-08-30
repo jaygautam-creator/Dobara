@@ -4,20 +4,21 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "dobara-theme";
 
-/** Keeps the render's default (dark, matching the brand) unless a viewer has already
- * chosen otherwise -- this must match the inline script in layout.tsx exactly, since
- * that script sets the attribute before hydration to avoid a flash of the wrong theme.
- * `?theme=` takes the same precedence here as in that script, so the toggle's icon
- * matches what's actually on screen for a screenshot pass -- but it is never written to
- * storage, so it never overrides the viewer's own persisted choice on the next load. */
+/** Keeps the render's default (light, so a judge lands on the light site regardless of
+ * OS setting -- docs/DECISIONS.md [2026-08-30]) unless a viewer has already chosen dark
+ * -- this must match the inline script in layout.tsx exactly, since that script sets
+ * the attribute before hydration to avoid a flash of the wrong theme. `?theme=` takes
+ * the same precedence here as in that script, so the toggle's icon matches what's
+ * actually on screen for a screenshot pass -- but it is never written to storage, so it
+ * never overrides the viewer's own persisted choice on the next load. */
 function readStoredTheme(): "light" | "dark" {
   try {
     const q = new URLSearchParams(window.location.search).get("theme");
     if (q === "light" || q === "dark") return q;
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored === "light" ? "light" : "dark";
+    return stored === "dark" ? "dark" : "light";
   } catch {
-    return "dark";
+    return "light";
   }
 }
 

@@ -1,15 +1,26 @@
 import Link from "next/link";
 import { Demonstration } from "@/components/home/Demonstration";
 import { Equation } from "@/components/home/Equation";
-import { getHomeDemo } from "@/lib/server-data";
+import { getHomeDemo, getComplianceRules } from "@/lib/server-data";
 import { formatInr } from "@/lib/format";
+import { NODES } from "@/components/architecture/nodes";
 
 // docs/10-REDESIGN.md §4 `/` -- an editorial argument in five beats: the claim, the
-// demonstration, the three sourced facts, the equation, the way in.
+// mechanism (added 2026-08-30, docs/DECISIONS.md -- a stranger reading only `/` learns
+// the thesis but never what was built), the demonstration, the three sourced facts, the
+// equation, the way in.
+
+// The mechanism strip shares its node data with /architecture's SystemDiagram rather
+// than forking a second node list -- see components/architecture/nodes.ts.
+const MECHANISM_NODE_IDS = ["sim", "models", "gate", "action"] as const;
 
 export default function ThesisPage() {
   const demo = getHomeDemo();
+  const rules = getComplianceRules();
   const advantage = demo.selection.net_ltv_advantage_inr;
+  const mechanismNodes = MECHANISM_NODE_IDS.map(
+    (id) => NODES.find((n) => n.id === id)!,
+  );
 
   return (
     <div className="flex flex-col">
@@ -34,6 +45,48 @@ export default function ThesisPage() {
         <p className="mt-8 font-serif text-step-3 italic text-text-primary">
           “Recover the payment. Keep the mandate.”
         </p>
+      </section>
+
+      {/* 1b — the mechanism, in one screen: problem -> what Dobara does -> how it
+          decides -> what it guarantees. Node copy is shared from
+          components/architecture/nodes.ts, not forked. */}
+      <section className="mx-auto w-full max-w-6xl px-6 pb-16">
+        <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
+          What this is
+        </p>
+        <h2 className="mt-2 max-w-3xl font-serif text-step-3 leading-tight text-text-primary">
+          A calibrated pricing model decides. A compliance gate keeps it legal. A
+          language model never touches the money.
+        </h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-4">
+          {mechanismNodes.map((node, i) => (
+            <div key={node.id} className="relative border-t border-border pt-4">
+              <span className="tabular-nums text-[11px] text-text-muted">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <p className="mt-1 text-sm font-semibold text-text-primary">{node.label}</p>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                {node.sublabel}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 max-w-3xl text-sm leading-relaxed text-text-secondary">
+          Every candidate action is priced by three tabular, calibrated models — never an
+          LLM, a boundary a test enforces (
+          <code className="text-xs text-text-muted">tests/test_no_llm_in_money_path.py</code>
+          ) — then run through{" "}
+          <span className="tabular-nums">{rules.n_hard}</span> hard compliance rules
+          (RBI, TRAI, NPCI) that remove any illegal candidate before scoring, not after.
+          What survives is priced against the mandate&apos;s own survival, and the agent
+          stops or abstains rather than guess when the bet isn&apos;t worth it.
+        </p>
+        <Link
+          href="/architecture"
+          className="mt-4 inline-block text-xs text-arm-dobara-text underline decoration-dotted underline-offset-2"
+        >
+          See the full diagram and the LLM boundary →
+        </Link>
       </section>
 
       {/* 2 — the demonstration */}

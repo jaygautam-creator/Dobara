@@ -10,8 +10,8 @@ Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 Every retry of a failed recurring payment in India legally requires its own 24-hour
 warning message. Dobara treats each retry as a priced bet against losing the mandate
 entirely, rather than a free action — and it beats Razorpay's own default retry policy
-on net value recovered while cutting mandate revocations by 39%, measured across 30
-simulated seeds with confidence intervals. It's a working system: a simulator, three
+on net value recovered while cutting mandate revocations from 1,049 [95% CI 1,040,
+1,057] to 638 [629, 646] per seed (Honest metrics, below). It's a working system: a simulator, three
 trained/calibrated ML models, a structurally-enforced compliance gate, a full audit
 trail, and a batch evaluation harness — not a slide deck.
 

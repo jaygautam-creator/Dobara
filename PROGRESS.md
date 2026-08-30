@@ -48,6 +48,15 @@ rehearsal pack. **All commits through this session are pushed** — `origin/main
 local `HEAD`. **Live deploy is current and auto-deploying**:
 `https://dobara-one.vercel.app`. Ship target 3 Sep 2026, hard deadline 5 Sep 2026.
 
+**Also (commit `a5f12ce`, same day, in between the above and this session):** fixed two
+real, pre-existing GitHub Actions CI failures on both jobs, unrelated to app content —
+`web`'s standalone `tsc --noEmit` ran before any build step so the generated
+`LayoutProps<"/">` type didn't exist on a clean checkout (added `sync-data` + `next
+typegen` first), and `python`'s two DB-reading tests had nothing populating
+`data/dobara.sqlite3` on a fresh clone (added `sim.run` before the unit-test step).
+Closed the same gap in `make check` itself. Full detail in `docs/DECISIONS.md`
+[2026-08-30] "Fixed two real, pre-existing GitHub Actions CI failures."
+
 **What shipped this session (all detail in `docs/DECISIONS.md` [2026-08-30]):**
 
 1. **Found and fixed a stale production deploy, then closed the root cause.** The live

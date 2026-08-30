@@ -7,7 +7,63 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-30, fifth post-redesign follow-up session (mobile responsive
+**Last updated:** 2026-08-30, sixth post-redesign follow-up session (the decision
+walkthrough -- the last frontend change before recording; full account in
+`docs/DECISIONS.md` [2026-08-30] "Decision walkthrough component"). Built the site's
+first interactive component that shows the agent actually deciding, rather than
+explaining the mechanism in prose. Placed on `/architecture` (not `/`, per the brief --
+`/` already has Demonstration as its interactive centrepiece) directly after
+`SystemDiagram`, at `#watch-it-decide`; the `/` mechanism strip's link now points there.
+
+**What it shows, staged and skippable like `Demonstration`:** one real decision from
+`artifacts/demo_batch.json`, walked situation -> priced candidates -> compliance clauses
+-> arithmetic, with a toggle between two real cases:
+1. **Mandate 13, cycle 4, attempt 3** -- `Stop` wins the argmax at exactly ₹0.00 against
+   7 priced, all-negative alternatives (76 candidates considered, summed from the
+   fixture's own tied-group counts, same convention `DecisionCard.tsx` already uses
+   elsewhere). Chosen over the other 38 `negative_expected_value`/₹0.00 decisions in the
+   fixture because it has the most rejected alternatives of any of them -- the strongest,
+   least-ambiguous version of the same case.
+2. **Mandate 47, cycle 6, attempt 3** -- `Abstain` on a *positive* point estimate
+   (+₹28.90) whose 95% confidence band ([-₹10.03, ₹66.83]) straddles zero -- a distinct
+   "refuses to guess" case from `/audit/144`'s bank-distrust abstention (that one
+   already exists; this is a genuinely different reason).
+
+**The hard data constraint held exactly as scoped:** the fixture does not record how
+many candidates `_generate_candidates` produced or how many the HARD compliance gate
+struck out before scoring -- `clauses_blocked` is per-chosen-action, not a filter count.
+The component states no candidate-generation or gate-filtering number anywhere, and
+**`agent/`, `models/`, `eval/`, and `sim/` were not touched, and no artifact was
+regenerated** -- `make check` (107 pytest) confirms this by staying green with zero
+Python-side diff.
+
+**If those counts are ever wanted:** `Decision` (`agent/context.py`) would need two new
+fields -- `n_candidates_generated: int` and `n_candidates_gate_removed: int` -- set in
+`agent/decide.py::decide()` right after `_generate_candidates()`/`is_hard_compliant()`
+filtering, which is a small, low-risk code change. The cost is not the code, though:
+every downstream artifact that reads a `Decision` (`demo_batch.json`, `summary.json`'s
+audit trail, the `/audit`, `/control-room`, and now this component's fixtures) would
+need `make eval`/the demo-batch build step rerun to actually populate the new fields --
+not attempted this session, six days from the deadline, for one animation detail.
+
+**Verified:** `document.scrollWidth === innerWidth` at 390/768/1440px on `/architecture`
+(Playwright, since the Chrome extension is still unresponsive this session too -- see
+prior session's note). Screenshotted light and dark, both cases, at 390px and 1440px --
+legible, no clipping, no overflow. `make check`, `npx tsc --noEmit`, `npm run lint`,
+`npm run build` (307 pages) all green.
+
+**`docs/09A-REHEARSAL-PACK.md` updated in the same commit** (required, since this
+changes the 4:20-4:50 architecture beat): Beat 7 doubles to 1:00 (3:50-4:50) to fit the
+walkthrough; Beat 4 and Beat 6 each lose 0:15 (drop the Control Room comparison-toggle
+aside; drop the money chart's cycle-by-cycle narration, since break-even already carries
+the point) to keep the total at 5:00. The abstain case (click 3) is marked optional and
+the first thing to cut if a real take runs long.
+
+**Next:** record. This was explicitly called the last frontend change before the pitch
+video (`docs/09-DEMO-SCRIPT.md`, `docs/09A-REHEARSAL-PACK.md`). Re-run the rehearsal
+pack's "How to re-verify" snippets one more time immediately before recording.
+
+**Prior session (2026-08-30, mobile responsive
 repair pass -- no analysis, numbers, CIs, or desktop rendering touched; full account in
 `docs/DECISIONS.md` [2026-08-30] "Mobile responsive repair pass"). Owner reported the
 live site wasn't mobile-friendly. Measured first (Playwright at 390/414/768px, since the

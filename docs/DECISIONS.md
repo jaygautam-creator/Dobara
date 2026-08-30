@@ -3062,3 +3062,100 @@ grounding 1,296/1,296 -- untouched, this session made no `agent/`/`models/`/`eva
 green. No number, CI, caveat, or existing copy changed anywhere -- the only new
 user-facing text is two scroll-hint labels and the mobile nav's own link labels (a
 verbatim copy of the existing desktop nav's labels).
+
+## [2026-08-30] Decision walkthrough component
+
+The site explained the mechanism in prose everywhere but never showed a viewer the
+agent actually deciding. Built one interactive component, `/architecture#watch-it-decide`
+(`web/components/architecture/DecisionWalkthrough.tsx`), placed directly after
+`SystemDiagram` -- not `/`, since `/` already has `Demonstration` as its interactive
+centrepiece and two competing animations on one page would fight each other. The `/`
+mechanism strip's "See the full diagram" link now reads "Watch the agent decide, stage
+by stage" and points at the new anchor.
+
+**Data constraint, held exactly.** `agent/decide.py::decide()` (read before writing
+anything) returns `rejected_alternatives`, `clauses_satisfied`/`clauses_blocked`, and
+`rupee_math` -- it does not return, and `Decision` (`agent/context.py`) does not carry,
+a count of how many candidates `_generate_candidates()` produced or how many
+`is_hard_compliant()` filtered out. `clauses_blocked` is per-chosen-action (which
+clauses the *winner* is flagged against, almost always empty), not a gate-filtering
+tally. The component states neither number, animates no "N candidates → M legal"
+transition, and does not touch `agent/`, `models/`, `eval/`, or `sim/` -- confirmed by
+`make check` staying green with zero diff under those directories. What field addition
+and regeneration cost would be required if those counts are ever wanted is recorded in
+`PROGRESS.md`'s CURRENT STATE rather than built this session.
+
+**The featured case, verified against the fixture, not assumed from the brief.** The
+task's opening message asserted "44 `insufficient_confidence` abstentions exist" as the
+count for a candidate second case. Checked directly: `abstain_reason` values in
+`artifacts/demo_batch.json` are `bank_health_changepoint` (23) and
+`expected_value_ci_straddles_zero` (21) -- there is no `abstain_reason` literally named
+`insufficient_confidence`. The count (44) was right; the field name wasn't -- 44 is the
+sum of `stopping_reason == "insufficient_confidence"` (the site's own umbrella label,
+already shown in `/architecture`'s `STOPPING_REASONS` table), which spans both finer
+`abstain_reason`s. Featured `expected_value_ci_straddles_zero` specifically (mandate 47,
+cycle 6, attempt 3) because `/audit/144` already showcases the other one
+(`bank_health_changepoint`) in the rehearsal pack, and this case makes a distinct point:
+a *positive* point estimate (+₹28.90) whose 95% confidence band ([-₹10.03, ₹66.83])
+straddles zero, so the agent declines to act on its own uncertainty rather than a bank
+it's already learned to distrust.
+
+**The Stop case: verified the strongest of 39 candidates.** Queried
+`artifacts/demo_batch.json` directly for every decision with `stop_reason:
+negative_expected_value` and `expected_net: 0.0`: 39 exist. Mandate 13, cycle 4, attempt
+3 has 7 rejected alternatives -- the most of any of them, and each one has a distinct,
+readable description (an escalate option, three tied clusters, three named
+push/sms/whatsapp retries), not a wall of anonymous ties. Featured that one.
+
+**The winner's own arithmetic, shown honestly rather than hidden.** `Stop`'s
+`rupee_math` is `{p_success: 0, amount: 0, p_revoke: 0, ltv_remaining: 0, cost: 0,
+expected_net: 0}` -- Stop makes no attempt, so every term is genuinely zero, not
+missing data. Reused `components/audit/DecisionEquation.tsx` verbatim rather than
+special-casing it, and added one line of framing prose beneath it (gated on
+`expected_net === 0 && amount === 0`, so it only ever appears for a decision that is
+actually degenerate this way): "Stop makes no attempt, so its own arithmetic is zero by
+definition -- every real alternative priced above it came back negative." This states
+what the numbers already show; it adds no new figure.
+
+**Staging, built on the existing pattern, not a new one.** Modeled on
+`components/home/Demonstration.tsx`: `useStaticRender()` gates the reduced-motion/
+`?static=1` screenshot path to an instant full reveal, `useInView` gates the auto-play
+timer to when the component is actually visible, and clicking anywhere on the card
+(or "Skip to the end") jumps straight to done -- a judge is never forced to wait.
+Deliberately did *not* copy `Demonstration`'s height-collapse-on-reveal approach for
+each stage: an early draft animated `height: "auto"` on conditionally-unmounted content,
+which has no stable "before" state for the animation to interpolate from on first
+reveal. Replaced with the same fix `Demonstration`'s own beat list already uses --
+opacity-only, content always mounted, layout never re-measures -- rather than debugging
+a fragile height animation for one extra frame of polish.
+
+**Reused, not reinvented:** `totalCandidatesConsidered()` (already exported from
+`DecisionCard.tsx`, already shown on every `/audit/[id]` page as "N considered") for the
+candidates-priced count -- this sums the fixture's own tied-group descriptions
+("N candidates tied at this E[net]"), which is categorically different from a
+candidate-generation or gate-filtering count: it is exactly what `rejected_alternatives`
+already states, already displayed elsewhere on the site, not a new derived number.
+
+**Verification.** `make check` (107 pytest, freshness gate clean via existing waivers,
+ask-why grounding 1,296/1,296 -- untouched), `npx tsc --noEmit`, `npm run lint`, `npm run
+build` (307 pages) all green. `document.documentElement.scrollWidth ===
+window.innerWidth` confirmed at 390/768/1440px on `/architecture`, both with the
+component mid-animation and with `?static=1` forcing the full reveal (the harder case,
+since every stage's content is present at once). Screenshotted light and dark themes at
+390px and 1440px for both cases (Stop, Abstain) -- legible, correctly coloured
+(green/red for positive/negative E[net]), no clipping. Verified the skip/replay controls
+and tab switch interactively (not just via `?static=1`) with a headless Playwright
+session, zero console/page errors.
+
+**Tooling note, same as last session:** the Claude-in-Chrome extension was still
+unresponsive this session. Every screenshot and measurement above came from the same
+Python Playwright fallback (`/opt/anaconda3/lib/python3.13/site-packages/playwright`,
+cached Chromium) established last session, not estimation.
+
+**`docs/09A-REHEARSAL-PACK.md` updated in the same commit**, since this changes the
+architecture beat: Beat 7 doubles from 0:30 to 1:00 (3:50-4:50) to fit walking a real
+decision on camera. To keep the 5:00 total, Beat 4 loses 0:15 (drop the optional
+`aggressive_8x` comparison-toggle aside on Control Room) and Beat 6 loses 0:15 (drop the
+money chart's cycle-by-cycle narration; the break-even framing already carries the same
+point with a number attached). The abstain case is marked as the first thing to cut if a
+real take still runs long -- the Stop case alone carries the thesis.

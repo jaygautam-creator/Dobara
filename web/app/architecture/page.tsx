@@ -1,8 +1,9 @@
 import { ComplianceGateSequence } from "@/components/architecture/ComplianceGateSequence";
+import { DecisionWalkthrough } from "@/components/architecture/DecisionWalkthrough";
 import { SystemDiagram } from "@/components/architecture/SystemDiagram";
 import { GITHUB_BLOB } from "@/components/architecture/nodes";
 import { Card, SectionHeading } from "@/components/ui";
-import { getComplianceRules } from "@/lib/server-data";
+import { getComplianceRules, getFeaturedDecisions } from "@/lib/server-data";
 
 export const metadata = { title: "Architecture — Dobara" };
 
@@ -21,6 +22,7 @@ const STOPPING_REASONS: [string, string][] = [
 
 export default function ArchitecturePage() {
   const compliance = getComplianceRules();
+  const featured = getFeaturedDecisions();
 
   return (
     <div className="mx-auto max-w-6xl space-y-14 px-6 py-14">
@@ -41,6 +43,15 @@ export default function ArchitecturePage() {
 
       <section>
         <SystemDiagram />
+      </section>
+
+      <section id="watch-it-decide" className="scroll-mt-20">
+        <SectionHeading
+          eyebrow="Watch it decide"
+          title="One real decision, walked stage by stage"
+          description="Every figure below is read from artifacts/demo_batch.json — the same fixture the Control Room and every /audit page read, not staged for this component."
+        />
+        <DecisionWalkthrough cases={featured} rules={compliance.rules} />
       </section>
 
       <section>

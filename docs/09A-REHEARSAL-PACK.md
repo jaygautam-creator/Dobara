@@ -72,7 +72,7 @@ against the live page 2026-08-30:**
   Across that set: p25 = **₹1,212.39**, p75 = **₹7,006.13**. Say "median case, not the
   best one" and cite the p25–p75 spread — do not round past these figures.
 
-### Beat 4 — Live case, opened (2:00–2:50)
+### Beat 4 — Live case, opened (2:00–2:35)
 
 **URL 1:** `https://dobara-one.vercel.app/control-room`
 
@@ -97,7 +97,7 @@ ordinary `schedule_debit`) — land on the second card within cycle 6.
   saw, the calibrated probabilities with CIs, this rejected alternative, the compliance
   clauses lighting green, the worked rupee equation, the `stop` action taken.
 
-### Beat 5 — Graceful failure (2:50–3:20)
+### Beat 5 — Graceful failure (2:35–3:05)
 
 **URL:** `https://dobara-one.vercel.app/audit/144` — scroll to **cycle 7** (the first of
 two consecutive abstains; cycle 8 also abstains, but land on 7).
@@ -112,7 +112,7 @@ Say: "When the bank-health monitor flags a real shift in this bank's behaviour a
 model can't yet trust its own calibration there, the agent doesn't guess and it doesn't
 fall back to an attempt. It stops and says why."
 
-### Beat 6 — The evidence (3:20–4:20)
+### Beat 6 — The evidence (3:05–3:50)
 
 **URL:** `https://dobara-one.vercel.app/evidence`
 
@@ -127,8 +127,11 @@ with scroll-spy if you want to jump directly to `#break-even`.
 
 Say: "Dobara doesn't recover the most gross rupees — the aggressive arm does, for a
 while. It recovers the most **net** lifetime value, because it isn't paying for that
-gross with mandates it destroys." On the money chart: `aggressive_8x` loses on net LTV
-from cycle 1, and past cycle 4 loses on gross recovery too.
+gross with mandates it destroys." **If short on time (this beat is now 0:45, trimmed
+this session), stop there** — the money-chart cycle-by-cycle detail ("`aggressive_8x`
+loses on net LTV from cycle 1, and past cycle 4 loses on gross recovery too") is the
+line to cut; the break-even framing below already carries the same point with a number
+attached.
 
 **Break-even, read from the live page 2026-08-30 (this replaces the older "no
 break-even exists" framing — say it this way, not as a retraction):**
@@ -145,19 +148,46 @@ break-even exists" framing — say it this way, not as a retraction):**
 **Do not state a required minimum gross-margin threshold** — an earlier ≈48% claim was
 retracted after a later artifact regeneration and the live page no longer states one.
 
-### Beat 7 — The architecture / what we didn't build (4:20–4:50)
+### Beat 7 — The architecture, and watching it decide (3:50–4:50)
 
 **URL:** `https://dobara-one.vercel.app/architecture`
 
-**Click:** click one node in the money lane (e.g. **"Compliance gate"**) to open its
+**Click 1:** click one node in the money lane (e.g. **"Compliance gate"**) to open its
 side panel — shows the module description, its source file (`agent/compliance.py`),
 and a GitHub link. This is the click that proves the diagram is interactive, not a
 static image.
 
 Say: "Money decisions never pass through a language model — that's not a policy, it's a
-wall a test enforces; the LLM only narrates, on the other side." Then name what was
+wall a test enforces; the LLM only narrates, on the other side." Name what was
 deliberately not built: no individual cash-flow inference, no probing debits, no LLM
 anywhere near the money path.
+
+**Scroll to "Watch it decide"** (added this session — `docs/DECISIONS.md` [2026-08-30]
+"Decision walkthrough component"). This is the first place on the site a viewer watches
+the agent actually decide, rather than reading about the mechanism in prose.
+
+**Click 2:** let it play once (it self-advances; click anywhere on the card to skip to
+the end if you're short on time), on the default **"Stop wins at ₹0"** case.
+
+**What's on screen (verified 2026-08-30 against `artifacts/demo_batch.json` — mandate
+13, cycle 4, attempt 3):** the agent priced 76 candidates this cycle (every retry
+channel and date, summed from the fixture's own tied-group counts) and every one of
+them scored negative — the three shown individually are retries at −₹103.16, −₹103.31,
+−₹103.51. `Stop` wins at exactly **₹0.00**, the highest score on the table, because zero
+genuinely beats every priced alternative. Say: "This is the thesis on one screen — not
+an aggressive agent retrying less, an agent that priced every option and found none of
+them worth taking."
+
+**Click 3 (optional, if time allows):** click the **"Abstain, not guess"** tab — mandate
+47, cycle 6, attempt 3. Point estimate **+₹28.90**, but its 95% confidence band
+(**[−₹10.03, ₹66.83]**) straddles zero, so the agent declines to act on a number it
+doesn't trust rather than gamble. Say: "Not every abstention is a bank it's already
+learned to distrust — sometimes it's just not confident enough in its own arithmetic to
+bet, even when the point estimate is positive."
+
+**Do not state a candidate-generation or gate-filtering count** — the fixture doesn't
+record how many candidates the compliance gate struck out before scoring, and the
+component correctly doesn't claim one; don't improvise one on camera either.
 
 ### Beat 8 — Close (4:50–5:00)
 
@@ -173,14 +203,26 @@ the payment. Keep the mandate."
 | 1. Hook + mechanism | 0:00–0:45 | 0:45 |
 | 2. Thesis | 0:45–1:05 | 0:20 |
 | 3. Demonstration | 1:05–2:00 | 0:55 |
-| 4. Live case (Control Room + `/audit/89`) | 2:00–2:50 | 0:50 |
-| 5. Graceful failure (`/audit/144`) | 2:50–3:20 | 0:30 |
-| 6. Evidence | 3:20–4:20 | 1:00 |
-| 7. Architecture | 4:20–4:50 | 0:30 |
+| 4. Live case (Control Room + `/audit/89`) | 2:00–2:35 | 0:35 |
+| 5. Graceful failure (`/audit/144`) | 2:35–3:05 | 0:30 |
+| 6. Evidence | 3:05–3:50 | 0:45 |
+| 7. Architecture + decision walkthrough | 3:50–4:50 | 1:00 |
 | 8. Close | 4:50–5:00 | 0:10 |
 
 Thesis lands inside the first 45 seconds (end of Beat 1 / start of Beat 2), per the
 requirement.
+
+**This session's timing change, and what it cost.** Adding the decision walkthrough to
+Beat 7 doubled it (0:30 → 1:00) — walking situation → candidates → clauses →
+arithmetic on camera, even at a skip-ahead pace, doesn't fit in 30 seconds alongside the
+existing node-click and "what we didn't build" beats. Rather than let the video run
+long, **Beat 4 lost 0:15** (drop the `aggressive_8x` comparison-toggle aside — say the
+counter, skip triggering the animated delta) and **Beat 6 lost 0:15** (state the
+headline lift and the `aggressive_8x`/`razorpay_default` break-even results; skip
+narrating the money chart's cycle-by-cycle crossover detail, since the break-even framing
+already carries the same point). Total still sums to 5:00. If Beat 7 still runs long in
+a real take, the second click (the abstain case) is marked optional above and is the
+first thing to cut — the Stop case alone carries the thesis.
 
 ## Fallbacks
 

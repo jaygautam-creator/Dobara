@@ -10,6 +10,7 @@ import type {
   AskWhyCache,
   AskWhyEntry,
   ComplianceRulesJson,
+  DecisionOut,
   DemoBatchJson,
   HomeDemoJson,
   HazardModelReport,
@@ -125,6 +126,39 @@ export function getQueueItemSummaryByMandate(mandateId: number) {
 export function getTopCaseFull() {
   const batch = getDemoBatch();
   return batch.queue[0] ?? null;
+}
+
+/** The two decisions `/architecture`'s interactive walkthrough features -- picked by
+ * hand (docs/DECISIONS.md [2026-08-30] "Decision walkthrough component"), not generated,
+ * because the fixture doesn't record a queryable "most alternatives" index. Both are
+ * read from the same committed `demo_batch.json` every other page reads; nothing here is
+ * a separate artifact or a re-derivation. Throws at build time (not silently falls back)
+ * if either ever goes missing from a regenerated fixture, since a broken pointer here
+ * would otherwise ship as a blank interactive component. */
+export function getFeaturedDecisions(): { stop: DecisionOut; abstain: DecisionOut } {
+  const findCase = (mandateId: number, cycleIndex: number, attemptIndex: number): DecisionOut => {
+    const trail = getMandateAudit(mandateId);
+    const rec = trail?.find(
+      (d) => d.cycle_index === cycleIndex && d.attempt_index === attemptIndex,
+    );
+    if (!rec) {
+      throw new Error(
+        `getFeaturedDecisions: mandate ${mandateId} cycle ${cycleIndex} attempt ${attemptIndex} not found in demo_batch.json`,
+      );
+    }
+    return rec;
+  };
+  return {
+    // Stop winning at exactly ₹0.00 against 7 priced, negative alternatives -- the
+    // strongest single case in the fixture (verified 2026-08-30: 39 decisions share
+    // stop_reason negative_expected_value and expected_net 0.0; this one has the most
+    // rejected alternatives of any of them).
+    stop: findCase(13, 4, 3),
+    // A positive point estimate (+Rs.28.90) whose 95% confidence band straddles zero
+    // ([-10.03, 66.83]) -- the agent declines to act on a number it doesn't trust, not
+    // just a regime-shift bank it already distrusts (that case is /audit/144).
+    abstain: findCase(47, 6, 3),
+  };
 }
 
 let _askWhyCache: AskWhyCache | null | undefined = undefined;

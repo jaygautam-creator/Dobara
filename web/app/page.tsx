@@ -89,10 +89,10 @@ export default function ThesisPage() {
           stops or abstains rather than guess when the bet isn&apos;t worth it.
         </p>
         <Link
-          href="/architecture"
+          href="/architecture#watch-it-decide"
           className="mt-4 inline-block text-xs text-arm-dobara-text underline decoration-dotted underline-offset-2"
         >
-          See the full diagram and the LLM boundary →
+          Watch the agent decide, stage by stage →
         </Link>
       </section>
 

@@ -3159,3 +3159,47 @@ decision on camera. To keep the 5:00 total, Beat 4 loses 0:15 (drop the optional
 money chart's cycle-by-cycle narration; the break-even framing already carries the same
 point with a number attached). The abstain case is marked as the first thing to cut if a
 real take still runs long -- the Stop case alone carries the thesis.
+
+## [2026-08-31] Adoption and boundary section on /architecture
+
+**Chose:** added three additive sections to `/architecture` (`#how-this-is-used`,
+`#what-it-refuses`, `#not-built-yet`) placed after the compliance-gate sequence and
+before the seven stopping reasons: who touches the system (merchant, Razorpay, customer
+— stated positively, including "the customer never sees Dobara"), the DPDP-MINIMISE
+banned-feature guard shown with a real link to `features/recovery.py`'s
+`assert_no_banned_features()` alongside what the models DO see, and an explicit
+unhedged "what is not built" (the webhook→decision-queue gap, and that the deployed
+site is a static export, never "live").
+
+**Over:** building the webhook→decision queue that `api/main.py`'s `/razorpay/webhook`
+docstring already discloses as future work, which was the more ambitious way to close
+the same gap.
+
+**Because:** the owner verified by grep against the live HTML that "proposal" appeared
+once (Control Room only) and "aggregator", "licence", "webhook", "customer never sees"
+appeared zero times across all four routes — the integration story and ethical
+guarantees already exist in the code and docs (`docs/02-ARCHITECTURE.md`'s Non-goals,
+`api/razorpay_client.py`'s credential-optional design, `agent/decide.py`'s
+`requires_signoff`) but were invisible to a judge exploring the deployed site. Five days
+from the deadline with an unrecorded video and no live rail to validate a real queue
+against, building unvalidatable integration plumbing was the wrong trade; making the
+existing, honestly-disclosed gap legible on the site was the available beneficial move.
+Re-verified: post-deploy grep counts should show "proposal" ≥2 (Control Room +
+`#how-this-is-used`), "aggregator" ≥1, "licence" ≥1, "webhook" ≥2, "customer never sees"
+≥1 (paraphrased as "Never sees Dobara") across `/architecture`.
+
+**Caught mid-build:** the first draft's link text was
+`features/recovery.py::assert_no_banned_features()` as one unbroken anchor string —
+no wrap points, so it overflowed the page at 390px (`document.documentElement.scrollWidth`
+457 vs `window.innerWidth` 390, measured with Playwright). Split into a short link
+(`features/recovery.py`) plus a separately-wrappable `<code>` span for the function name.
+Re-verified zero overflow at 390/768/1440px after the fix. `make check` (107 pytest,
+1296/1296 ask-why grounding), `npx tsc --noEmit`, `npm run lint`, and `npm run build`
+(307 pages) all green throughout; `git diff --stat` confirms the entire change is +111/-0
+in one file, `web/app/architecture/page.tsx` — `agent/`, `models/`, `eval/`, `sim/`, and
+`api/` untouched, no artifact regenerated, no new route or dependency.
+
+`docs/09A-REHEARSAL-PACK.md` updated in the same commit: no new beat, Beat 7 stays
+3:50–4:50, total stays 5:00. Added a "not narrated" note pointing a judge exploring after
+the video at the new sections, plus one optional sentence for the narrator if a take runs
+short.

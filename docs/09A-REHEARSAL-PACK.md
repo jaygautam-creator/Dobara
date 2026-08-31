@@ -189,6 +189,17 @@ bet, even when the point estimate is positive."
 record how many candidates the compliance gate struck out before scoring, and the
 component correctly doesn't claim one; don't improvise one on camera either.
 
+**Not narrated — for a judge exploring after the video:** further down `/architecture`,
+after the compliance-gate sequence, three new sections (`#how-this-is-used`,
+`#what-it-refuses`, `#not-built-yet`, added `docs/DECISIONS.md` [2026-08-31] "Adoption
+and boundary section on /architecture") answer who touches the system (merchant,
+Razorpay, customer), what it structurally refuses to look at, and what is honestly not
+built yet (the webhook→decision queue). This does not add screen time to Beat 7 and is
+not part of the walkthrough click sequence. If a take runs short and you want one extra
+sentence to fill it, an optional line for the compliance-gate moment: "Dobara never
+touches the payment rail itself — it proposes, a licensed PA executes, and the customer
+never sees Dobara at all."
+
 ### Beat 8 — Close (4:50–5:00)
 
 **URL:** `https://dobara-one.vercel.app/` or `/architecture`, hold on the motto.

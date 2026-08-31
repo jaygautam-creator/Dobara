@@ -88,6 +88,117 @@ export default function ArchitecturePage() {
         </p>
       </section>
 
+      <section id="how-this-is-used" className="scroll-mt-20">
+        <SectionHeading
+          eyebrow="Adoption"
+          title="How anyone would actually use this"
+          description="Not a payment aggregator. Dobara proposes; a licensed PA executes. No funds are handled."
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card variant="raised">
+            <h3 className="text-sm font-semibold text-text-primary">Merchant</h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+              Points Razorpay <code className="font-mono text-xs">payment.failed</code>{" "}
+              webhooks in, reads a proposal queue out — no change to the existing Razorpay
+              integration. Above ₹15,000 a decision routes to a human sign-off instead of
+              executing (<code className="font-mono text-xs">requires_signoff</code> in{" "}
+              <a
+                href={`${GITHUB_BLOB}/agent/decide.py`}
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-dotted underline-offset-2"
+              >
+                agent/decide.py
+              </a>
+              ), which is also the realistic adoption path: start with approve-everything,
+              loosen the threshold as trust builds.
+            </p>
+          </Card>
+          <Card variant="raised">
+            <h3 className="text-sm font-semibold text-text-primary">Razorpay</h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+              The rail and the data source: signature-verified webhooks in, proposals out —
+              never a direct rail call. And it is honest about what it doesn&apos;t have:{" "}
+              <a
+                href={`${GITHUB_BLOB}/api/razorpay_client.py`}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono underline decoration-dotted underline-offset-2"
+              >
+                api/razorpay_client.py
+              </a>{" "}
+              is credential-optional by design — with no keys it raises{" "}
+              <code className="font-mono text-xs">RazorpayNotConfigured</code> rather than
+              faking a success. Most submissions silently no-op instead; this one refuses to.
+            </p>
+          </Card>
+          <Card variant="raised" className="sm:col-span-2">
+            <h3 className="text-sm font-semibold text-text-primary">Customer</h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+              Never sees Dobara. No app, no login, no message from Dobara. The only things
+              ever addressed to them are the legally-mandated pre-debit notice and,
+              occasionally, one offer to move the debit date. The product&apos;s success
+              condition is that the customer notices nothing.
+            </p>
+          </Card>
+        </div>
+      </section>
+
+      <section id="what-it-refuses" className="scroll-mt-20">
+        <SectionHeading
+          eyebrow="Refuse"
+          title="What it refuses to look at"
+          description="A build-time guard, not just a promise: importing features/recovery.py fails immediately if any feature name encodes an individual's finances."
+        />
+        <Card variant="raised">
+          <p className="text-sm leading-relaxed text-text-secondary">
+            <a
+              href={`${GITHUB_BLOB}/features/recovery.py`}
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono underline decoration-dotted underline-offset-2"
+            >
+              features/recovery.py
+            </a>
+            &apos;s <code className="font-mono text-xs">assert_no_banned_features()</code>{" "}
+            raises at import time if any feature name contains{" "}
+            <code className="font-mono text-xs">
+              balance · income · cashflow · spend · salary
+            </code>
+            . What the models see instead: this bank&apos;s recent health, this mandate&apos;s
+            own failure history, timing in the billing cycle, and amount band relative to the
+            AFA threshold — the payments rail, not a profile of the person behind it.
+          </p>
+        </Card>
+      </section>
+
+      <section id="not-built-yet" className="scroll-mt-20">
+        <SectionHeading
+          eyebrow="Honest boundary"
+          title="What is not built"
+          description="Stated before a judge finds it, not after."
+        />
+        <Card variant="raised">
+          <p className="text-sm leading-relaxed text-text-secondary">
+            The webhook receiver and the decision engine both exist and are real —{" "}
+            <a
+              href={`${GITHUB_BLOB}/api/main.py`}
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono underline decoration-dotted underline-offset-2"
+            >
+              api/main.py
+            </a>{" "}
+            verifies each webhook&apos;s signature and acknowledges it — but the queue that
+            would connect one to the other is scaffolded, not production: the endpoint is
+            intake-only and does not re-trigger a decision pass on its own. And the deployed
+            site you are reading is a static export of a real recorded batch run, not a
+            server making live decisions at request time — nowhere on this site should the
+            Control Room be described as &ldquo;live.&rdquo;
+          </p>
+        </Card>
+      </section>
+
       <section>
         <SectionHeading
           eyebrow="Stop"

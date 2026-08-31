@@ -7,7 +7,55 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-30, sixth post-redesign follow-up session (the decision
+**Last updated:** 2026-08-31, seventh post-redesign follow-up session (additive-only
+adoption/boundary section on `/architecture`; full account in `docs/DECISIONS.md`
+[2026-08-31] "Adoption and boundary section on /architecture"). The owner pointed out
+that "proposal", "aggregator", "licence", "webhook" and "customer never sees" — the
+integration story and ethical guarantees that already exist in the code and docs — were
+verified absent from the live site by grep, so a judge asking "how would anyone use
+this, and who touches it" had no answer on the site itself.
+
+**Added three new sections to `/architecture`** (`#how-this-is-used`, `#what-it-refuses`,
+`#not-built-yet`), all after the compliance-gate sequence and before the seven stopping
+reasons: (1) who touches the system — merchant (webhooks in, proposal queue out,
+`requires_signoff` above ₹15,000 as the realistic adoption path), Razorpay (signature-
+verified webhooks, `RazorpayNotConfigured` fails loud instead of no-op), customer (never
+sees Dobara — the sharpest line, now stated); (2) the banned-feature guard
+(`features/recovery.py::assert_no_banned_features`) shown alongside what the models DO
+see, so the DPDP-MINIMISE claim has a visible mechanism, not just a promise; (3) an
+explicit, unhedged "what is not built" — the webhook→decision queue is scaffolded, not
+production, and the deployed site is a static export of a recorded batch, never "live".
+**Did not build the webhook queue itself** — five days from deadline, video unrecorded,
+no live rail to validate against; the honest move was making the existing gap legible on
+the site, not building unvalidatable plumbing.
+
+**Caught and fixed one real mobile bug introduced by this change**: the first draft
+linked `features/recovery.py::assert_no_banned_features()` as one long unbroken anchor
+text — no spaces, so it couldn't wrap — which overflowed the page at 390px (measured:
+`scrollWidth` 457 vs `innerWidth` 390). Fixed by splitting the link (just the file path)
+from the function name (plain `<code>`, wraps normally). Re-verified 0 overflow at
+390/768/1440px after the fix.
+
+**Strictly additive**: `git diff --stat` shows one file touched,
+`web/app/architecture/page.tsx`, +111/-0. `agent/`, `models/`, `eval/`, `sim/`, `api/`
+untouched; no artifact regenerated; no new route, nav item, or dependency. `make check`
+green (107 pytest, 1296/1296 ask-why grounding, artifact-freshness gate clean — all
+pre-existing waivers, nothing new). `npx tsc --noEmit`, `npm run lint`, `npm run build`
+(307 pages) all green. Desktop screenshots of `/`, `/evidence`, `/control-room` were not
+touched by this diff and are therefore unchanged (git diff confirms no edits to those
+routes' files). Screenshotted the new sections light + dark at 1440px and light at 390px
+— legible, correctly themed, no clipping.
+
+**`docs/09A-REHEARSAL-PACK.md` updated, no beat added**: Beat 7 stays 3:50–4:50 (1:00),
+total stays 5:00. Added one "not narrated" note after Beat 7's existing content pointing
+a judge exploring after the video at the three new sections, plus one optional sentence
+the narrator may use if a take runs short — no new beat, no change to the click sequence
+or timing table.
+
+**Next:** record. This remains the last frontend change before the pitch video. Re-run
+the rehearsal pack's "How to re-verify" snippets once more immediately before recording.
+
+**Prior session (2026-08-30, sixth post-redesign follow-up session — the decision
 walkthrough -- the last frontend change before recording; full account in
 `docs/DECISIONS.md` [2026-08-30] "Decision walkthrough component"). Built the site's
 first interactive component that shows the agent actually deciding, rather than

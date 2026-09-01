@@ -7,7 +7,29 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-08-31, seventh post-redesign follow-up session (additive-only
+**Last updated:** 2026-09-01, investigation-only session: calibrator bake-off for the
+isotonic recovery-probability calibrator (`artifacts/models/recovery_lgbm_calibrator_e5eaa66718f2.joblib`,
+33 knots / 17 distinct outputs, the mechanism behind the 76% argmax-tie rate diagnosed
+2026-08-27). Pre-registered an adoption rule in `docs/DECISIONS.md` [2026-09-01] before
+measuring anything: adopt a replacement only if (a) its Brier CI overlaps isotonic's and
+(b) it at least halves the argmax tie rate. Ran `scripts/calibrator_bakeoff.py` (new,
+not wired into `make`) against Platt/logistic, beta calibration, and a monotone spline
+on isotonic's knots, fit/evaluated on the existing train/validate splits only (test set
+untouched, `n_test_evaluations` still 1). **Result: NEGATIVE.** All three pass (a); none
+passes (b) — Platt/beta cut the tie rate 94%→60.7% (real, but short of halved); the
+spline barely moves it (interpolating isotonic's own coarse knots doesn't add
+resolution). Isotonic stays. Full numbers in `artifacts/calibrator_bakeoff.json` and
+`docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off result — NEGATIVE, isotonic kept".
+**No production code, model, or artifact touched** besides the new script and its output
+JSON — `agent/`, `models/`, `eval/`, `sim/`, `web/`, the README, and every existing
+`artifacts/*.json` are unchanged; `make eval` was not rerun.
+
+**Next:** the 76% tie coarseness remains open as a documented, not-fixed limitation —
+worth one line in the README if there's time before the pitch video, but not a blocker.
+Otherwise unchanged from the prior session below: record the pitch video next; this
+remains the last frontend change before recording.
+
+**Prior session (2026-08-31, seventh post-redesign follow-up session — additive-only
 adoption/boundary section on `/architecture`; full account in `docs/DECISIONS.md`
 [2026-08-31] "Adoption and boundary section on /architecture"). The owner pointed out
 that "proposal", "aggregator", "licence", "webhook" and "customer never sees" — the

@@ -1,0 +1,92 @@
+{
+  "n_validate_total": 4653,
+  "n_validate_fit": 2326,
+  "n_validate_eval": 2327,
+  "raw_score_range": [
+    0.09575702637914633,
+    0.9496410104398905
+  ],
+  "candidates": {
+    "isotonic_baseline": {
+      "brier_score": {
+        "point": 0.11729163691540845,
+        "ci_lo": 0.10786545810075361,
+        "ci_hi": 0.12776999903336872
+      },
+      "brier_skill_score_vs_climatology": 0.22966115909897222,
+      "n_distinct_output_values": 218,
+      "tie_rate": {
+        "n_decisions_with_alternatives": 300,
+        "n_tied_at_argmax": 282,
+        "tie_rate": 0.94
+      }
+    },
+    "platt_logistic": {
+      "brier_score": {
+        "point": 0.11658212763946066,
+        "ci_lo": 0.10742507506370469,
+        "ci_hi": 0.12717077805907992
+      },
+      "brier_skill_score_vs_climatology": 0.23432101863896937,
+      "n_distinct_output_values": 5000,
+      "tie_rate": {
+        "n_decisions_with_alternatives": 300,
+        "n_tied_at_argmax": 182,
+        "tie_rate": 0.6066666666666667
+      }
+    },
+    "beta_calibration": {
+      "brier_score": {
+        "point": 0.11668198877165582,
+        "ci_lo": 0.10750842521391255,
+        "ci_hi": 0.1270962441985236
+      },
+      "brier_skill_score_vs_climatology": 0.23366515850393033,
+      "n_distinct_output_values": 5000,
+      "tie_rate": {
+        "n_decisions_with_alternatives": 300,
+        "n_tied_at_argmax": 182,
+        "tie_rate": 0.6066666666666667
+      }
+    },
+    "monotone_spline": {
+      "brier_score": {
+        "point": 0.11729103332270964,
+        "ci_lo": 0.10786357903251352,
+        "ci_hi": 0.12776745966658892
+      },
+      "brier_skill_score_vs_climatology": 0.22966512332789946,
+      "n_distinct_output_values": 217,
+      "tie_rate": {
+        "n_decisions_with_alternatives": 300,
+        "n_tied_at_argmax": 282,
+        "tie_rate": 0.94
+      }
+    }
+  },
+  "pre_registered_verdict": {
+    "per_candidate": {
+      "platt_logistic": {
+        "criterion_a_brier_ci_overlaps_isotonic": true,
+        "criterion_b_tie_rate_at_least_halved": false,
+        "adopt": false
+      },
+      "beta_calibration": {
+        "criterion_a_brier_ci_overlaps_isotonic": true,
+        "criterion_b_tie_rate_at_least_halved": false,
+        "adopt": false
+      },
+      "monotone_spline": {
+        "criterion_a_brier_ci_overlaps_isotonic": true,
+        "criterion_b_tie_rate_at_least_halved": false,
+        "adopt": false
+      }
+    },
+    "any_candidate_meets_both_criteria": false
+  },
+  "provenance": {
+    "generated_at": "2026-09-01T13:13:43.101688+00:00",
+    "git_commit": "4dd11835615fff96fc08a4f76de1e58821464b9d"
+  },
+  "content_hash": "d76a632853ef6498800dbcd0f9f5fd2608b59df6734caa28be79ae80ca100453"
+}

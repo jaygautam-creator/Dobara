@@ -3234,3 +3234,54 @@ stays at 1): (a) isotonic (baseline), (b) Platt/logistic on the logit, (c) beta
 calibration, (d) a monotone spline (isotonic's knots interpolated monotonically).
 Investigation only — no production code, retraining, or artifact regeneration beyond
 `scripts/calibrator_bakeoff.py` and `artifacts/calibrator_bakeoff.json`.
+
+## [2026-09-01] Calibrator bake-off result — NEGATIVE, isotonic kept
+
+**Ran** `scripts/calibrator_bakeoff.py` per the pre-registration above. Method: fit the
+LGBM booster's raw scores on `data/dobara.sqlite3`'s validate split, split that split
+50/50 (stratified, seed 42) into a calibrator-fit half and a held-out eval half (fitting
+and scoring on the identical rows would understate error for a flexible calibrator like
+isotonic, biasing the comparison), fit all four candidates on the fit half, score Brier
++ distinct-output-count + argmax tie rate on the eval half. Tie rate reused
+`agent/decide.py`'s own `_generate_candidates`/`is_hard_compliant`/`_score_all`
+unmodified — only `TrainedRecoveryModel.lgbm_calibrator` swapped via
+`dataclasses.replace` — against 300 realistic first-cycle, first-attempt
+`DecisionContext`s built from `eval.world.build_world` (same population-generation
+function the eval harness uses), not a synthetic probe. Full numbers, with CIs, in
+`artifacts/calibrator_bakeoff.json`.
+
+| Candidate | Brier (95% CI) | Distinct outputs | Tie rate |
+|---|---|---|---|
+| isotonic (baseline) | 0.1173 [0.1079, 0.1278] | 218 | 94.0% |
+| Platt/logistic | 0.1166 [0.1074, 0.1272] | 5000 | 60.7% |
+| beta calibration | 0.1167 [0.1075, 0.1271] | 5000 | 60.7% |
+| monotone spline (isotonic knots, PCHIP) | 0.1173 [0.1079, 0.1278] | 217 | 94.0% |
+
+(This bake-off's isotonic tie rate, 94%, is measured on a fresh half-validate refit
+against a different candidate-construction population than the committed 76% figure —
+not the same number, not meant to be; both point at the same defect.)
+
+**Against the pre-registered rule:** (a) held for every candidate — all three
+alternatives' Brier CIs overlap isotonic's, none is measurably worse calibrated. (b)
+failed for every candidate — Platt and beta calibration cut the tie rate from 94% to
+60.7% (real, but 65% of the original, not the required ≤50%); the monotone spline barely
+moved it (217 vs 218 distinct values) because it interpolates isotonic's own knots, and
+the knots themselves are the coarse part — smoothing between them doesn't add
+resolution where isotonic placed none. No candidate meets both criteria.
+
+**Verdict: NEGATIVE RESULT, per the pre-registered rule.** Isotonic stays as the shipped
+calibrator. Not adopted, not retrained, `make eval` not rerun. The 76%-argmax-tie
+coarseness remains a named, measured limitation — worth a line in the README rather than
+a fix, per the pre-registration's own rule about not going looking for a third criterion
+after seeing the numbers (60.7%, close to but short of halved, is exactly the kind of
+result that tempts loosening the bar post hoc; the bar was set in advance and is honored
+as set).
+
+**Worth noting, not actioned:** Platt/beta calibration's 5000 distinct output values vs
+isotonic's 218 is a genuine resolution difference and would likely still reduce
+`_tie_break_score`'s share of the effective decision-making even short of halving the
+*exact*-tie rate (a tie rate metric doesn't capture "near-ties still separated by the
+tie-break axis" vs "true argmax ties" — the pre-registered criterion is on exact ties
+only, deliberately, since that's what the original 76% figure measured and what the rule
+was written against). If this coarseness becomes a live blocker later, Platt/beta are the
+better starting point than a spline, but that is a future call, not one made here.

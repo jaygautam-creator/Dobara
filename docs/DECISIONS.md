@@ -3203,3 +3203,34 @@ in one file, `web/app/architecture/page.tsx` — `agent/`, `models/`, `eval/`, `
 3:50–4:50, total stays 5:00. Added a "not narrated" note pointing a judge exploring after
 the video at the new sections, plus one optional sentence for the narrator if a take runs
 short.
+
+## [2026-09-01] Pre-registration: calibrator bake-off, `agent/decide.py`'s coarse isotonic calibrator
+
+**The gap this closes.** `artifacts/models/recovery_lgbm_calibrator_e5eaa66718f2.joblib`
+is an `IsotonicRegression` with 33 knots but only 17 distinct output values, including a
+dead-flat plateau spanning raw score 0.36 -> 0.81. Identical calibrated `p_success` at
+identical cost is an identical `E[net]`, which is why 76% of decisions tie at the argmax
+and `agent/decide.py`'s `_tie_break_score` — not the trained model — picks the debit date
+(`agent/decide.py:225`, `docs/DECISIONS.md` [2026-08-27]). The model learns real
+day-of-month/day-of-week signal; the calibrator quantizes it away. This entry is written,
+and committed, **before** the bake-off script runs — so whichever way the result lands,
+this paragraph is proof the adoption rule was not back-fitted to it.
+
+**The rule, committed in advance:**
+
+We adopt a replacement calibrator ONLY IF both hold:
+ (a) its Brier score CI overlaps isotonic's - calibration must not be measurably worse,
+     since calibration is the priority over AUC per docs/05-ML-SPEC.md; and
+ (b) it cuts the argmax tie rate by at least half.
+If both hold, we adopt, rerun `make eval`, and report the new headline in whatever
+direction it moves, including down, at full weight. If either fails, we keep isotonic
+and report the bake-off as a NEGATIVE RESULT in the README - the coarseness stays,
+named and measured rather than quietly fixed. We do not go looking for a third
+criterion after seeing the numbers.
+
+Candidates compared, fit on the existing train/validate splits only (test set, cycle
+6-8, stays untouched — `n_test_evaluations` in `artifacts/recovery_model_report.json`
+stays at 1): (a) isotonic (baseline), (b) Platt/logistic on the logit, (c) beta
+calibration, (d) a monotone spline (isotonic's knots interpolated monotonically).
+Investigation only — no production code, retraining, or artifact regeneration beyond
+`scripts/calibrator_bakeoff.py` and `artifacts/calibrator_bakeoff.json`.

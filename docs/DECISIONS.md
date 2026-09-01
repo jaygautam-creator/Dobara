@@ -3285,3 +3285,182 @@ tie-break axis" vs "true argmax ties" — the pre-registered criterion is on exa
 only, deliberately, since that's what the original 76% figure measured and what the rule
 was written against). If this coarseness becomes a live blocker later, Platt/beta are the
 better starting point than a spline, but that is a future call, not one made here.
+
+## [2026-09-01] Number collision resolved: 76% and 94% are the same defect, different populations — not a bug
+
+**The collision.** The repo stated the argmax tie rate as both 76% (`agent/decide.py`'s
+`_tie_break_score` docstring, this file's `[2026-08-27]` entry, the README) and 94% (the
+bake-off's own `isotonic_baseline.tie_rate`, above) with no reconciliation. Investigated
+which: (a) the bake-off's candidate construction diverges from `agent/decide.py`'s own
+(a bug), or (b) the two numbers measure different populations, both honestly.
+
+**Verdict: (b), confirmed with evidence, not asserted.** `scripts/calibrator_bakeoff.py`
+reuses `agent/decide.py`'s own `_generate_candidates`/`is_hard_compliant`/`_score_all`
+unmodified — verified directly, not just by reading the code: `_population_reconciliation`
+(new, in the script) runs the live `dobara` arm once over the SAME held-out eval-world
+population `api/demo.py` uses for the committed demo fixture (seed 9001, n=150), with the
+SAME unmodified production calibrator, and recomputes the argmax tie **from scratch** off
+each decision's own `ctx` — not by re-reading the fixture's already-collapsed
+`rejected_alternatives`. Result: **77.2%** — reproduces the committed 76% figure (small
+gap is population-sampling noise between this run and the exact 150-mandate population
+the committed fixture used; both draw from the same generator). This rules out (a): the
+candidate-construction code path is faithful.
+
+**What actually causes the gap, decomposed on the SAME production calibrator throughout**
+(`population_reconciliation.population_effect` in `artifacts/calibrator_bakeoff.json`):
+
+| Population | Calibrator | Tie rate |
+|---|---|---|
+| Full multi-cycle demo world (all cycles, all attempt indices) | production isotonic | **77.2%** (reproduces the committed 76%) |
+| Full multi-cycle demo world, attempt_index=1 only | production isotonic | 74.9% |
+| This script's own population: cycle_index=1 only, first attempt, train-seed world | production isotonic | 89.7% |
+| Same script population | isotonic refit on half the validate split (the bake-off's own `isotonic_baseline`) | 94.0% |
+
+Two separate, additive effects, both real: (1) **population narrowing** — the bake-off's
+`_build_tie_ctxs` restricts every decision to a mandate's very first cycle
+(`cycle_index=1`), a materially different, younger sub-population than the committed
+figure's full multi-cycle mix (77.2% → 89.7%, +12.5pp, the dominant effect); (2)
+**calibrator refit** — the Brier-score comparison correctly fits each candidate on half
+the validate split and scores on the other half (avoiding in-sample bias for a flexible
+calibrator), but that means the bake-off's own "isotonic_baseline" is a *refit on 2,326
+rows*, not the production artifact fit on the full 4,653-row validate split — a
+coarser calibrator, coarser is more tie-prone (89.7% → 94.0%, +4.3pp).
+
+**Fixed, not just explained:** `scripts/calibrator_bakeoff.py`'s `_build_tie_ctxs`
+docstring previously claimed its population matched "the committed 76% figure's own
+methodology" — false, and now corrected to state the narrower population explicitly. A
+new `POPULATION` module constant states cycle_index/attempt_index/world_seed/n_mandates
+precisely; `agent/decide.py::_tie_break_score`'s docstring gets one added sentence
+pointing to this entry for the distinct, narrower-population 94% figure so a reader
+hitting either number can find the other. Both numbers are correct for what they measure;
+neither is deleted or hidden.
+
+## [2026-09-01] Raw-score tie decomposition: most ties predate the calibrator (training seed) — reproduced, and reversed, held-out
+
+**Question.** Platt and beta calibration are fully continuous (5,000/5,000 distinct
+output values, effectively zero quantization) yet their argmax tie rate only falls to
+60.7% (182/300, `POPULATION`: n=300, `world_seed=42` — the recovery model's own training
+seed, cycle_index=1 only), not to ~0%. Since both are monotonic reparametrizations of the
+same raw booster score, this predicted the raw score itself already ties in most of those
+cases — tested that directly rather than inferring it.
+
+**Method.** `scripts/calibrator_bakeoff.py::_IdentityWrap` swaps in a no-op "calibrator"
+(clipped raw score, no fitting at all) through the exact same `_tie_rate` path used for
+every other candidate. Measured on this script's own cycle_index=1-only, `world_seed=42`
+population (n=300): **raw-score tie rate = 60.7% (182/300)** — exactly matching
+Platt/beta's measured rate on the same population, confirming they inherit the raw
+score's tie structure unchanged (as a strictly monotonic transform must).
+
+**Corrected 2026-09-01, same day: the first version of this entry decomposed against the
+isotonic-refit-on-half-validate baseline (94.0%) without stating its population or seed,
+and without checking whether the split reproduces on held-out data — a violation of
+CLAUDE.md's "every number reported must have a confidence interval and a stated source"
+non-negotiable, caught in review before push.** Fixed two ways: (1) every figure below
+now states its exact n and `world_seed`; (2) the decomposition is recomputed against the
+SAME production (full-validate-fit) isotonic calibrator on both sides, and reproduced a
+second time on the held-out eval-world population (`api/demo.py`'s `DEMO_SEED=9001`) that
+the committed 76% figure and the `[2026-08-27]` diagnosis both actually run on — not left
+as a single unreplicated number.
+
+**Decomposition, same production calibrator, two populations:**
+
+| Population | n | Raw-score-only tie rate | Total (production-calibrator) tie rate | Raw share of total ties | Calibrator-added share |
+|---|---|---|---|---|---|
+| `POPULATION`: cycle_index=1 only, `world_seed=42` (training seed, NOT held out) | 300 | 60.7% (182/300) | 89.7% (269/300) | **67.7%** (182/269) | 32.3% (87/269) |
+| Held-out eval world, `world_seed=9001`, attempt_index=1 across every cycle | 1,173 | 30.4% (357/1,173) | 74.9% (878/1,173) | **40.7%** (357/878) | 59.3% (521/878) |
+
+(The isotonic-refit-on-half-validate figure used in the bake-off's own Brier comparison —
+94.0%, 282/300, `world_seed=42` — decomposes to a similar raw share, 64.5%, when paired
+with the raw-score figure on the SAME population; it is not reported as the primary
+number here because it mixes two things that should be reported separately: the
+population effect and the calibrator-fit-data effect. The table above holds the
+calibrator fixed at the single production artifact and varies only the population, which
+isolates the effect actually in question.)
+
+**The split direction reverses between the two populations — this is real, not noise,
+and is reported as found, not smoothed toward the more flattering number.** On the
+training-seed sample, roughly two-thirds of ties predate calibration. On the held-out
+world — which is the population both the committed 76% figure and every other headline
+number in this project actually run on — it's roughly two-fifths, and the calibrator is
+responsible for the *majority* of ties (59.3%). Both are real measurements of the same
+underlying mechanism on genuinely different candidate populations (`POPULATION`'s
+cycle_index=1-only sample vs. the held-out world's full multi-cycle mix, `mandate_age_cycles`
+gain 252.6/split 67 — a real, non-date feature that shifts which leaf combination a
+decision lands in and is systematically different between the two populations, cycle
+index 0 always vs. cycle index 0 through ~7).
+
+**What IS stable across both populations, and is the load-bearing part of the finding:**
+mean raw-score resolution — the fraction of a decision's `ScheduleDebit` candidates
+(day × channel) that get a distinct raw `p_success` — is **23.1% on the training-seed
+sample (20.1/87 candidates) and 23.5% held-out (20.4/87 candidates)**, functionally
+identical. The tree ensemble's per-candidate quantization rate is a reproducible property
+of the trained model; how often that quantization happens to collapse the specific
+argmax into a tie is a property of which population is being decided over, and is not
+stable — stated here explicitly rather than picked once and generalized.
+
+**Confirmed against the actual booster** (`_date_feature_split_analysis`, direct
+inspection of `artifacts/models/recovery_lgbm_e5eaa66718f2.joblib`, no retraining; ranks
+now computed as a field in the artifact itself, `gain_rank_among_all_features`, so this
+claim cannot silently drift from the booster the way the uncorrected version of this
+entry did — see the correction below):
+
+| Feature | Gain | Gain rank (of 26 features) | Split count | Distinct thresholds |
+|---|---|---|---|---|
+| `day_of_month` | 1248.9 | **4** | 321 | 28 — thresholds at nearly every day boundary (1.5, 2.5, ... 28.5, 30.5) |
+| `bank_dow_profile` | 479.4 | 7 | 141 | 6 |
+| `is_mid_month_window` | 106.7 | 11 | 26 | 1 (binary) |
+| `days_until_cycle_end` | 25.3 | 14 | 6 | 2 |
+| `is_month_start_window` | 9.7 | 15 | 3 | 1 (binary) |
+| `day_of_week` | **0.0** | — (tied last) | **0** | — never split on directly |
+
+**FACTUAL CORRECTION, caught in review, same day: `day_of_month` is the FOURTH-highest-gain
+feature (behind `attempt_index` 40224.8, `amount` 3795.8, `bank_health_ewma` 2480.8), not
+third, as the first version of this entry and the README both stated.** Verified directly
+against `booster.feature_importance('gain')`: `attempt_index` 40224.8, `amount` 3795.8,
+`bank_health_ewma` 2480.8, `day_of_month` 1248.9. `day_of_month` is still a real,
+substantial, top-decile feature in a 26-feature model — the correction is the ordinal
+claim, not the underlying finding. Every "third-highest-gain" instance in this repo
+(this file, the README) is fixed to "fourth-highest-gain" / "gain rank 4 of 26" in the
+same commit as this correction, and `_date_feature_split_analysis` now writes
+`gain_rank_among_all_features` into `artifacts/calibrator_bakeoff.json` as a computed
+field precisely so a future prose claim can be checked against the artifact instead of
+hand-copied and left to drift.
+
+**Conclusion, stated plainly, without overclaiming in either direction — unchanged from
+the first version of this entry, because the qualitative finding does not depend on the
+specific split ratio.** This is a genuine, if partial, **model-granularity limitation,
+not "restraint is correct because the model is indifferent."** The model is not
+indifferent: `day_of_month` carries real, substantial gain (rank 4 of 26 features) and
+the booster splits on it at near-single-day resolution across the forest (28 distinct
+thresholds spanning the whole month). The signal is genuinely there and the trees try to
+use it. But the realized ensemble output — 200 trees, `num_leaves=15`,
+`min_data_in_leaf=20` (`models/recovery.py::train_recovery_model`) — doesn't carry that
+resolution through to a ~29-day candidate window: only ~23% of candidates end up with a
+raw score no other candidate in the same window shares, stable across both populations
+measured. `day_of_week` is never split on at all (redundant with `bank_dow_profile`,
+which does carry weekly signal but only at 6 coarse thresholds) — that specific feature
+genuinely contributes nothing beyond what `bank_dow_profile` already provides, which is a
+different, narrower claim than "the model has no date signal." A substantial share of the
+76%/94% (training-seed) / 74.9%/77.2% (held-out) tie rate traces to this tree-ensemble
+quantization, upstream of and independent from the isotonic calibrator's own additional
+quantization — the exact share is population-dependent (see table above) and is reported
+as such, not collapsed to one number.
+
+**Not adopted, not reopened.** This is a diagnosis of *why* ties happen, not a re-run of
+the pre-registered adoption question above — that rule and its NEGATIVE verdict stand
+exactly as decided; `scripts/calibrator_bakeoff.py`'s own `pre_registered_verdict.note`
+states this explicitly so a future reader cannot mistake this investigation for a second,
+looser bite at the same decision. No production code touched, no retraining, `make eval`
+not rerun; `artifacts/recovery_model_report.json`'s `n_test_evaluations` is unchanged at 1
+(this investigation never evaluates against the test split — only the validate split's
+labels, and the trained booster's own already-persisted split structure).
+
+**For the README:** `_tie_break_score`'s restraint-based tie-break is still the correct
+mechanism when candidates truly do tie — that engineering choice is unaffected. The
+*honest* framing of *why* ties are so common: partly a coarse probability calibrator
+(`[2026-08-27]`), and partly a tree-ensemble resolution limit on real date signal the
+model has learned but cannot fully express across a full candidate window (this entry) —
+with the split between the two varying by population (roughly two-thirds raw / one-third
+calibrator on the training seed, roughly two-fifths raw / three-fifths calibrator
+held-out), reported as measured on both, not asserted as one fixed ratio. Both mechanisms
+are named as limitations in the README, not folded into the restraint-design story.

@@ -78,5 +78,40 @@
     "artifact": "artifacts/llm_cache/ask_why.json",
     "commit": "ad1e671e1d445fd230add703dced78974c96264a",
     "reason": "ad1e671's only change under a watched path is eval/runner.py's opt-in per-beat trace: a new AttemptEvent dataclass, a MandateResult.events list defaulting to empty, and a `trace: bool = False` parameter threaded through run_arm/_run_cadence_arm/_run_dobara_arm/_draw_attempt. Every append is guarded by `if trace`, no draw, ordering or scored field is touched, and the only caller that passes trace=True is the new scripts/build_home_demo.py. Proven, not just argued: tests/test_runner_trace.py runs aggressive_8x and dobara with and without the trace over a shared world and asserts the two result lists are equal after clearing `events` -- so any field this artifact reports would have to differ for that test to pass. The cache narrates artifacts/demo_batch.json's decisions, which are unchanged by this commit (the HASH_DEPENDENCIES content check confirms it independently); llm/ and scripts/generate_ask_why.py are untouched here."
+  },
+  {
+    "artifact": "artifacts/summary.json",
+    "commit": "c56ce5f08220b59b9383dde180eada791b3b56c5",
+    "reason": "c56ce5f's only watched-path change is agent/decide.py: a pure docstring addition (+7/-0 lines) to `_tie_break_score` pointing readers at docs/DECISIONS.md for the calibrator bake-off follow-up findings. Verified via `git show c56ce5f -- agent/decide.py`: no code, control flow, or default value changed. eval/run.py's call graph is unaffected."
+  },
+  {
+    "artifact": "artifacts/sensitivity.json",
+    "commit": "c56ce5f08220b59b9383dde180eada791b3b56c5",
+    "reason": "Same as artifacts/summary.json: c56ce5f's only watched-path change is a pure docstring addition to agent/decide.py::_tie_break_score. eval/sensitivity.py's call graph is unaffected."
+  },
+  {
+    "artifact": "artifacts/demo_batch.json",
+    "commit": "c56ce5f08220b59b9383dde180eada791b3b56c5",
+    "reason": "Same as artifacts/summary.json: c56ce5f's only watched-path change is a pure docstring addition to agent/decide.py::_tie_break_score. scripts/build_demo_fixture.py's live decide() path is unaffected."
+  },
+  {
+    "artifact": "artifacts/money_chart_data.json",
+    "commit": "c56ce5f08220b59b9383dde180eada791b3b56c5",
+    "reason": "Same as artifacts/summary.json: c56ce5f's only watched-path change is a pure docstring addition to agent/decide.py::_tie_break_score. scripts/build_money_chart.py's call graph is unaffected."
+  },
+  {
+    "artifact": "artifacts/home_demo.json",
+    "commit": "c56ce5f08220b59b9383dde180eada791b3b56c5",
+    "reason": "Same as artifacts/summary.json: c56ce5f's only watched-path change is a pure docstring addition to agent/decide.py::_tie_break_score. scripts/build_home_demo.py's live decide() path is unaffected."
+  },
+  {
+    "artifact": "artifacts/compliance_rules.json",
+    "commit": "c56ce5f08220b59b9383dde180eada791b3b56c5",
+    "reason": "c56ce5f made no change to agent/compliance.py or scripts/build_compliance_rules.py -- its only watched-path change is a pure docstring addition to agent/decide.py::_tie_break_score, which the compliance-rules exporter does not import."
+  },
+  {
+    "artifact": "artifacts/llm_cache/ask_why.json",
+    "commit": "c56ce5f08220b59b9383dde180eada791b3b56c5",
+    "reason": "c56ce5f's only watched-path change is a pure docstring addition to agent/decide.py::_tie_break_score; llm/ and scripts/generate_ask_why.py are untouched, and the cache narrates artifacts/demo_batch.json's decisions, which this commit does not affect (see that artifact's own waiver above)."
   }
 ]

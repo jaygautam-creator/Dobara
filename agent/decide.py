@@ -237,6 +237,13 @@ def _tie_break_score(action: Action, ctx: DecisionContext) -> float:
     never handled: **restraint decides when the money model is indifferent.** Lower
     returned score is more preferred:
 
+    A different, narrower-population figure (94%) also appears in
+    `artifacts/calibrator_bakeoff.json` — see `docs/DECISIONS.md` [2026-09-01] "Number
+    collision resolved" for why the two numbers differ (population, not a bug) and
+    [2026-09-01] "Raw-score tie decomposition" for the finding that ~65% of ties predate
+    calibration entirely (tree-ensemble resolution limit on real date signal), with only
+    ~35% attributable to the calibrator quantization described above.
+
     - When the customer has a declared or evidenced-stable preferred day
       (`ctx.has_declared_preferred_day`), prefer the `ScheduleDebit` candidate whose
       calendar day is closest to it — nudging back toward the day they actually asked

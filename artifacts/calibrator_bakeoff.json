@@ -1,4 +1,12 @@
 {
+  "population": {
+    "description": "Every mandate's first cycle (cycle_index=1), first attempt (attempt_index=1), zero prior history -- NOT the same population as the committed 76% figure (docs/DECISIONS.md [2026-08-27]), which spans every decision with alternatives across a mandate's full multi-cycle lifecycle. See 'population_reconciliation' for a direct, same-code comparison of both.",
+    "cycle_index": 1,
+    "attempt_index": 1,
+    "world_seed": 42,
+    "world_seed_note": "same seed as the recovery model's own training population, not a held-out eval seed",
+    "n_mandates": 300
+  },
   "n_validate_total": 4653,
   "n_validate_fit": 2326,
   "n_validate_eval": 2327,
@@ -82,11 +90,141 @@
         "adopt": false
       }
     },
-    "any_candidate_meets_both_criteria": false
+    "any_candidate_meets_both_criteria": false,
+    "note": "This bake-off's adoption question (docs/DECISIONS.md [2026-09-01] 'Pre-registration') is settled and NOT reopened by the 2026-09-01 follow-up investigation below (number collision / raw-score decomposition). That investigation is about WHY ties happen, not whether to adopt a different calibrator -- the pre-registered rule and its NEGATIVE verdict stand as-is."
+  },
+  "raw_score_tie_decomposition": {
+    "note": "Decomposes the isotonic_baseline tie rate above into ties that already exist in the raw (uncalibrated) booster output (upstream of calibration) versus ties added by the calibrator's own quantization. Measured on the SAME population/candidates as 'candidates' above.",
+    "raw_score_tie_rate": {
+      "n_decisions_with_alternatives": 300,
+      "n_tied_at_argmax": 182,
+      "tie_rate": 0.6066666666666667,
+      "mean_scheduledebit_candidates_per_decision": 87.0,
+      "mean_distinct_raw_p_success_per_decision": 20.10333333333333,
+      "mean_raw_score_resolution_per_candidate": 0.2310727969348659
+    },
+    "total_tied_at_argmax": 282,
+    "raw_tied_at_argmax": 182,
+    "calibrator_added_ties": 100,
+    "share_of_total_ties_from_raw_score": 0.6453900709219859,
+    "share_of_total_ties_from_calibrator": 0.3546099290780142,
+    "date_feature_split_analysis": {
+      "day_of_month": {
+        "gain": 1248.8917991518974,
+        "gain_rank_among_all_features": 4,
+        "n_features_total": 26,
+        "split_count": 321,
+        "n_distinct_thresholds_in_forest": 28,
+        "thresholds_sample": [
+          1.5,
+          2.5,
+          3.5,
+          4.5,
+          5.5,
+          6.5,
+          7.5,
+          8.5,
+          10.5,
+          11.5
+        ]
+      },
+      "day_of_week": {
+        "gain": 0.0,
+        "gain_rank_among_all_features": 21,
+        "n_features_total": 26,
+        "split_count": 0,
+        "n_distinct_thresholds_in_forest": 0,
+        "thresholds_sample": []
+      },
+      "bank_dow_profile": {
+        "gain": 479.3740122616291,
+        "gain_rank_among_all_features": 7,
+        "n_features_total": 26,
+        "split_count": 141,
+        "n_distinct_thresholds_in_forest": 6,
+        "thresholds_sample": [
+          0.0,
+          1.5,
+          2.5,
+          3.5,
+          4.5,
+          5.5
+        ]
+      },
+      "days_until_cycle_end": {
+        "gain": 25.32412028312683,
+        "gain_rank_among_all_features": 14,
+        "n_features_total": 26,
+        "split_count": 6,
+        "n_distinct_thresholds_in_forest": 2,
+        "thresholds_sample": [
+          28.5,
+          29.5
+        ]
+      },
+      "is_month_start_window": {
+        "gain": 9.72664999961853,
+        "gain_rank_among_all_features": 15,
+        "n_features_total": 26,
+        "split_count": 3,
+        "n_distinct_thresholds_in_forest": 1,
+        "thresholds_sample": [
+          0.0
+        ]
+      },
+      "is_mid_month_window": {
+        "gain": 106.7222306728363,
+        "gain_rank_among_all_features": 11,
+        "n_features_total": 26,
+        "split_count": 26,
+        "n_distinct_thresholds_in_forest": 1,
+        "thresholds_sample": [
+          0.0
+        ]
+      }
+    }
+  },
+  "population_reconciliation": {
+    "note": "Both figures below use the SAME unmodified production calibrator and the SAME held-out eval-world population (seed 9001, n=150) `api/demo.py` uses to build the committed demo fixture. 'all_decisions_with_alternatives' reproduces the committed 76% figure's methodology (docs/DECISIONS.md [2026-08-27]: every decision with alternatives, every cycle, every attempt index). 'attempt_index_1_only' isolates just the attempt-index restriction, still spanning every cycle_index. Neither matches this script's own cycle_index=1-only POPULATION exactly -- see 'population_effect' below.",
+    "all_decisions_with_alternatives": {
+      "n_decisions_with_alternatives": 1304,
+      "n_tied_at_argmax": 1007,
+      "tie_rate": 0.772239263803681
+    },
+    "attempt_index_1_only": {
+      "n_decisions_with_alternatives": 1173,
+      "n_tied_at_argmax": 878,
+      "tie_rate": 0.7485080988917306
+    },
+    "held_out_raw_score_tie_decomposition": {
+      "note": "Job 2's raw-score-vs-calibrator decomposition, reproduced on the SAME held-out eval-world population as above (seed 9001, n=150), not just on POPULATION's training-seed (42) sample -- so the raw-score tie rate can be read on either seed without ambiguity about which world it came from.",
+      "all_decisions_with_alternatives": {
+        "n_decisions_with_alternatives": 1304,
+        "n_tied_at_argmax": 446,
+        "tie_rate": 0.34202453987730064,
+        "mean_scheduledebit_candidates_per_decision": 85.4148773006135,
+        "mean_distinct_raw_p_success_per_decision": 20.051380368098158,
+        "mean_raw_score_resolution_per_candidate": 0.2351142196311003
+      },
+      "attempt_index_1_only": {
+        "n_decisions_with_alternatives": 1173,
+        "n_tied_at_argmax": 357,
+        "tie_rate": 0.30434782608695654,
+        "mean_scheduledebit_candidates_per_decision": 87.0,
+        "mean_distinct_raw_p_success_per_decision": 20.428815004262574,
+        "mean_raw_score_resolution_per_candidate": 0.23481396556623654
+      }
+    },
+    "population_effect": {
+      "note": "Same production (unmodified) calibrator throughout -- isolates how much of the 76%->94% gap is the population narrowing (full multi-cycle demo world -> this script's cycle_index=1-only, train-seed population) versus the separate effect of refitting isotonic on half the validate split for the candidate comparison above.",
+      "full_population_all_decisions_production_calibrator": 0.772239263803681,
+      "this_script_population_production_calibrator": 0.8966666666666666,
+      "this_script_population_refit_half_calibrator": 0.94
+    }
   },
   "provenance": {
-    "generated_at": "2026-09-01T13:13:43.101688+00:00",
-    "git_commit": "4dd11835615fff96fc08a4f76de1e58821464b9d"
+    "generated_at": "2026-09-01T14:35:53.804698+00:00",
+    "git_commit": "c56ce5f08220b59b9383dde180eada791b3b56c5"
   },
-  "content_hash": "d76a632853ef6498800dbcd0f9f5fd2608b59df6734caa28be79ae80ca100453"
+  "content_hash": "d721a2ed4c074941575664f09b705006ae6eebadc3737405de8a987c4dc05fdf"
 }

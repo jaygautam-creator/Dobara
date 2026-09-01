@@ -7,27 +7,56 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-09-01, investigation-only session: calibrator bake-off for the
-isotonic recovery-probability calibrator (`artifacts/models/recovery_lgbm_calibrator_e5eaa66718f2.joblib`,
-33 knots / 17 distinct outputs, the mechanism behind the 76% argmax-tie rate diagnosed
-2026-08-27). Pre-registered an adoption rule in `docs/DECISIONS.md` [2026-09-01] before
-measuring anything: adopt a replacement only if (a) its Brier CI overlaps isotonic's and
-(b) it at least halves the argmax tie rate. Ran `scripts/calibrator_bakeoff.py` (new,
-not wired into `make`) against Platt/logistic, beta calibration, and a monotone spline
-on isotonic's knots, fit/evaluated on the existing train/validate splits only (test set
-untouched, `n_test_evaluations` still 1). **Result: NEGATIVE.** All three pass (a); none
-passes (b) — Platt/beta cut the tie rate 94%→60.7% (real, but short of halved); the
-spline barely moves it (interpolating isotonic's own coarse knots doesn't add
-resolution). Isotonic stays. Full numbers in `artifacts/calibrator_bakeoff.json` and
-`docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off result — NEGATIVE, isotonic kept".
-**No production code, model, or artifact touched** besides the new script and its output
-JSON — `agent/`, `models/`, `eval/`, `sim/`, `web/`, the README, and every existing
-`artifacts/*.json` are unchanged; `make eval` was not rerun.
+**Last updated:** 2026-09-01, second investigation-only session, same day: follow-up on
+the calibrator bake-off above — two jobs, both read-only (no production code retrained,
+no artifact regenerated beyond `scripts/calibrator_bakeoff.py` and
+`artifacts/calibrator_bakeoff.json`, `make eval` not rerun).
 
-**Next:** the 76% tie coarseness remains open as a documented, not-fixed limitation —
-worth one line in the README if there's time before the pitch video, but not a blocker.
-Otherwise unchanged from the prior session below: record the pitch video next; this
-remains the last frontend change before recording.
+**Job 1 — resolved a number collision.** The repo stated the argmax tie rate as both 76%
+(fixture, `[2026-08-27]`) and 94% (the bake-off's own isotonic baseline) with no
+reconciliation. Verdict: **(b), not a bug** — confirmed with evidence, not asserted. A
+new `_population_reconciliation()` in the script runs the live `dobara` arm over the
+SAME held-out eval-world population `api/demo.py` uses for the committed fixture, with
+the SAME production calibrator, and recomputes the tie rate from scratch off each
+decision's own `ctx` (not from the fixture's already-collapsed `rejected_alternatives`):
+**77.2%**, reproducing the committed 76% and ruling out a candidate-construction bug.
+The 94% gap decomposes into two additive, real effects: population narrowing (the
+bake-off's own population is cycle_index=1-only, a younger sub-population than the
+fixture's full multi-cycle mix — 77.2%→89.7%, the dominant effect) and calibrator refit
+(the bake-off fits isotonic on half the validate split for a fair Brier comparison,
+coarser than the production artifact's full-split fit — 89.7%→94.0%). Labeled precisely
+everywhere the numbers appear: `agent/decide.py::_tie_break_score` docstring, README, and
+a new `POPULATION` constant + docstring fix in the script itself (which previously
+overclaimed equivalence to the fixture's methodology — corrected, not just annotated).
+
+**Job 2 — decomposed the remaining tie rate into raw-model-score ties vs. calibrator
+ties.** Platt/beta calibration are fully continuous (5,000/5,000 distinct outputs) yet
+their tie rate only falls to 60.7%, not ~0% — predicting the raw booster score itself
+already ties in most of those cases. Confirmed directly (`_IdentityWrap`, a no-op
+calibrator run through the same tie-rate path): **raw-score tie rate = 60.7%, exactly
+matching Platt/beta.** Of the isotonic baseline's 282 total ties, 182 (64.5%) are already
+tied in the raw score; only 100 (35.5%) are added by calibrator quantization. Confirmed
+against the actual booster (`artifacts/models/recovery_lgbm_e5eaa66718f2.joblib`, no
+retraining): `day_of_month` carries real signal (gain 1248.9, 321 splits, near-single-day
+threshold resolution) but the realized ensemble only achieves ~23% raw-score resolution
+across a typical ~29-day candidate window; `day_of_week` is never split on at all (gain
+0, redundant with `bank_dow_profile`'s 6 coarse thresholds). **Conclusion, stated as the
+evidence supports and not spun toward restraint:** this is a genuine, if partial,
+tree-ensemble resolution limit on real learned date signal — not the model being
+indifferent — and is now named in the README alongside the calibrator coarseness rather
+than folded into the restraint-design story. Neither job reopens the pre-registered
+calibrator-adoption verdict (still NEGATIVE, isotonic kept) — stated explicitly in both
+`docs/DECISIONS.md` and the script's own output so this can't be mistaken for a second
+bite at that decision. Full detail: `docs/DECISIONS.md` [2026-09-01] "Number collision
+resolved" and "Raw-score tie decomposition"; raw numbers in
+`artifacts/calibrator_bakeoff.json`. `make check` green (107 tests, ruff, mypy,
+artifact-freshness, ask-why grounding all clean).
+
+**Next:** unchanged from the prior session below: record the pitch video next; this
+remains the last frontend change before recording. The README now names two real,
+partial limitations behind the 76%/94% tie rate (calibrator coarseness, ~35%; tree
+resolution, ~65%) rather than one — worth a glance before recording in case either is
+worth a sentence in the pitch, but neither blocks it.
 
 **Prior session (2026-08-31, seventh post-redesign follow-up session — additive-only
 adoption/boundary section on `/architecture`; full account in `docs/DECISIONS.md`

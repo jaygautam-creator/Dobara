@@ -259,6 +259,49 @@ regardless, and to report a fall honestly if there was one, was committed to
 a ₹0.28 move** — a rounding-level change, not a regression, and the rule is kept exactly
 as pre-registered.
 
+**Two follow-up findings on the same tie rate, investigated 2026-09-01, neither one
+changing the fix above.** First, a four-calibrator bake-off (isotonic, Platt, beta,
+monotone spline — `scripts/calibrator_bakeoff.py`) tested whether a smoother calibrator
+would meaningfully cut the tie rate; the pre-registered bar (halve it, without hurting
+calibration) was not met by any candidate, so isotonic stays — a negative result, not a
+fix (`docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off result").
+
+Second: **a non-trivial share of ties trace to the raw, uncalibrated model score itself,
+not the calibrator** — but the exact share is population-dependent, and both populations
+are reported here rather than the more flattering one alone. Swapping in a fully
+continuous calibrator (Platt/beta, 5,000 distinct outputs, zero quantization) still
+leaves decisions tied, because the raw model score already ties before calibration runs.
+Measured two ways, same production model, same production (full-validate-fit) isotonic
+calibrator throughout:
+
+| Population | n | Raw-score-only tie rate | Total (calibrated) tie rate | Share of ties already in the raw score |
+|---|---|---|---|---|
+| This script's own sample: mandate's first cycle only, `world_seed=42` — the recovery model's *own training seed*, not held out | 300 | 60.7% (182/300) | 89.7% (269/300) | **67.7%** (182/269) |
+| Held-out eval world (`api/demo.py`'s `DEMO_SEED=9001`), first attempt of every cycle across a mandate's full lifecycle | 1,173 | 30.4% (357/1,173) | 74.9% (878/1,173) | **40.7%** (357/878) |
+
+The raw-score *resolution* — the mean fraction of `ScheduleDebit` candidates (day ×
+channel) in one decision's window that get a distinct raw score — is stable across both
+populations (23.1% training-seed, 23.5% held-out out of a mean 87 candidates per
+decision), confirming the underlying tree-ensemble quantization is a real, reproducible
+property of the model, not a training-seed artifact. But *how often that quantization
+lands exactly on the argmax* is not stable — it's roughly two-thirds of ties on the
+training-seed sample and roughly two-fifths on the held-out world, the reverse
+ordering. `docs/DECISIONS.md` [2026-09-01] "Raw-score tie decomposition" has the full
+breakdown; `artifacts/calibrator_bakeoff.json`'s
+`raw_score_tie_decomposition` and `population_reconciliation.held_out_raw_score_tie_decomposition`
+carry both populations' numbers with n's, so neither figure can be read without the other.
+
+What doesn't move between the two populations: `day_of_month` carries real, substantial
+learned signal (gain rank 4 of 26 features, computed directly from the persisted
+booster's own `feature_importance('gain')` — not hand-copied — split at near-single-day
+resolution across the forest) and the ensemble's realized per-candidate resolution stays
+around 23% either way. That is the finding that stands: this is a genuine
+model-granularity limitation, not the restraint design working as intended — the model
+has a preference it can't fully express, not no preference at all. What does move is how
+often that limitation happens to decide the *specific* argmax, which is a property of the
+population being decided over, not of the model alone
+(`docs/DECISIONS.md` [2026-09-01] "Raw-score tie decomposition").
+
 **Below Razorpay's own credibility anchor, which is the point.** ₹328,534 on
 `razorpay_default`'s ₹22.66M net-LTV base is a **1.45% lift** — well under the
 [4-6% success-rate lift](https://arxiv.org/abs/2111.00783) Razorpay's own production

@@ -3766,13 +3766,24 @@ GitHub link carries `break-all` on the anchor itself; `StatTile`'s `source` prop
 already wraps (`break-words`, an existing, unmodified component contract) so the
 long `docs/DECISIONS.md` citation strings used as sources don't need special-casing.
 `npx tsc --noEmit`, `npm run lint`, `npm run build` all pass against this section.
-**Visual verification (1440px light/dark, 390px light) was not completed this
-session** — the Chrome extension driving this repo's browser-automation tool did not
-respond after three attempts (a known, documented failure mode: stop retrying past
-2-3 attempts and flag it, not loop on it). Flagged plainly rather than silently
-skipped or claimed as done; a follow-up visual pass with a working browser tool (or a
-manual check by the owner) is recommended before recording, though nothing in the
-code review found a construction likely to overflow at 390px.
+**Visual verification completed 2026-09-02** via the local Python Playwright install
+(`/opt/anaconda3/lib/python3.13/site-packages/playwright`, Chromium cached — the
+documented fallback for when the Chrome extension is unresponsive) against `npm run
+dev` on a clean `main` checkout. `document.documentElement.scrollWidth ===
+clientWidth` at all three breakpoints, measured, not asserted: 390×390, 768×768,
+1440×1440 — no horizontal overflow anywhere on `/evidence`. `#calibrator-experiment`
+screenshotted at 1440px light, 1440px dark (`data-theme="dark"` set directly, since
+this app's dark mode is an explicit `localStorage`/`data-theme` toggle, never
+`prefers-color-scheme` — see `web/app/globals.css:8`), and 390px light: every
+truncated hash (`4dd11835615f`, `184f1579bdaa`) and the `experiment/platt-calibrator`
+link wrap cleanly inside their cards at all three renders, no overflow, no clipped or
+overlapping text. (The mobile screenshot shows a black circular "N" badge over the
+docstring-quote paragraph — confirmed to be the Next.js dev-mode indicator injected
+by `next dev`, not app content; it does not exist in `next build` output.) The nav
+anchor link (`a[href*="calibrator-experiment"]`) clicked from the top of `/evidence`
+lands the section at the top of the viewport (`getBoundingClientRect().top` ≈ 80px
+after click, sticky header height), confirming a narrator can reach it by clicking
+the rail entry with no hunting.
 
 **Rehearsal pack updated to match.** Beat 7's click sequence now names the real
 target (`/evidence#calibrator-experiment`, scroll from Beat 6) instead of "hold on a

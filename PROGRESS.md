@@ -7,6 +7,24 @@
 
 ## CURRENT STATE
 
+**Last updated:** 2026-09-02, visual-verification session — the repo is record-ready.**
+Closed the one open item from the prior session (calibrator-experiment section shipped
+but not visually checked). Used the local Python Playwright install (Chrome extension
+unresponsive, per the documented fallback) against `npm run dev` on a clean `main`
+checkout: no horizontal overflow at 390/768/1440px on `/evidence`
+(`document.documentElement.scrollWidth === clientWidth` at all three, measured, not
+assumed); `#calibrator-experiment` screenshotted and inspected at 1440px light, 1440px
+dark, and 390px light — every truncated commit hash and the
+`experiment/platt-calibrator` link wrap cleanly, no clipped or overlapping text (the
+one thing that looked like an overlap in the mobile shot was the Next.js dev-mode "N"
+badge, confirmed not to exist in production builds); the sticky-rail anchor link lands
+the section correctly with no hunting. Also re-ran every "How to re-verify" snippet in
+`docs/09A-REHEARSAL-PACK.md`, including `production_tie_rate.json`, on a clean checkout
+— all pass, all numbers match the pack. Full account in `docs/DECISIONS.md`
+`[2026-09-02]` "The /evidence calibrator-experiment section" (updated in place). No
+code changes were needed — everything measured clean. Per explicit instruction, no
+further repo changes before recording.
+
 **Last updated:** 2026-09-01, second investigation-only session, same day: follow-up on
 the calibrator bake-off above — two jobs, both read-only (no production code retrained,
 no artifact regenerated beyond `scripts/calibrator_bakeoff.py` and

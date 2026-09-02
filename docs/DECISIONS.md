@@ -3774,3 +3774,142 @@ decisive than it needed to be."
 chart are all regenerated from these artifacts in the same session -- see the commit
 this entry lands in. `scripts/check_artifact_freshness.py` passes with no new waivers
 (every affected artifact was actually regenerated, not waived around).
+
+**Work preserved, not shipped:** the full Platt-adopted state (this entry's artifacts,
+`models/recovery.py`'s calibrator swap, everything above) was committed and pushed to
+`experiment/platt-calibrator`, NOT merged to `main`. `main` remains at `6a20367`
+(isotonic, the prior committed headline). See `[2026-09-02] Diagnosing the reversal`
+below for why: the owner correctly flagged that a strictly-dominated result (less gross
+recovered AND more revocations, not a trade-off) needed ruling out as a bug before being
+accepted as a finding, before any ship decision was made.
+
+## [2026-09-02] Diagnosing the reversal: is it a bug, or a real finding?
+
+**The question, stated precisely by the owner, not by us:** the Platt configuration is
+not trading gross for safety -- it is **strictly dominated** on both raw components:
+gross recovered fell (₹24,328,993 -> ₹23,952,261, -₹376,733) AND revocations rose
+(637.7 -> 716.4, +78.7, +12.3%). A calibrator with a *better* global Brier score
+producing a strictly worse policy on every raw component is possible, but it is also
+what a bug looks like. Investigated in the order requested, all read-only, no
+retraining, no `make eval` rerun (both configurations already fully measured).
+
+**(a) Operating-band calibration -- the owner's own hypothesis, tested to be falsified,
+not confirmed.** Reliability compared directly, isotonic vs. Platt, on the SAME
+validate-split rows (n=4,653), restricted to the p~0.85-0.92 band where most decisions
+actually live:
+
+| Sub-band | Isotonic: n / pred / obs / gap | Platt: n / pred / obs / gap |
+|---|---|---|
+| [0.84, 0.86) | 763 / 0.857 / 0.857 / +0.000 | 270 / 0.852 / 0.878 / **-0.026** |
+| [0.86, 0.88) | 598 / 0.865 / 0.865 / +0.000 | 935 / 0.871 / 0.860 / **+0.011** |
+| [0.88, 0.90) | 1,615 / 0.890 / 0.890 / +0.000 | 2,443 / 0.890 / 0.894 / -0.003 |
+| [0.90, 0.92) | 814 / 0.915 / 0.915 / +0.000 | 288 / 0.904 / 0.920 / **-0.016** |
+| Whole [0.85,0.92] band (aggregate) | 3,790 / 0.885 / 0.885 / +0.000 | 3,843 / 0.885 / 0.886 / -0.001 |
+
+Isotonic shows ~zero gap everywhere, which is expected and not itself informative: it
+is nonparametric and was fit to minimize exactly this binned error on this exact split
+(tautological within-sample fit, not evidence of superior real-world calibration).
+Platt shows real, non-trivial local deviations (up to 2.6 percentage points in a single
+sub-bin) but **no consistent one-directional bias** -- some sub-bins over-state, some
+under-state -- and the AGGREGATE gap across the whole operating band is -0.001,
+essentially zero. **Verdict: the hypothesis as stated (a systematic, one-directional
+upper-tail bias) is not supported by this data.** Something real and band-relevant is
+happening (next two findings), but it is not simply "Platt is biased high in the band
+where it matters."
+
+**(b) Fitting scale -- a real, verifiable methodological point, not a bug.**
+`models/recovery.py::PlattCalibrator.fit()` fits `LogisticRegression` on
+`booster.predict(...)`'s output directly. `models/recovery.py::train_recovery_model`
+calls `lgb.train({"objective": "binary", ...})` and never passes `raw_score=True` to
+`.predict()`, so LightGBM's default (`raw_score=False`) applies: **the "raw" score
+Platt is fit on is already the LightGBM booster's own internal sigmoid output, a
+probability in [0,1], not an unbounded margin/logit.** Classic Platt scaling (Platt
+1999) was constructed for SVM decision-function margins -- unbounded real values, not
+already-bounded probabities. Fitting a second logistic regression on an
+already-sigmoided, already-saturating input is a valid statistical model (a monotone
+transform of a bounded feature) but is a non-standard construction of "Platt scaling,"
+and composing two saturating nonlinearities creates exactly the structural risk the
+owner's hypothesis was reaching for, measured directly in finding (c) below. Not
+reverted or refit differently in this diagnostic pass -- flagged for whoever makes the
+ship decision.
+
+**(c) Sanity -- monotone and in-range, but with a real, measured ceiling effect.**
+`PlattCalibrator`'s output on the validate population: range **[0.167, 0.914]** --
+strictly monotone confirmed on a 2,000-point grid, no values at or beyond 0/1. Isotonic's
+range on the same rows: **[0.0, 1.0]**. **Platt's fitted sigmoid (coefficient 4.579,
+intercept -2.034 on the full-validate-split production fit) cannot reach above ~0.914
+for any raw score in this population's actual range (max raw score 0.960)** -- a direct,
+mechanical consequence of (b): a 2-parameter sigmoid fit to data whose raw scores only
+reach ~0.96 has a hard mathematical ceiling below 1.0. Isotonic's [0.98, 1.0) bin, by
+contrast, has n=13 -- isotonic can and does output an exact 1.0 there, but that is a
+non-parametric fit to 13 data points, a real overfitting risk at the tail (calibration
+literature's standard warning about isotonic with sparse extreme bins), not necessarily
+a *more correct* estimate than Platt's smoothed 0.914 ceiling. Distribution-wide: mean
+delta (Platt - isotonic) is -0.000013 (net unbiased), std 0.025, with 600/4,653 (12.9%)
+of rows moving by more than 0.02 in either direction -- a real, non-trivial reshuffling
+of which candidates look most attractive, even though the aggregate distribution barely
+shifts. **This ceiling compression, not a directional bias, is the calibration-level
+finding**: real, measured, mechanically explained, not a bug.
+
+**(d) Confounds -- verified none reach the money path.** The recovery model's LightGBM
+booster (`lgbm_booster`) is **bit-identical** between the isotonic (`e5eaa66718f2`) and
+Platt (`46abfd4c9c02`) model versions -- confirmed directly: `booster.predict()` on the
+same validate rows, max absolute difference `0.0`. Only the calibrator differs. The
+other changes this pass made (`llm/provider.py`'s `OpenRouterProvider`,
+`scripts/generate_ask_why.py`'s caching fix, `scripts/check_ask_why_grounding.py`'s
+whitelist, `eval/sensitivity.py`'s note-text fix) live entirely outside the money path:
+`llm/` is never imported by `agent/` (`tests/test_no_llm_in_money_path.py` passed in
+`make check` above); `eval/sensitivity.py`'s changed function
+(`search_break_even_vs_razorpay_default`'s note string) is never called by `eval/run.py`
+(`make eval`'s entrypoint) -- confirmed via import inspection, `eval/run.py` does not
+import `eval.sensitivity` at all. **The reversal's only possible cause is the
+calibrator swap.**
+
+**(e) Abstentions -- a real, measured, and directionally informative difference.**
+`dobara`'s `abstentions_total`: isotonic **1,952.57** [1,933.69, 1,966.64] -> Platt
+**1,720.57** [1,701.96, 1,738.07] -- a drop of ~232/seed (11.9%), not a rise. Mechanism,
+traced as far as this pass goes: `agent/decide.py`'s `confidence_band` is a
+Wilson-score interval on `p_success` itself (`_wilson_interval`), and abstention fires
+when that band straddles zero. Platt's ceiling compression (finding (c)) pushes
+high-confidence `p_success` values away from 1.0 relative to isotonic, which by the
+Wilson formula (width ~ sqrt(p(1-p)/n)) should, if anything, WIDEN the band for
+high-confidence candidates -- yet abstentions fell. **Net effect, not fully decision-
+level traced:** under Platt, the agent abstains less and attempts more
+(`attempts_mean_in_failed_cycles` 1.61 -> 1.78, +10.6%) than it did under isotonic, and
+those additional attempts are, in aggregate, net costly (more revocations, less gross).
+This is consistent with, and arguably strengthens, the restraint-tie-break-is-load-
+bearing reading in the write-up below -- but a full per-decision causal trace of why
+the abstention rate specifically fell was not run in this diagnostic pass.
+
+**Side-by-side, every arm-level metric measured, both configurations
+(`dobara` arm, per-5,000-mandate seed, mean across 30 seeds):**
+
+| Metric | Isotonic (main, `6a20367`) | Platt (`experiment/platt-calibrator`) | Delta |
+|---|---:|---:|---:|
+| Gross recovered (₹) | 24,328,993.31 | 23,952,260.76 | **-376,732.55** |
+| Net LTV (₹) | 22,986,683.52 | 22,337,705.83 | **-648,977.69** |
+| Recovery rate of failed cycles | 0.19 | 0.24 | +0.05 |
+| Mandate-ever-recovered rate | 0.99 | 0.99 | ~0.00 |
+| Mean attempts | 7.77 | 7.80 | +0.03 |
+| Mean attempts in failed cycles | 1.61 | 1.78 | +0.17 |
+| Notifications | 39,081.57 | 39,175.07 | +93.50 |
+| Revocations | 637.70 | 716.43 | **+78.73** |
+| Abstentions | 1,952.57 | 1,720.57 | **-232.00** |
+| Recovered per notification (₹) | 622.53 | 611.43 | -11.10 |
+
+**Verdict on "is it a bug": no bug found.** Every mechanical check (booster identity,
+calibrator monotonicity/range, confound isolation, the owner's own falsification
+hypothesis) either came back clean or surfaced a real, mechanically-explained,
+non-bug property of fitting a 2-parameter sigmoid on an already-bounded probability
+(ceiling compression) combined with a real behavioral shift (fewer abstentions, more
+attempts). Reported as such -- not spun toward "therefore it's definitely fine to ship
+Platt" or "therefore isotonic is definitely right" either; see the ship-decision draft
+this entry's companion README section closes with, which is explicitly not executed.
+
+**What this pass did NOT do, flagged rather than silently skipped:** a full per-decision
+causal trace of exactly why the abstention rate fell, and a rupee-level attribution of
+how much of the -₹648,978 net-LTV swing traces to (c)'s ceiling compression specifically
+versus (e)'s reduced-abstention behavior versus ordinary date-selection reshuffling
+among the 12.9% of rows whose calibrated score moved meaningfully. That would be a
+further, separate investigation, not run here per instruction (no re-run hunting a
+better number, report don't decide).

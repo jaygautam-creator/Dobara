@@ -4,9 +4,9 @@
 > timing, what to say in prose). This file exists so recording is a one-take job: exact
 > URLs in order, exact figures with their CIs as the live site displays them today, the
 > exact case IDs, click targets, and fallbacks. Every number below was read from the
-> **live deploy** at `https://dobara-one.vercel.app` (commit `1f8e36e`, deployed
-> 2026-09-02, Vercel `dpl_5EbAnqiLRHyNZYUSovrJHTPjwtNH`, READY/production) or from
-> `artifacts/*.json` directly — **re-read both before recording**,
+> **live deploy** at `https://dobara-one.vercel.app`, which auto-deploys `main` on every
+> push (Vercel Git integration — so it is current with `main` by construction; check the
+> project's deployments if you need the exact build) or from `artifacts/*.json` directly — **re-read both before recording**,
 > since a later `make eval` / `python -m eval.sensitivity` rerun moves them.
 
 ## Before you press record

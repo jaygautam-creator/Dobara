@@ -7,6 +7,46 @@
 
 ## CURRENT STATE
 
+**Last updated:** 2026-09-03, README/demo-doc accuracy pass — the repo is record-ready
+and the only remaining deliverable is the pitch video.** Four commits, all docs, no
+number, CI, caveat, model, or artifact moved; `make check` green throughout (107 tests,
+spoken-figures gate included).
+
+1. **`a54c8ae`** — the rehearsal pack's header claimed the live deploy was commit
+   `afe326f` (2026-08-30). Verified against the Vercel deployment list: 13 commits and
+   three days stale, and it predated the `/evidence#calibrator-experiment` section the
+   pack's own beat navigates to. Corrected — then corrected again this session (below),
+   because pinning a commit in a doc re-stales on every push; it now states that the
+   deploy tracks `main` by construction, which is stable and true.
+2. **`fea2373`** — `docs/09-DEMO-SCRIPT.md` stated six wrong numbers for the home
+   demonstration: `3871e9c` regenerated `artifacts/home_demo.json` and the selected
+   mandate changed (4838 → 3313). A narrator reading the script would have spoken all six
+   on camera. Corrected against the artifact and the live site, rewritten around the
+   stronger story the real case tells (the aggressive lane *succeeds* in cycle 1, then
+   destroys the mandate on the first bad cycle — not the old "0 successes" strawman), and
+   every figure added to `scripts/check_spoken_figures.py` so it cannot go stale silently.
+3. **`2ef0f8b`, `b390ce6`** — README accessibility and self-consistency. Added an "In
+   plain English" on-ramp, then fixed the redundancy it introduced: it and "What I built"
+   were making the same four points back to back, so the first 40 lines said everything
+   twice to a primary reader who wrote the retry defaults being described. Split by
+   division of labour — the on-ramp defines a mandate, gives the human stakes and the
+   ~20M/month scale (now carrying its NPCI/Business Standard source, per CLAUDE.md's
+   no-unsourced-numbers rule), and hands off; "What I built" keeps the mechanism and every
+   number. The builder's note was retold as a sequence and cut from 15 lines to 9, with
+   every technical term left to the linked `docs/DECISIONS.md` `[2026-09-02]` entry.
+   Also fixed a real self-contradiction: the fast path for a judge short on time named
+   `/`, `/evidence` and `/architecture` — written before the calibrator experiment
+   existed — while the calibrator section calls itself "the strongest finding in this
+   repo". The pointer now leads with `/evidence#calibrator-experiment`.
+
+**Verified at the end of this session:** `main` clean and in sync with `origin/main`;
+Vercel production deployment `dpl_7uXgHgSKxXWhGp67qEbuT4UDM9mN` is commit `b390ce6`,
+READY — the live site matches `main` exactly; `experiment/platt-calibrator` still pushed
+as the permanent record of the reverted configuration.
+
+**Next: record the pitch video.** No repo change is pending or planned. The Razorpay
+webhook→decision queue stays deliberately unbuilt and disclosed on `/architecture`.
+
 **Last updated:** 2026-09-02, visual-verification session — the repo is record-ready.**
 Closed the one open item from the prior session (calibrator-experiment section shipped
 but not visually checked). Used the local Python Playwright install (Chrome extension

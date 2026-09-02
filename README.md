@@ -7,33 +7,36 @@ Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 
 ## In plain English
 
-When a recurring payment fails, the usual playbook is to just retry — but Indian law
-requires a fresh 24-hour warning before every single retry, so every retry is another
-interruption landing in the customer's inbox or phone. That gets expensive fast: enough
-customers respond by cancelling the whole standing instruction (a "mandate" — the
-customer's standing permission for a merchant to auto-debit them) rather than just the
-one failed payment, and a cancelled mandate loses every future payment on it, not just
-this one. About 20 million mandates are cancelled this way every month across India.
-Before each retry, Dobara prices the trade-off: what this attempt is likely to recover,
-weighed against the odds that another warning pushes the customer to cancel — and when
-that trade looks bad, it stops instead of retrying. Net result: Dobara recovers slightly
-less cash than retrying aggressively, but ends up ahead overall, because it destroys far
-fewer mandates.
+A **mandate** is the standing permission you give a company to charge your account
+automatically — your gym, your phone bill, your insurance.
+
+When one of those payments fails, Indian law requires a fresh 24-hour warning before
+every single retry. A short balance on Tuesday becomes a warning on Wednesday, another on
+Friday, another the week after. Enough people answer that by cancelling the mandate
+outright that about 20 million are killed every month across India ([NPCI data via
+Business Standard, July 2025](#the-mechanism-nobody-prices)) — and a cancelled mandate
+takes every future payment with it, not just the one that failed.
+
+That's the problem this is built for. Everything below is what I built, whether it works,
+and where it's weakest.
 
 ## What I built
 
-Every retry of a failed recurring payment in India legally requires its own 24-hour
-warning message. Dobara treats each retry as a priced bet against losing the mandate
-entirely, rather than a free action — and it beats Razorpay's own default retry policy
-on net value recovered while cutting mandate revocations from 1,049 [95% CI 1,040,
-1,057] to 638 [629, 646] per seed (Honest metrics, below). It's a working system: a simulator, three
+Dobara treats each retry as a priced bet against losing the mandate entirely, rather than
+a free action: before every attempt it weighs what that attempt is likely to recover
+against the odds that the warning is what makes the customer cancel — and when that trade
+looks bad, it stops. It beats Razorpay's own default retry policy on net value recovered
+while cutting mandate revocations from 1,049 [95% CI 1,040, 1,057] to 638 [629, 646] per
+seed (Honest metrics, below). It's a working system: a simulator, three
 trained/calibrated ML models, a structurally-enforced compliance gate, a full audit
 trail, and a batch evaluation harness — not a slide deck.
 
-**Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** — the three strongest
-reads for a judge short on time: [`/`](https://dobara-one.vercel.app) (the thesis and a
-real mandate's aggressive-vs-Dobara replay), [`/evidence`](https://dobara-one.vercel.app/evidence)
-(the full result, CIs, sensitivity and break-even), [`/architecture`](https://dobara-one.vercel.app/architecture)
+**Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** — if you're short on
+time, start with [`/evidence#calibrator-experiment`](https://dobara-one.vercel.app/evidence#calibrator-experiment):
+I wrote down a rule in advance, it told me to ship a change that made the system worse,
+and both results are published. Then [`/`](https://dobara-one.vercel.app) (the thesis and
+a real mandate's aggressive-vs-Dobara replay), [`/evidence`](https://dobara-one.vercel.app/evidence)
+(the full result, CIs, sensitivity and break-even), and [`/architecture`](https://dobara-one.vercel.app/architecture)
 (the LLM boundary and the compliance gate, plus a short note from me). Two worked
 decisions if you want to go deeper: [`/audit/89`](https://dobara-one.vercel.app/audit/89)
 (rejected alternatives and all) and [`/audit/144`](https://dobara-one.vercel.app/audit/144)
@@ -45,20 +48,17 @@ keep reading for how it was built and how to run it.
 
 ## A note from the builder
 
-I'm Jay Gautam, and I built this alone for this submission. The thing I'm most honest
-about: I pre-registered an adoption rule for a candidate calibrator *before* measuring
-it — the tie-break problem that started this thread (76% of decisions landing on an
-exact scoring tie, traced to an isotonic calibrator too coarse to preserve a real
-day-of-week signal) is what prompted the search. A Platt-scaled calibrator passed that
-pre-registered rule by a wide margin, so I adopted it and reran the full evaluation.
-The result was a strictly-dominated loss: net LTV reversed from +₹65.71/mandate to
-−₹64.09/mandate, gross recovery fell, and revocations rose. I diagnosed why before
-writing anything up, ruled out a bug, and published the full decomposition — both the
-passing calibrator experiment and the losing outcome it produced — in
-[`docs/DECISIONS.md`](docs/DECISIONS.md) under `[2026-09-02]`, "The calibrator
-experiment: Platt adopted, measured, diagnosed, reverted — isotonic ships." I shipped
-the calibrator that wins on the metric that actually matters, not the one that won the
-proxy metric it was picked on.
+I'm Jay Gautam, and I built this alone for this submission.
+
+The thing I'm most honest about: partway through I found that most of my agent's
+decisions were landing on an exact scoring tie, which meant a simple fallback rule — not
+the model — was doing the choosing. Before I went looking for a better model, I wrote the
+test down: if a candidate passes these two checks, I ship it, whatever that does to my
+headline number. One passed. I shipped it, reran the full evaluation, and my result
+flipped from a win to a loss. So I checked it wasn't a bug, published both outcomes, and
+shipped the version that wins on the thing that actually matters rather than the one that
+won the test I'd picked. The whole account, losing branch included, is in
+[`docs/DECISIONS.md`](docs/DECISIONS.md) under `[2026-09-02]`.
 
 ## How this was built
 

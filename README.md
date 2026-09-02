@@ -5,6 +5,21 @@
 An AI revenue-recovery agent for Indian recurring payments.
 Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 
+## In plain English
+
+When a recurring payment fails, the usual playbook is to just retry — but Indian law
+requires a fresh 24-hour warning before every single retry, so every retry is another
+interruption landing in the customer's inbox or phone. That gets expensive fast: enough
+customers respond by cancelling the whole standing instruction (a "mandate" — the
+customer's standing permission for a merchant to auto-debit them) rather than just the
+one failed payment, and a cancelled mandate loses every future payment on it, not just
+this one. About 20 million mandates are cancelled this way every month across India.
+Before each retry, Dobara prices the trade-off: what this attempt is likely to recover,
+weighed against the odds that another warning pushes the customer to cancel — and when
+that trade looks bad, it stops instead of retrying. Net result: Dobara recovers slightly
+less cash than retrying aggressively, but ends up ahead overall, because it destroys far
+fewer mandates.
+
 ## What I built
 
 Every retry of a failed recurring payment in India legally requires its own 24-hour
@@ -31,15 +46,19 @@ keep reading for how it was built and how to run it.
 ## A note from the builder
 
 I'm Jay Gautam, and I built this alone for this submission. The thing I'm most honest
-about: partway through, I found that 76% of the agent's decisions were landing on an
-exact tie at the top of its scoring — silently broken by loop order, not by any real
-rule, because an isotonic probability calibrator was too coarse to preserve a day-of-week
-signal the underlying model had genuinely learned. I diagnosed the actual cause before
-touching a fix, wrote down a commitment to report the headline result honestly either
-way *before* rerunning it, and then reran — the number moved by ₹0.28 per mandate, not a
-regression, but I didn't know that going in. Full account in
-[`docs/DECISIONS.md`](docs/DECISIONS.md) under `[2026-08-27]`, "Three findings from a
-static review."
+about: I pre-registered an adoption rule for a candidate calibrator *before* measuring
+it — the tie-break problem that started this thread (76% of decisions landing on an
+exact scoring tie, traced to an isotonic calibrator too coarse to preserve a real
+day-of-week signal) is what prompted the search. A Platt-scaled calibrator passed that
+pre-registered rule by a wide margin, so I adopted it and reran the full evaluation.
+The result was a strictly-dominated loss: net LTV reversed from +₹65.71/mandate to
+−₹64.09/mandate, gross recovery fell, and revocations rose. I diagnosed why before
+writing anything up, ruled out a bug, and published the full decomposition — both the
+passing calibrator experiment and the losing outcome it produced — in
+[`docs/DECISIONS.md`](docs/DECISIONS.md) under `[2026-09-02]`, "The calibrator
+experiment: Platt adopted, measured, diagnosed, reverted — isotonic ships." I shipped
+the calibrator that wins on the metric that actually matters, not the one that won the
+proxy metric it was picked on.
 
 ## How this was built
 

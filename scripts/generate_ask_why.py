@@ -54,6 +54,11 @@ PAUSE_SECONDS = 0.5
 
 
 def decision_key(mandate_id: int, cycle_index: int, attempt_index: int) -> str:
+    """Identity only -- kept exactly as `web/lib/server-data.ts::getAskWhy()` looks it
+    up (`${mandateId}:${cycleIndex}:${attemptIndex}`), a contract this function cannot
+    change unilaterally. Staleness under a changed decision (see `main()`'s
+    `audit_content_hash` check below) is handled separately, per-entry, not by folding
+    content into this key."""
     return f"{mandate_id}:{cycle_index}:{attempt_index}"
 
 
@@ -108,10 +113,21 @@ def main() -> None:
             done += 1
             decision = _decision_out_from_json(raw)
             key = decision_key(decision.mandate_id, decision.cycle_index, decision.attempt_index)
-            if key in narratives:
+            audit_text = render_from_decision_out(decision)
+            audit_digest = content_hash(audit_text)
+            cached = narratives.get(key)
+            # Bug found and fixed 2026-09-02 (docs/DECISIONS.md [2026-09-02] "Platt
+            # adopted"): identity alone doesn't detect a decision whose NUMBERS changed
+            # under a model swap (different candidate wins, different expected_net) at
+            # the same (mandate, cycle, attempt) -- reusing that stale text produced
+            # narratives the grounding gate correctly flagged at scale (897/1,312).
+            # `audit_content_hash` (added to every entry from here on; missing on older
+            # entries treated as stale, not trusted) makes that regenerate instead of
+            # silently reusing the wrong text, while the identity KEY itself stays
+            # exactly what web/lib/server-data.ts::getAskWhy() looks up.
+            if cached is not None and cached.get("audit_content_hash") == audit_digest:
                 skipped += 1
                 continue
-            audit_text = render_from_decision_out(decision)
             try:
                 text = narrate(provider, audit_text)
                 narratives[key] = {
@@ -119,6 +135,7 @@ def main() -> None:
                     "provider": provider.provider_id,
                     "model": provider.model,
                     "generated_at": datetime.now(UTC).isoformat(),
+                    "audit_content_hash": audit_digest,
                 }
                 generated += 1
             except QuotaExhausted as exc:

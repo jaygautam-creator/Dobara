@@ -3550,7 +3550,11 @@ alone, inside `dobara`'s own decision logic — the project's own thesis, demons
 itself, not asserted a second time in the abstract.
 
 **The finding, stated in full:** we replaced the calibrator with one that scored
-*better* on Brier and cut the argmax tie rate from 77.2% to 17.9%. Net LTV moved
+*better* on Brier and cut the argmax tie rate from 75.7% to 17.9% (held-out world,
+seed 9001, n=150, all decisions with alternatives — `artifacts/production_tie_rate.json`,
+a single paired measurement of both calibrators; see "Third number collision" below for
+why this is not the same figure as the 77.2% in "Number collision resolved" above, and
+why that entry's own 77.2% stands unedited). Net LTV moved
 +₹65.71 → −₹64.09/mandate [−₹81.50, −₹48.65], CI excluding zero, 30 paired seeds. The
 new configuration is strictly dominated: it recovers *less* gross (−₹376,732) AND
 revokes *more* mandates (+78). The dominant channel is date selection (50.9% of
@@ -3656,3 +3660,63 @@ reproducible content; both waiver entries for `684caf2` removed from
 `docs/artifact_freshness_waivers.json` (not carried forward) — regeneration, not a
 waiver, is the correct fix for a genuinely stale file. `check_artifact_freshness.py`
 passes clean for both with no waiver needed.
+
+## [2026-09-02] Third number collision: 77.2% vs 75.7%, and the root cause finally fixed
+
+**The collision.** `main` stated the same quantity twice with different values:
+README.md and this file's own "Platt adopted" entry said the held-out argmax tie rate
+moved 77.2% -> 17.9%; `docs/09A-REHEARSAL-PACK.md`'s new calibrator-experiment beat
+(added the same session, sourced from a script written that same session) said
+75.7% -> 17.9%. Both numbers are real measurements of the same nominal population
+(held-out world, seed 9001, n=150 mandates, isotonic vs. Platt, all decisions with
+alternatives) — they are not a contradiction about what happened, but they cannot both
+be quoted as *the* figure without saying which is which.
+
+**Which is correct, for which population, resolved by checking provenance, not
+guessing.** `77.2%` was measured by `scripts/calibrator_bakeoff.py`'s
+`_population_reconciliation()`, `[2026-09-01]`, against `demo_batch.json`/the model
+bundle as they existed *before* this session's later retrain. `75.7%` was measured by
+the new `scripts/measure_production_tie_rate.py`, `[2026-09-02]`, against the
+production bundle as it exists *now* — and, critically, is a **single, paired**
+measurement: both the isotonic and Platt tie rates in that run came from one script,
+one execution, the same candidate set, written to one artifact
+(`artifacts/production_tie_rate.json`). The `77.2%` figure was never paired that way
+with its own `17.9%` counterpart — the `17.9%` half was always measured separately (an
+ad hoc script, prose-only, this file's earlier "Platt adopted" entry) and the two
+halves were combined into one before/after claim by hand, across two different
+measurement runs, without either being pinned to a shared artifact. **Root cause:
+mixing an unpaired isotonic figure from one run with a Platt figure from a different
+run.** The tiny numeric gap (77.2% vs 75.7%) is itself explained and immaterial —
+already-documented candidate-count churn from `compute_bank_health_snapshots`
+re-running between sessions (n=1,304 then vs. n=1,312 now) — but the *pairing* error is
+the one worth fixing structurally, not just patching the number.
+
+**Fixed: `main` now states one thing, labeled.** README and this file's "Platt
+adopted" entry now cite **75.7% to 17.9%**, both from the single paired measurement in
+`artifacts/production_tie_rate.json`, labeled with the exact population (held-out,
+seed 9001, n=150, all decisions with alternatives) everywhere it appears. The earlier
+`77.2%` in the `[2026-09-01]` "Number collision resolved" entry above is **left
+unedited** — it is a correct, historically-accurate record of what that earlier script
+measured at that time, on the population it actually ran against; changing it after
+the fact would replace one drift bug with a worse one (silently rewriting a dated
+finding). The two entries now cross-reference each other so a reader hits the
+explanation, not a second unexplained mismatch.
+
+**Root cause, structurally fixed, not just patched a third time.** This is the third
+collision this session: `76%`/`94%` (`[2026-09-01]` "Number collision resolved"), the
+`day_of_month` gain-rank correction (`[2026-09-01]`, "third- vs fourth-highest-gain"),
+and now this. Every one was a number measured once, in one place, then re-typed by
+hand somewhere else, never re-checked against its source after the first typing. Added
+`scripts/check_spoken_figures.py`, wired into `make check`: an explicit, hand-maintained
+table of the figures the pitch video's own script/rehearsal-pack narration actually
+speaks aloud, each pinned to the exact artifact field (local, or on
+`experiment/platt-calibrator` via `git show <ref>:<path>` without checking it out) it's
+computed from, checked as an exact-substring match against the doc file(s) that quote
+it. Deliberately narrow, not a general prose-number-extraction system — a broad checker
+that tries to guess which number in a sentence is "the claim" (versus a mandate ID, a
+day of the month, a citation year) was considered and rejected as more engineering than
+this gate's payoff justifies; a small table that actually runs beats an ambitious one
+that doesn't. Covers, today: the tie rate; both configurations' headline net-LTV
+figures (point + CI); the gross and revocation deltas. Adding a new spoken figure to
+the video means adding a row to `FIGURES` in the same commit — the discipline this gate
+exists to enforce, now structurally required rather than merely asked for next time.

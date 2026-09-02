@@ -34,6 +34,7 @@ check:
 	@test -f data/dobara.sqlite3 || uv run python -m sim.run
 	uv run pytest -q
 	uv run python -m scripts.check_ask_why_grounding
+	uv run python -m scripts.check_spoken_figures
 
 demo: sim train eval
 	@echo "Run 'make api' and 'make web' in separate terminals."

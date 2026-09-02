@@ -230,7 +230,11 @@ Nothing about it is deleted, softened, or moved out of view.
 *better* on the pre-registered proxy metric (Brier score, held-out, CI-overlap
 confirmed) and cut the argmax tie rate — the fraction of decisions where the calibrator
 couldn't distinguish candidate dates, forcing `agent/decide.py`'s restraint-first
-tie-break to pick instead — from **77.2% to 17.9%**. Net LTV vs. `razorpay_default`
+tie-break to pick instead — from **75.7% to 17.9%** (held-out world, seed 9001,
+n=150 mandates, all decisions with alternatives; `artifacts/production_tie_rate.json`,
+a paired single-run measurement of both calibrators — see
+`docs/DECISIONS.md` [2026-09-02] "Third number collision" for why this figure moved
+from an earlier, differently-sourced **77.2%**). Net LTV vs. `razorpay_default`
 moved from **+₹65.71/mandate** [+₹53.31, +₹80.27] to **−₹64.09/mandate**
 [−₹81.50, −₹48.65], CI excluding zero, 30 paired seeds. The new configuration was
 **strictly dominated**, not a trade-off: it recovered *less* gross (−₹376,733) AND
@@ -283,7 +287,7 @@ across 30 seeds — full detail and every other arm-level metric measured:
 | Metric | Isotonic (shipped, `main`) | Platt (`experiment/platt-calibrator`) | Delta |
 |---|---:|---:|---:|
 | Net LTV vs. `razorpay_default` | **+₹65.71/mandate** (win) | **−₹64.09/mandate** (loss) | −₹129.80 |
-| Argmax tie rate (held-out) | 77.2% | 17.9% | −59.3pp |
+| Argmax tie rate (held-out, seed 9001, n=150, all decisions) | 75.7% | 17.9% | −57.8pp |
 | Gross recovered (₹, total) | 24,328,993 | 23,952,261 | −376,733 |
 | Revocations (per seed) | 637.7 | 716.4 | +78.7 (+12.3%) |
 | Abstentions (per seed) | 1,952.6 | 1,720.6 | −232.0 (−11.9%) |

@@ -1,0 +1,28 @@
+{
+  "note": "Decomposes isotonic->Platt argmax changes on the held-out world (seed=9001, n=150) into action-type changes vs. date-only changes among ScheduleDebit-to-ScheduleDebit decisions, and measures the signed day delta (platt_date - isotonic_date) for the latter.",
+  "seed": 9001,
+  "n_mandates": 150,
+  "isotonic_model_version": "e5eaa66718f2",
+  "platt_model_version": "46abfd4c9c02",
+  "n_decisions_with_alternatives": 1312,
+  "n_action_type_changed": 23,
+  "n_date_changed": 668,
+  "n_unchanged": 621,
+  "date_changed_pct_of_total": 0.5091463414634146,
+  "action_type_changed_pct_of_total": 0.01753048780487805,
+  "day_delta_stats": {
+    "n": 668,
+    "n_later": 668,
+    "n_earlier": 0,
+    "pct_later": 1.0,
+    "median_days": 7.0,
+    "mean_days": 9.034431137724551,
+    "min_days": 1.0,
+    "max_days": 28.0
+  },
+  "provenance": {
+    "generated_at": "2026-09-02T14:30:54.702442+00:00",
+    "git_commit": "4a96c7fe76797241cf245cd2066b85eca7780a36"
+  },
+  "content_hash": "b08f84fba46be9f1671c118b512982f79a324ef68b0bb9c30e5430914e1988ba"
+}

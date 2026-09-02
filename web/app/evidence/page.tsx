@@ -166,21 +166,22 @@ export default function EvidencePage() {
                 <code className="tabular-nums">
                   {summary.provenance.git_commit.slice(0, 12)}
                 </code>
-                , after <code>agent/decide.py</code>&apos;s tie-break fix (
+                , after adopting Platt as the recovery model&apos;s calibrator (
                 <a
                   href="#tie-break-honesty"
                   className="underline decoration-dotted hover:text-text-secondary"
                 >
                   see the honesty panel
                 </a>
-                ) — the previous run (26 Aug, pre-tie-break-fix) reported ₹65.99/mandate
-                [₹53.82, ₹80.63]. Pre-registered before this rerun in{" "}
-                <code>docs/DECISIONS.md</code> [2026-08-27]: the rule is kept regardless
+                ) — the previous run (isotonic calibrator, post-tie-break-fix) reported
+                +₹65.71/mandate [₹53.31, ₹80.27]. Pre-registered before this rerun in{" "}
+                <code>docs/DECISIONS.md</code> [2026-09-01]: the rule is kept regardless
                 of which way the number moved. It moved by{" "}
                 <strong>
-                  {signedInr(headline.mean_diff / summary.n_customers_per_seed - 65.99)}
+                  {signedInr(headline.mean_diff / summary.n_customers_per_seed - 65.71)}
                 </strong>
-                /mandate — a rounding-level change, not a regression.
+                /mandate — a sign reversal, not a rounding change, reported at full
+                weight and not reverted.
               </p>
             </Card>
           </section>
@@ -199,7 +200,7 @@ export default function EvidencePage() {
             <div className="max-w-[68ch]">
               <SectionHeading
                 title="The mechanism, decomposed"
-                description="dobara recovers less gross and wins anyway — cutting revocations far more than it cuts notification spend."
+                description="dobara recovers less gross, and the revocation cut no longer covers the gap — a reversal from the isotonic-calibrator result this section used to describe."
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -220,7 +221,7 @@ export default function EvidencePage() {
               <StatTile
                 label="Net"
                 value={formatInr(headline.mean_diff, { compact: true })}
-                tone="good"
+                tone={headline.mean_diff >= 0 ? "good" : "critical"}
                 source={`per ${summary.n_customers_per_seed.toLocaleString("en-IN")}-mandate seed`}
                 ciText={`[${formatInr(headline.ci_lo, { compact: true })}, ${formatInr(headline.ci_hi, { compact: true })}]`}
               />
@@ -311,12 +312,13 @@ export default function EvidencePage() {
                   columns={["Predicted", "Observed"]}
                   rows={recoveryReliabilityRows}
                 />
-                <p className="mt-2 text-[11px] text-status-warning-text">
-                  The visible steps are real, not a rendering artifact: this calibrator
-                  (isotonic regression, a step function by construction) emits only{" "}
-                  <strong>17 distinct probability values</strong> across [0, 1]. See
-                  &ldquo;Isotonic calibration is a step function&rdquo; in the honesty
-                  panel below for what that costs.
+                <p className="mt-2 text-[11px] text-text-muted">
+                  Adopted 2026-09-02: this calibrator is now Platt scaling (a logistic
+                  regression on the raw score), fully continuous — 5,000/5,000 distinct
+                  values on a 5,000-point grid, not the isotonic step function an
+                  earlier revision of this page described here. See &ldquo;Calibrator
+                  swap: isotonic to Platt&rdquo; in the honesty panel below for why, and
+                  for the headline reversal that came with it.
                 </p>
                 <p className="mt-2 text-[11px] text-text-muted">
                   Beats logistic baseline:{" "}
@@ -362,9 +364,12 @@ export default function EvidencePage() {
                   rows={hazardReliabilityRows}
                 />
                 <p className="mt-2 text-[11px] text-status-warning-text">
-                  Same step-function calibrator, coarser here: <strong>8 distinct
-                  probability values</strong> across [0, 1] (n_validate is smaller for
-                  this model, so isotonic regression has fewer points to fit steps to).
+                  Unlike the recovery model above, this calibrator is still isotonic
+                  regression (a step function by construction) — not part of the
+                  2026-09-02 Platt swap, which only measured and applied to the recovery
+                  model. <strong>8 distinct probability values</strong> across [0, 1]
+                  (n_validate is smaller for this model, so isotonic regression has
+                  fewer points to fit steps to).
                 </p>
                 <p className="mt-2 text-[11px] text-text-muted">
                   Rising hazard with same-cycle failure count is recovered by the model,
@@ -413,10 +418,12 @@ export default function EvidencePage() {
                 <code>docs/07-EVAL-SPEC.md</code> asks for by name, and it holds robustly
                 across the full declared range [0.05, 0.15].
               </Callout>
-              <Callout tone="good" title="vs razorpay_default: no break-even inside the declared range">
-                {breakEven.note} A range that never inverts hasn&apos;t found the
-                boundary, only described the interior — see the extended search below for
-                how far it actually holds.
+              <Callout tone="critical" title="vs razorpay_default: break-even is now INSIDE the declared range, on the losing side">
+                {breakEven.note} The calibrated hazard value (0.098) currently sits
+                below this break-even — <code>dobara</code> loses to{" "}
+                <code>razorpay_default</code> at the real-world-anchored parameter value,
+                the reverse of every earlier revision of this page. See the honesty
+                panel below for the calibrator swap that caused this.
               </Callout>
             </div>
             <div className="mt-4 max-w-[68ch]">
@@ -436,47 +443,44 @@ export default function EvidencePage() {
               />
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Callout tone="warning" title="hazard_per_failure_notification: break-even found">
-                Widening from the declared range&apos;s floor (0.05) down toward 0, the
-                break-even is located at hazard ≈{" "}
-                <strong>{extendedHazard.break_even_value?.toFixed(4)}</strong>. The
-                calibrated value, <strong>{sensitivity.calibrated_value}</strong>, sits{" "}
-                <strong>{extendedHazard.ratio_calibrated_to_break_even?.toFixed(2)}×</strong>{" "}
-                above it — a wider margin than this section previously reported.
-                Anchored against the NPCI ratio: at this break-even,{" "}
-                <code>razorpay_default</code>&apos;s revocation ratio is ≈
-                {formatPct(
-                  extendedHazard.razorpay_default_revocation_per_execution_ratio_at_break_even ??
-                    0,
-                  2,
-                )}
-                , against NPCI&apos;s published ≈2.5% — real-world revocations would need
-                to run at roughly half the published rate for <code>dobara</code> to lose.
+              <Callout tone="critical" title="hazard_per_failure_notification: break-even is now inside the declared range">
+                Unlike every earlier revision of this section, the break-even against{" "}
+                <code>razorpay_default</code> is found directly within the declared
+                sweep (between 0.100 and 0.125), not by widening past it — see the
+                callout above. The extended search below 0.05, toward the physical floor{" "}
+                {extendedHazard.search_bound}, found no further inversion (
+                {extendedHazard.note}):{" "}
+                <code>razorpay_default</code> keeps winning all the way down to{" "}
+                {extendedHazard.search_bound}, the same direction it already wins in
+                across the whole declared range.
+                Anchored against the NPCI ratio at the (in-range) break-even:{" "}
+                <code>razorpay_default</code>&apos;s revocation ratio there is ≈2.79%,
+                just above NPCI&apos;s published ≈2.5% — real-world revocations running
+                near the published rate currently favor <code>razorpay_default</code>.
               </Callout>
-              <Callout tone="good" title="ltv.margin_factor: no inversion to the economic floor">
+              <Callout tone="critical" title="ltv.margin_factor: razorpay_default wins to the economic floor">
                 Widened from the declared range&apos;s floor (
                 {marginAxis.sensitivity_range[0]}) down to{" "}
                 <strong>{extendedMargin.search_bound}</strong> — an extreme 2% gross
                 margin, below which a subscription business isn&apos;t economically
-                viable. <code>dobara</code> still wins at that floor; no break-even found.
-                Retracts an earlier version of this section, which stated a break-even at
-                ≈0.48 and a required 48%+ gross margin — that finding did not hold against
-                a later regeneration of this artifact and is not restated here. This axis
-                has no external anchor (a bare, unsourced assumption), so this robustness
-                carries less evidentiary weight than the hazard result even though it
-                reaches further (to the edge of what the parameter can mean, not just the
-                declared guess).
+                viable. <code>razorpay_default</code> wins throughout the declared range
+                and keeps winning at that floor; no inversion found in either direction.
+                This axis has no external anchor (a bare, unsourced assumption), so this
+                robustness carries less evidentiary weight than the hazard result even
+                though it reaches further (to the edge of what the parameter can mean,
+                not just the declared guess).
               </Callout>
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <Callout title="notification.cost_inr.whatsapp: no inversion down to free">
                 Widened from the declared floor ({whatsappAxis.sensitivity_range[0]}) down to{" "}
                 <strong>{extendedWhatsapp.search_bound}</strong> (free notifications) — no
-                measurable inversion. WhatsApp cost is too small a share of total spend
-                for this axis to move the ranking at any point tested.
+                measurable inversion. <code>razorpay_default</code> wins throughout;
+                WhatsApp cost is too small a share of total spend for this axis to move
+                the ranking at any point tested.
               </Callout>
               <Callout title="date_change_offer.response_rate: already at its floor">
-                {extendedResponseRate.note} — <code>dobara</code> does not depend on the
+                {extendedResponseRate.note} — the ranking does not depend on the
                 date-change mechanic working at all, down to and including 0% response.
               </Callout>
             </div>
@@ -504,7 +508,7 @@ export default function EvidencePage() {
                 {summary.robustness_slices.by_bank.dobara.SBI.revocations} vs{" "}
                 {summary.robustness_slices.by_bank.razorpay_default.SBI.revocations}).
               </Callout>
-              <Callout tone="good" title="The 7 unshifted banks — a clear win">
+              <Callout tone="warning" title="The 7 unshifted banks — a win, but barely one now">
                 dobara{" "}
                 {formatInr(
                   summary.robustness_slices.regime_shift_bank_flag.dobara.False
@@ -515,8 +519,12 @@ export default function EvidencePage() {
                   summary.robustness_slices.regime_shift_bank_flag.razorpay_default.False
                     .mean_net_ltv_inr,
                 )}{" "}
-                /mandate. The headline ₹66/mandate is the net of a real, priced restraint
-                cost on SBI and a real win everywhere the model is still trustworthy.
+                /mandate — a ~₹30/mandate margin, down from ~₹166 under the earlier
+                isotonic calibrator. The overall headline is now negative (see the top of
+                this page): the reversal is not localized to SBI&apos;s restraint cost —
+                the win everywhere else nearly vanished too, consistent with the
+                mechanism section below being about date selection generally, not a
+                SBI-specific effect.
               </Callout>
             </div>
           </section>
@@ -579,31 +587,37 @@ export default function EvidencePage() {
               </Callout>
               <Callout
                 id="tie-break-honesty"
-                tone="warning"
-                title="Isotonic calibration is a step function — and it costs real decision resolution"
+                tone="critical"
+                title="Calibrator swap: isotonic to Platt (2026-09-02) — fixed the tie rate, reversed the headline"
               >
-                Both models&apos; probability calibrators are{" "}
+                Through 2026-09-01, both models&apos; probability calibrators were{" "}
                 <code>sklearn.isotonic.IsotonicRegression</code>, which by construction
-                outputs a piecewise-constant step function, not a smooth curve — visible
-                directly in the reliability diagrams above as flat segments, not a
-                rendering artifact. Measured exactly, not approximated: the recovery
-                model&apos;s LightGBM calibrator has <strong>17 distinct output
-                values</strong> across [0, 1] (33 knots, fit on the validation split,
-                n_validate={recovery.n_validate.toLocaleString("en-IN")}); its logistic
-                baseline has <strong>15</strong>; the hazard model&apos;s calibrator has{" "}
-                <strong>8</strong> (fewer knots — a smaller validation set). This is what
-                it costs: many genuinely different raw predictions — the underlying
-                LightGBM model does learn real day-of-month/day-of-week signal, confirmed
-                by nonzero feature importance — collapse to an identical calibrated
-                probability once the isotonic step swallows them. On the committed demo
-                fixture this produced an exact <code>E[net]</code> tie at the argmax in
-                76% of decisions, some spanning candidate dates a month apart — not a bug
-                in candidate scoring, a resolution ceiling in the calibrator.{" "}
-                <code>agent/decide.py</code>&apos;s tie-break rule (closest to the
-                customer&apos;s declared preferred day, else earliest date) exists
-                specifically to give a principled answer at exactly the granularity the
-                calibrator can no longer discriminate. Full diagnosis in{" "}
-                <code>docs/DECISIONS.md</code> [2026-08-27].
+                outputs a piecewise-constant step function, not a smooth curve — the
+                recovery model&apos;s LightGBM calibrator had <strong>17 distinct output
+                values</strong> across [0, 1], and this produced an exact{" "}
+                <code>E[net]</code> tie at the argmax in 76-94% of decisions depending on
+                population (full diagnosis: <code>docs/DECISIONS.md</code> [2026-08-27],
+                [2026-09-01]). A pre-registered bake-off (
+                <code>scripts/calibrator_bakeoff.py</code>) tested whether a smoother
+                calibrator would cut that tie rate without hurting Brier calibration;
+                measured directly on the held-out population, Platt scaling passed both
+                bars by a wide margin and was adopted 2026-09-02. The recovery
+                model&apos;s calibrator is now Platt — fully continuous, 5,000/5,000
+                distinct values on a swept grid — and the production tie rate fell to{" "}
+                <strong>15.2-17.9%</strong>, down from 74.9-77.2% under isotonic. The
+                hazard model&apos;s calibrator is unaffected (still isotonic, 8 distinct
+                values — the bake-off never tested it).{" "}
+                <strong>
+                  This is not a free improvement: adopting Platt reversed the headline
+                  from a +₹65.71/mandate win to a −₹64.09/mandate loss
+                </strong>{" "}
+                (see the top of this page) — the calibrator&apos;s own, now
+                far-less-frequently-overridden date picks recover less value in
+                aggregate than <code>agent/decide.py</code>&apos;s restraint-first
+                tie-break rule used to on that same share of decisions. Reported at full
+                weight, calibrator kept, not reverted — full account and the mechanism as
+                far as it&apos;s been traced: <code>docs/DECISIONS.md</code> [2026-09-02]
+                &ldquo;Platt adopted&rdquo;.
               </Callout>
             </div>
           </section>

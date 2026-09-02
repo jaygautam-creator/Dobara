@@ -21,13 +21,27 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", type=str, default="data/dobara.sqlite3")
     parser.add_argument("--out", type=str, default="artifacts")
+    parser.add_argument(
+        "--recovery-n-test-evaluations",
+        type=int,
+        default=1,
+        help=(
+            "Honesty marker (docs/05-ML-SPEC.md): how many times the recovery model's "
+            "test split (cycle 6-8) has ever actually been evaluated. Bump this "
+            "explicitly, never silently, when retraining touches the test set again "
+            "(e.g. a calibrator swap requiring a fresh test-set report) -- see "
+            "docs/DECISIONS.md [2026-09-01] 'Platt adopted' for the first such bump."
+        ),
+    )
     args = parser.parse_args()
 
     n_snapshots = compute_bank_health_snapshots(args.db)
     print(f"bank_health: {n_snapshots} snapshots written")
 
     print("\n=== Model 1: Recovery ===")
-    recovery_report = train_recovery_model(args.db, out_dir=args.out)
+    recovery_report = train_recovery_model(
+        args.db, out_dir=args.out, n_test_evaluations=args.recovery_n_test_evaluations
+    )
     print(f"model_version={recovery_report['model_version']}")
     print(
         f"  train={recovery_report['n_train']} validate={recovery_report['n_validate']} "

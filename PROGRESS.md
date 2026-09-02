@@ -7,7 +7,86 @@
 
 ## CURRENT STATE
 
-**Last updated:** 2026-09-01, second investigation-only session, same day: follow-up on
+**Last updated:** 2026-09-02, fourth session, same continuation: Platt ADOPTED as the
+recovery model's calibrator, `make eval` rerun, headline REVERSED (win -> significant
+loss), fully propagated and reconciled. `make check`, `npx tsc --noEmit`, `npm run
+lint`, `npm run build` all green. **Not pushed — reported to the owner first, per
+instruction.**
+
+**What changed, in order:**
+1. **Part A (consistency check, resolved, no bug):** the owner flagged that raw/Platt/
+   beta argmax tie rates "must" be identical on any one slice (monotone-invariance
+   argument) but measured differently (34.2%/30.8%/31.0% on the n=1,304 slice). Root
+   cause found and confirmed empirically, not assumed: `Stop`/`EscalateToHuman` have a
+   FIXED `expected_net` (0.0) independent of the recovery calibrator, so a recalibrated
+   `ScheduleDebit` score can coincidentally tie or not tie with that constant depending
+   on the calibrator's absolute scale — this breaks the naive invariance argument at the
+   any-candidate level, though the invariant DOES hold, and was verified to hold, on the
+   `ScheduleDebit`-only subset (392/1,304 identical across raw/Platt/beta). Regression
+   test added: `tests/test_calibrator_monotone_invariance.py`. No verdict change.
+2. **Part B (consistency check, resolved, no bug in the gate):** `check_artifact_freshness`
+   reported clean one session ago, red this session, at the same commit `6a20367`. Root
+   cause found in `git reflog`: that commit was an **amend** of an earlier commit
+   (`c56ce5f`) that had already written waiver entries referencing its own (pre-amend)
+   hash — the amend silently orphaned those waivers. Fixed by correcting the hash
+   references in `docs/artifact_freshness_waivers.json` (same verified reasoning, right
+   hash) — not a new waiver. The prior session's "clean" claim was the wrong one.
+3. **Adoption:** `models/recovery.py`'s `lgbm_calibrator` switched isotonic -> Platt
+   (`PlattCalibrator`, new class). `models/hazard.py` untouched (never measured).
+   `model_version` bumped (`e5eaa66718f2` -> `46abfd4c9c02`, tag `v2`).
+   `n_test_evaluations` incremented 1 -> 2 via a new `--recovery-n-test-evaluations`
+   CLI flag, loudly, not silently reused.
+4. **`make eval` (30x5,000, ~118 min) + `python -m eval.sensitivity` (~90+ min this
+   run, contention-slowed) rerun, chained, `nohup`, not polled tightly.** Headline
+   REVERSED: +₹65.71/mandate -> **-₹64.09/mandate** [-₹81.50, -₹48.65], significant
+   both ways. Break-even vs. `razorpay_default` moved from "not found in declared
+   range" to **found inside it, at hazard≈0.122** — the calibrated value (0.098) is now
+   on the LOSING side. Break-even vs. `aggressive_8x` unaffected (still not found,
+   `dobara` still wins). Argmax tie rate (production Platt, measured directly): 77.2%
+   -> **17.9%** (all-decisions), 74.9% -> **15.2%** (attempt_index=1). Full reconciliation,
+   in the `[2026-08-27]` format: `docs/DECISIONS.md` [2026-09-02] "Platt adopted".
+5. **A real bug found and fixed along the way, not just reported:**
+   `eval/sensitivity.py`'s extended-break-even-search note text hardcoded "dobara beats
+   razorpay_default" regardless of who actually won — harmless while dobara always won,
+   silently wrong the moment it didn't. Fixed to read the winner from the actual sign;
+   `eval.sensitivity` rerun a second time to pick up the corrected text (same numbers,
+   different prose).
+6. **Propagation, all real regeneration, no waivers:** `make demo-fixture`,
+   `make money-chart`, `make home-demo`, `make compliance-rules` regenerated.
+   `make ask-why` needed THREE provider swaps this session — Groq (daily token quota
+   exhausted mid-batch), Gemini (500 req/day free tier also exhausted mid-batch), then
+   OpenRouter (new `OpenRouterProvider` added to `llm/provider.py`, `minimax/minimax-m3:free`
+   after two other free models 429'd) — before finishing all 1,312 decisions. Along the
+   way, found and fixed a real caching bug in `scripts/generate_ask_why.py`: cache keys
+   were identity-only (mandate:cycle:attempt), so a decision whose NUMBERS changed under
+   recalibration silently kept its stale pre-Platt narrative; added a per-entry
+   `audit_content_hash` check so a changed decision regenerates automatically. Of 49
+   narratives `check_ask_why_grounding` still flagged after full regeneration, 8 were
+   genuine hallucinations (wrong compliance-check counts, one wrong year, one wrong
+   amount — verified against `demo_batch.json` by hand) and were regenerated; the other
+   41 were verified-accurate (regulatory constants, hyphenated-date false positives,
+   real derived/rounded figures) and whitelisted with per-entry reasons in
+   `scripts/check_ask_why_grounding.py`. Final: **0 flagged, 1,312/1,312 covered.**
+   README, `/evidence`, `/architecture` all rewritten with the new numbers (not just the
+   headline — mechanism decomposition, break-even section, bank-slice comparison, the
+   tie-break honesty panel, the opening thesis paragraph). `artifacts/money_chart.svg`
+   (no committed regeneration script, a known pre-existing gap) is explicitly flagged
+   stale in the README rather than left silently wrong.
+
+**Not yet done, flagged for the owner, not decided here:** whether/how to fix the
+underlying mechanism (Platt-calibrated date selection currently recovers less value in
+aggregate than the old tie-break did on the same decisions) is unresolved — traced as
+far as "gross given up grew, revocation-avoidance gain shrank, the second no longer
+covers the first" but no deeper causal account. Per instruction, this session does not
+chase a better number or add a criterion after the fact to explain it away.
+
+---
+
+**Prior update (2026-09-01, third investigation-only session):** calibrator
+bake-off verdict reversed on the held-out population (see below) — read-only (no
+production code retrained, no `make eval`).
+
+**Prior same-day update:** second investigation-only session, follow-up on
 the calibrator bake-off above — two jobs, both read-only (no production code retrained,
 no artifact regenerated beyond `scripts/calibrator_bakeoff.py` and
 `artifacts/calibrator_bakeoff.json`, `make eval` not rerun).
@@ -52,11 +131,38 @@ resolved" and "Raw-score tie decomposition"; raw numbers in
 `artifacts/calibrator_bakeoff.json`. `make check` green (107 tests, ruff, mypy,
 artifact-freshness, ask-why grounding all clean).
 
-**Next:** unchanged from the prior session below: record the pitch video next; this
-remains the last frontend change before recording. The README now names two real,
-partial limitations behind the 76%/94% tie rate (calibrator coarseness, ~35%; tree
-resolution, ~65%) rather than one — worth a glance before recording in case either is
-worth a sentence in the pitch, but neither blocks it.
+**Same-day third session: calibrator bake-off verdict reversed on the held-out
+population.** The owner flagged that the pre-registration fixed the decision rule but
+never specified the evaluation population, and that the bake-off script's own n=300
+default (`world_seed=42`, the recovery model's training seed) was un-sanctioned and
+unrepresentative — already known from this session's own `population_reconciliation`
+(89.7% vs. 77.2% tie rate under the identical production calibrator). Wrote
+`scripts/held_out_calibrator_verification.py` (read-only, no retraining, `make eval` not
+rerun, `n_test_evaluations` stays 1) to measure Platt's/beta's argmax tie rate and Brier
+score DIRECTLY on the held-out world (`DEMO_SEED=9001`), not inferred from monotonicity,
+with criterion (a) also computed on that same held-out population rather than only
+`validate`. **Confirmed: both criteria pass, for both candidates, on both slices**
+(`attempt_index_1_only` n=1,173: isotonic 74.9%, Platt/beta 30.4%; full-lifecycle
+n=1,304: isotonic 77.2%, Platt/beta ~31%) — the pre-registered rule now says ADOPT.
+**Not yet acted on** — swapping the production calibrator and rerunning `make eval` is a
+separate step requiring separate sign-off. Full account, including why this isn't
+population-shopping (the held-out measurement was forced by an unrelated
+seed-disclosure correction, verdict implication noticed only afterward — verifiable in
+commit order): `docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off verdict reversed on
+the held-out population". README's tie-decomposition section rewritten to lead with the
+held-out (representative, calibrator-majority) reading, training-seed reading kept only
+as contrast. `artifacts/calibrator_bakeoff.json["held_out_direct_verification"]` carries
+the raw numbers.
+
+**Next (superseded by the 2026-09-02 entry at the top of this file — kept for
+history):** decide whether to spend the adoption step before recording. **Resolved:**
+adoption was spent (2026-09-02) and reversed the headline to a significant loss. The
+pitch script (`docs/09-DEMO-SCRIPT.md`) has NOT been updated to reflect this and almost
+certainly still assumes the old winning headline — needs a full read-through before
+recording, not just a number swap; the thesis framing itself ("recovers more value than
+naive retry") is currently false for the production system and the script needs to
+either report the loss honestly (matching this repo's own stated non-negotiables) or the
+underlying mechanism issue needs to be fixed first. Owner's call, not decided here.
 
 **Prior session (2026-08-31, seventh post-redesign follow-up session — additive-only
 adoption/boundary section on `/architecture`; full account in `docs/DECISIONS.md`

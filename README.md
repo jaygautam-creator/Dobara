@@ -9,11 +9,15 @@ Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 
 Every retry of a failed recurring payment in India legally requires its own 24-hour
 warning message. Dobara treats each retry as a priced bet against losing the mandate
-entirely, rather than a free action — and it beats Razorpay's own default retry policy
-on net value recovered while cutting mandate revocations from 1,049 [95% CI 1,040,
-1,057] to 638 [629, 646] per seed (Honest metrics, below). It's a working system: a simulator, three
-trained/calibrated ML models, a structurally-enforced compliance gate, a full audit
-trail, and a batch evaluation harness — not a slide deck.
+entirely, rather than a free action. **As of the current calibrator (Platt, adopted
+2026-09-02), it currently LOSES to Razorpay's own default retry policy on net value
+recovered** — ₹64.09/mandate [95% CI −₹81.50, −₹48.65], a real, significant, reported
+reversal, not hidden — while still cutting mandate revocations from 1,049 [95% CI 1,040,
+1,057] to 716 [708, 726] per seed, a smaller cut than an earlier calibrator achieved
+(Honest metrics, below, has the full account of why). It's a working system: a
+simulator, three trained/calibrated ML models, a structurally-enforced compliance gate,
+a full audit trail, and a batch evaluation harness — not a slide deck, and this README
+reports the current negative result exactly as prominently as it would report a win.
 
 **Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** — the three strongest
 reads for a judge short on time: [`/`](https://dobara-one.vercel.app) (the thesis and a
@@ -230,54 +234,96 @@ that no longer exists) — every figure below is quoted verbatim, not hand-typed
 | `do_nothing` | ₹0 | ₹0 | 0.00 | 0 | 0 |
 | `razorpay_default` | ₹25,072,658 [24,941,494, 25,218,567] | ₹22,658,150 [22,514,345, 22,815,206] | 8.42 | 42,110 [42,047, 42,168] | 1,049 [1,040, 1,057] |
 | `aggressive_8x` | ₹24,674,228 [24,541,037, 24,802,164] | ₹21,510,625 [21,354,397, 21,661,268] | 8.52 | 42,587 [42,507, 42,668] | 1,353 [1,341, 1,363] |
-| **`dobara`** | ₹24,328,993 [24,200,557, 24,461,022] | **₹22,986,684 [22,855,497, 23,123,587]** | 7.77 | 39,082 [39,042, 39,131] | **638 [629, 646]** |
+| **`dobara`** | ₹23,952,261 [23,848,085, 24,069,417] | **₹22,337,706 [22,235,793, 22,449,259]** | 7.80 | 39,175 [39,134, 39,222] | **716 [708, 726]** |
 | `oracle` | ₹26,093,076 [25,940,986, 26,261,183] | ₹24,864,706 [24,704,211, 25,045,958] | 8.31 | 41,534 [41,485, 41,586] | 727 [718, 735] |
 
 All values ± 95% bootstrap CI over 30 seeds. Paired comparisons on identical seeds. Only
-`dobara`'s row moved from the pre-rerun table (the other four arms never call
-`agent/decide.py`, so the tie-break fix cannot touch them — confirmed bit-identical).
+`dobara`'s row moves when its own decision-time code (`agent/decide.py`, or — as here —
+its calibrator) changes; the other four arms never call `decide()`, so they stay
+bit-identical run over run (confirmed).
 
-**Headline: `dobara` beats `razorpay_default` by ₹66 per mandate [95% CI ₹53.31 –
-₹80.27], paired difference across 30 seeds of 5,000 mandates each, CI excludes zero,
-significant.** (The table above states this as a ₹328,534 [₹266,526, ₹401,362] *total*
-over one seed's 5,000-mandate population — the same number, same unit, before dividing by
-5,000; do not divide the total by 150,000, the 30-seed row count, or you'll land on
-₹2.19 and think something's broken.) `oracle` (perfect foresight, the ceiling) weakly
-dominates every arm, confirming the harness itself is sound — no arm can beat the arm that
-knows the true probabilities.
+**Headline, current: `dobara` LOSES to `razorpay_default` by ₹64.09 per mandate [95%
+CI −₹81.50 to −₹48.65], paired difference across 30 seeds of 5,000 mandates each, CI
+excludes zero, significant.** (The table above states this as a −₹320,444
+[−₹407,481, −₹243,240] *total* over one seed's 5,000-mandate population — the same
+number, same unit, before dividing by 5,000.) This is a **reversal**, not a rerun-noise
+move — `dobara` won by +₹65.71/mandate as recently as the previous headline below, and
+now loses by a comparable margin, both significant. `oracle` (perfect foresight, the
+ceiling) still weakly dominates every arm, confirming the harness itself is sound — no
+arm can beat the arm that knows the true probabilities; `dobara` losing to
+`razorpay_default` is not a harness bug, it is `dobara` actually performing worse under
+its current (Platt-calibrated) policy.
 
-**This is a rerun, not the original run — and the number was pre-registered, not
-fitted.** `184f157` fixed a real bug: 76% of `dobara`'s decisions had an exact tie at the
-argmax (`docs/DECISIONS.md` [2026-08-27] has the full diagnosis — an isotonic calibrator
-with only 17 distinct output values collapsing genuine day-of-month/day-of-week model
-signal), resolved until then by accident of candidate-list order, not by any rule. Because
-that tie-break governs the chosen debit *date* in most decisions, and the simulator's
-hidden latent-balance process makes true success genuinely date-dependent, fixing it could
-have moved this headline in either direction — so the commitment to keep the fix
-regardless, and to report a fall honestly if there was one, was committed to
-`docs/DECISIONS.md` *before* this rerun launched. The result: **₹65.99 → ₹65.71/mandate,
-a ₹0.28 move** — a rounding-level change, not a regression, and the rule is kept exactly
-as pre-registered.
+**Why the headline reversed — the calibrator adoption that caused it, reported at full
+weight per its own pre-registered commitment, exactly like the rerun below.** The
+recovery model's calibrator was switched from isotonic regression to Platt scaling on
+2026-09-02, adopted because both pre-registered bake-off criteria (Brier-CI overlap,
+argmax tie rate at least halved) passed by a wide margin, directly measured on the
+held-out population (`docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off verdict
+reversed on the held-out population"; the pre-registration itself:
+`docs/DECISIONS.md` [2026-09-01] "Pre-registration: calibrator bake-off"). The
+adoption's own commitment — "the calibrator is kept, no re-run hunting a better number,
+no criterion added after the fact" — is honored here: **the headline fell, is reported
+as such, and the calibrator was not reverted.** Mechanism, as far as this session traced
+it (not chased further — see `docs/DECISIONS.md` [2026-09-02] "Platt adopted"): with
+isotonic's coarse calibrator, 74.9-77.2% of decisions were exact ties, resolved by
+`agent/decide.py::_tie_break_score`'s restraint-first date selection; under Platt, the
+tie rate falls to 15.2-17.9% and the now-differentiated calibrated score picks the date
+directly on the vast majority of decisions instead. In aggregate, the calibrator's own
+picks recover **less** gross (₹23.95M vs. `razorpay_default`'s ₹25.07M, a ₹1.12M gap —
+wider than the old ₹743,665 gap) while cutting **fewer** revocations proportionally
+(716 vs. 1,049, a 31.7% cut — smaller than the old 39% cut, 638 vs. 1,049) than the
+tie-break's picks did on that same share of decisions. The smaller revocation-avoidance
+gain no longer outweighs the larger gross-recovery loss, flipping net LTV negative. A
+specific causal account of why continuous Platt-driven date selection underperforms
+restraint-first tie-break selection is not established — flagged as follow-up work,
+not resolved here.
 
-**Two follow-up findings on the same tie rate, investigated 2026-09-01, neither one
-changing the fix above.** First, a four-calibrator bake-off (isotonic, Platt, beta,
-monotone spline — `scripts/calibrator_bakeoff.py`) tested whether a smoother calibrator
-would meaningfully cut the tie rate; the pre-registered bar (halve it, without hurting
-calibration) was not met by any candidate, so isotonic stays — a negative result, not a
-fix (`docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off result").
+**The original tie-break fix, for history — this is a rerun of a rerun, and the number
+was pre-registered both times.** `184f157` (2026-08-27) fixed a real bug: 76% of
+`dobara`'s decisions had an exact tie at the argmax (`docs/DECISIONS.md` [2026-08-27]
+has the full diagnosis — an isotonic calibrator with only 17 distinct output values
+collapsing genuine day-of-month/day-of-week model signal), resolved until then by
+accident of candidate-list order, not by any rule. That rerun moved the headline
+₹65.99 → ₹65.71/mandate, a rounding-level change. The calibrator-adoption rerun above is
+the second such pre-registered, commit-before-you-measure rerun on this same headline,
+and moved it far more — a sign reversal, not a rounding change — reported with the same
+discipline both times.
 
-Second: **a non-trivial share of ties trace to the raw, uncalibrated model score itself,
-not the calibrator** — but the exact share is population-dependent, and both populations
-are reported here rather than the more flattering one alone. Swapping in a fully
-continuous calibrator (Platt/beta, 5,000 distinct outputs, zero quantization) still
-leaves decisions tied, because the raw model score already ties before calibration runs.
-Measured two ways, same production model, same production (full-validate-fit) isotonic
-calibrator throughout:
+**Two follow-up findings on the same tie rate, investigated 2026-09-01 — the adoption
+verdict below was corrected the same day once the right population was checked, and
+has since been acted on (above).** First, a four-calibrator bake-off (isotonic, Platt,
+beta, monotone spline — `scripts/calibrator_bakeoff.py`) tested whether a smoother
+calibrator would meaningfully cut the tie rate against the pre-registered bar (halve the
+tie rate without hurting calibration). On the bake-off script's own default sample —
+n=300, the recovery model's *own training seed*, never sanctioned by the
+pre-registration as the evaluation population — no candidate met the bar. But measured
+directly on the held-out world (`api/demo.py`'s `DEMO_SEED=9001`, the population every
+other number on this page uses), **Platt and beta both clear both pre-registered bars
+by a wide margin**: tie rate 30.4%/74.9% (well under the 37.5% halve-bar) and Brier CI
+overlapping isotonic's, on both the `attempt_index_1_only` (n=1,173) and full-lifecycle
+(n=1,304) slices. **The pre-registered rule said adopt Platt or beta, and Platt has now
+been adopted** (`docs/DECISIONS.md` [2026-09-02] "Platt adopted") — this page's headline
+above already reflects it. Full reversal and the ordering of how it was found (a
+seed-disclosure correction surfaced the representative population first, the verdict
+implication was noticed only after): `docs/DECISIONS.md` [2026-09-01] "Calibrator
+bake-off verdict reversed on the held-out population."
+
+Second: **a majority of ties trace to the calibrator's own quantization, not the raw,
+uncalibrated model score** — on the held-out, representative population. Swapping in a
+fully continuous calibrator (Platt/beta, 5,000 distinct outputs, zero quantization) still
+leaves some decisions tied, because the raw model score already ties before calibration
+runs — but on held-out data that's the minority cause, not the majority; the
+training-seed sample above and the raw-score story below invert that story, which is
+why leading with the training-seed reading (as an earlier version of this page did) was
+the wrong lead — kept here now for contrast, not as the headline. Measured two ways,
+same production model, same production (full-validate-fit) isotonic calibrator
+throughout:
 
 | Population | n | Raw-score-only tie rate | Total (calibrated) tie rate | Share of ties already in the raw score |
 |---|---|---|---|---|
-| This script's own sample: mandate's first cycle only, `world_seed=42` — the recovery model's *own training seed*, not held out | 300 | 60.7% (182/300) | 89.7% (269/300) | **67.7%** (182/269) |
-| Held-out eval world (`api/demo.py`'s `DEMO_SEED=9001`), first attempt of every cycle across a mandate's full lifecycle | 1,173 | 30.4% (357/1,173) | 74.9% (878/1,173) | **40.7%** (357/878) |
+| Held-out eval world (`api/demo.py`'s `DEMO_SEED=9001`) — first attempt of every cycle across a mandate's full lifecycle, the representative population | 1,173 | 30.4% (357/1,173) | 74.9% (878/1,173) | 40.7% (357/878) — **calibrator causes the majority (~59%)** |
+| Contrast only — bake-off script's own sample: mandate's first cycle only, `world_seed=42`, the recovery model's *own training seed*, not held out | 300 | 60.7% (182/300) | 89.7% (269/300) | 67.7% (182/269) — raw score is the majority here |
 
 The raw-score *resolution* — the mean fraction of `ScheduleDebit` candidates (day ×
 channel) in one decision's window that get a distinct raw score — is stable across both
@@ -302,83 +348,103 @@ often that limitation happens to decide the *specific* argmax, which is a proper
 population being decided over, not of the model alone
 (`docs/DECISIONS.md` [2026-09-01] "Raw-score tie decomposition").
 
-**Below Razorpay's own credibility anchor, which is the point.** ₹328,534 on
-`razorpay_default`'s ₹22.66M net-LTV base is a **1.45% lift** — well under the
-[4-6% success-rate lift](https://arxiv.org/abs/2111.00783) Razorpay's own production
-routing system reports across millions of real transactions. A number anywhere near or
-above 4-6% here would be the bug to go find, not a result to celebrate; landing
-comfortably below it on a *net-LTV*, revocation-aware metric (a strictly harder bar than
-their *success-rate* metric) is what a believable simulated result looks like.
+**No longer below Razorpay's own credibility anchor — a loss, not a small lift, and
+reported that way.** −₹320,444 on `razorpay_default`'s ₹22.66M net-LTV base is a
+**−1.41% lift** (a loss, magnitude comparable to the old +1.45% win). The
+[4-6% success-rate lift](https://arxiv.org/abs/2111.00783) anchor Razorpay's own
+production routing system reports exists to catch an implausibly LARGE win, not to bless
+a small loss — it has nothing useful to say about this result, and this section is not
+going to reach for it as reassurance. A negative, significant headline on a project whose
+one-sentence thesis is "recover the payment, keep the mandate" is the finding, stated
+plainly, not a number to explain away with an anchor built for a different failure mode.
 
-**The mechanism, decomposed** — this is the clearest statement of the thesis the harness
-produces, not asserted:
+**The mechanism, decomposed** — this is the clearest statement of what's currently going
+wrong, not asserted:
 
 | | Rs., 5,000-mandate seed |
 |---|---:|
-| Gross recovery given up (`dobara` attempts less, more selectively) | −₹743,665 |
-| Mandate value bought back (fewer revocations, fewer notifications) | +₹1,072,198 |
-| **Net** | **+₹328,534** |
+| Gross recovery given up (`dobara` attempts less, more selectively) | −₹1,120,397 |
+| Mandate value bought back (fewer revocations, fewer notifications) | +₹799,953 |
+| **Net** | **−₹320,444** |
 
-`dobara` recovers *less* gross (₹24.33M vs. `razorpay_default`'s ₹25.07M — 7.77 vs 8.42
-mean attempts, 39,082 vs 42,110 notifications) and wins anyway because it cuts revocations
-**39%** (638 vs 1,049) — every notification is a mandated 24h pre-debit warning that is
-also a chance to lose the mandate forever, and `dobara` spends fewer of them. Of the
-₹1,072,198 bought back, essentially all of it is avoided revocation loss, not avoided
-notification spend — `dobara` sends only 3,029 fewer notifications than
-`razorpay_default` (a small share of ~42,000, and mostly free `push` notifications), while
-avoiding 411 revocations that are each worth an entire mandate's remaining lifetime value.
-The mandate-value channel, not the cost-saving one, is doing essentially all the work.
-`aggressive_8x` shows the same crossover inverted: more gross than `dobara` (₹24.67M) but
-the worst net LTV of any retrying arm (₹21.51M, a significant ₹1.15M loss vs.
-`razorpay_default`) — more retries, more notifications, more revocations, exactly the
-mechanism this project is built to price.
+`dobara` recovers *less* gross (₹23.95M vs. `razorpay_default`'s ₹25.07M — 7.80 vs 8.42
+mean attempts, 39,175 vs 42,110 notifications) and now the gross given up is LARGER than
+under the old isotonic calibrator (₹1,120,397 vs. the old ₹743,665), while the
+revocation cut that used to more than cover it has shrunk: **31.7%** (716 vs 1,049),
+down from the old 39% (638 vs 1,049) — `dobara` now avoids fewer revocations, not more,
+even though the tie rate (and therefore how often the tie-break's restraint-first date
+selection used to run instead of the calibrator's own pick) fell sharply. The two
+effects both moved the wrong way at once: bigger gross loss, smaller revocation-avoidance
+gain, and the gain no longer covers the loss. `aggressive_8x` still shows the same
+crossover inverted, unaffected by this session's changes: more gross than `dobara`
+(₹24.67M) but the worst net LTV of any retrying arm (₹21.51M, a significant ₹1.15M loss
+vs. `razorpay_default`) — more retries, more notifications, more revocations, exactly
+the mechanism this project is built to price. `dobara` no longer sits cleanly on the
+other side of that trade-off from `aggressive_8x` the way it did under isotonic; it has
+moved partway toward it.
 
 **Two lift estimates appear in `artifacts/summary.json`; they measure different things,
-and only one is the headline.** The paired comparison above (₹66/mandate [₹53.31,
-₹80.27]) is the arm-level `dobara`-vs-`razorpay_default` difference, seed-bootstrapped,
-with a valid CI — **this is the headline number.** `permanent_holdout_arm` reports a
-second figure: `dobara`'s served population (n=135,299, live `decide()`) averaging
-₹4,606.91/mandate against its own same-world holdout control (n=14,701, routed through
-`razorpay_default`'s cadence instead) averaging ₹4,509.19/mandate — a ₹97.73/mandate gap.
-These are not in conflict; they differ by construction. The holdout figure is a cleaner
-served-vs-control design (same seed, same population, no cross-arm dilution) but is
-**pooled across all 30 seeds with no seed-level bootstrap CI** — a point estimate, not a
-confidence interval. The paired headline's denominator, by contrast, is *every* mandate in
-`dobara`'s arm, including the ~10% internally routed to the holdout control (which, using
-identical per-mandate RNG draws to the standalone `razorpay_default` arm, contribute ~0 to
-the paired numerator by construction) — so the same underlying effect is spread over a
-denominator that includes mandates the effect didn't touch. **Read them as: ₹66/mandate,
-CI-backed, is the number to quote; ₹97.73/mandate is a directionally consistent,
-uncertainty-unquantified second read of the same underlying effect, not a competing
-estimate.**
+and only one is the headline — both now negative, consistently.** The paired comparison
+above (−₹64.09/mandate [−₹81.50, −₹48.65]) is the arm-level
+`dobara`-vs-`razorpay_default` difference, seed-bootstrapped, with a valid CI — **this is
+the headline number.** `permanent_holdout_arm` reports a second figure: `dobara`'s served
+population (n=135,299, live `decide()`) averaging ₹4,463.02/mandate against its own
+same-world holdout control (n=14,701, routed through `razorpay_default`'s cadence
+instead) averaging ₹4,509.19/mandate — now a **−₹46.17/mandate** gap, the same direction
+as the headline. These are not in conflict; they differ by construction, as before. The
+holdout figure is a cleaner served-vs-control design (same seed, same population, no
+cross-arm dilution) but is **pooled across all 30 seeds with no seed-level bootstrap
+CI** — a point estimate, not a confidence interval. The paired headline's denominator, by
+contrast, is *every* mandate in `dobara`'s arm, including the ~10% internally routed to
+the holdout control (which, using identical per-mandate RNG draws to the standalone
+`razorpay_default` arm, contribute ~0 to the paired numerator by construction) — so the
+same underlying effect is spread over a denominator that includes mandates the effect
+didn't touch. **Read them as: −₹64.09/mandate, CI-backed, is the number to quote;
+−₹46.17/mandate is a directionally consistent, uncertainty-unquantified second read of
+the same underlying effect, not a competing estimate.**
 
 **Bank-level slices are directional, not a second headline.** Per
 `artifacts/summary.json`'s own `robustness_slices.note`: these are pooled across all 30
 seeds' mandate rows, not independently seed-bootstrapped — no valid CI exists at the slice
 level, and none is shown below. Read magnitude and direction, not precision.
 
-**`SBI` is designed restraint, not underperformance — reported as intended, not apologised
-for.** `SBI` is the one bank carrying a real, *injected* mid-mandate failure-rate shift
-(`sim/params.yaml`'s `regime_shift` block, test-window only, by construction). The
+**`SBI` restraint is still real and still working — but it is no longer the whole
+story, and saying so plainly matters more now than it did when the headline was
+positive.** `SBI` is the one bank carrying a real, *injected* mid-mandate failure-rate
+shift (`sim/params.yaml`'s `regime_shift` block, test-window only, by construction). The
 `bank_health_changepoint` detector catches it — 63-66% recall, 84-88% precision against the
-known injected regime, measured this session (`docs/DECISIONS.md` [2026-08-26]) — and
-`dobara` correctly declines to trust its own recovery-model score there, exactly the
-graceful-failure design in `docs/06-AGENT-SPEC.md`. That restraint has a measured, real
-price: on `SBI` specifically (directional slice, no CI, see above), `dobara`'s mean net
-LTV/mandate (₹3,673) runs below `razorpay_default`'s (₹4,318) even as `SBI`-specific
-revocations are cut by more than half (2,052 vs 5,219) — `dobara` is choosing to forgo
-some recoverable value on a bank it correctly no longer trusts, rather than guess. On the
-7 unshifted banks (also directional), `dobara` wins clearly (₹4,728 vs ₹4,562/mandate) —
-the headline ₹66/mandate is the net of a real, priced restraint cost on `SBI` and a real
-win everywhere the model is still trustworthy. The next lever isn't detection (already
-measured as working) — it's whether the *response* to a detected shift should be
-zero-attempt abstention or a scaled-back attempt; flagged for a future session, not fixed
-here, since it's outside Step 2's pre-registered scope of detection quality and threshold
-derivation.
+known injected regime, measured `[2026-08-26]` and unaffected by this session's
+calibrator change (the detector doesn't depend on the recovery model) — and `dobara`
+correctly declines to trust its own recovery-model score there, exactly the
+graceful-failure design in `docs/06-AGENT-SPEC.md`. That restraint still has a real,
+measured price, now larger: on `SBI` specifically (directional slice, no CI, see above),
+`dobara`'s mean net LTV/mandate (₹3,586) runs **₹731.95** below `razorpay_default`'s
+(₹4,318) even as `SBI`-specific revocations are still cut by more than half (**56.4%**,
+2,275 vs 5,219). **But the 7 unshifted banks — where the model IS trusted, and `SBI`
+restraint has no bearing — now barely win at all**: ₹4,592 vs. ₹4,562/mandate, a
+**₹30.55** gap, down from the old ₹166/mandate margin. The old story ("a real, priced
+restraint cost on `SBI` and a real win everywhere else") is no longer accurate: the
+non-`SBI` win nearly vanished too, meaning the reversal is not localized to the
+known-shifted bank — it is broad, consistent with the mechanism section above (worse
+date selection generally, not a `SBI`-specific effect). The next lever isn't detection
+(already measured as working, unaffected here) — it's now, more urgently than before,
+whether Platt-calibrated date selection itself needs a different tie-break or scoring
+adjustment; flagged for a future session, not fixed here.
 
 ## The money chart
 
-![Money chart: gross recovery vs. net LTV by arm, over an 8-cycle horizon](artifacts/money_chart.svg)
+> **Known gap, flagged not hidden (`docs/DECISIONS.md` [2026-08-27], still open as of
+> the 2026-09-02 Platt adoption):** this static SVG has no committed regeneration
+> script — it predates `scripts/build_money_chart.py` (which only writes
+> `artifacts/money_chart_data.json`, the live web chart's data source, regenerated this
+> session) and was never wired into `check_artifact_freshness.py` for exactly that
+> reason. **It still shows the pre-Platt (winning) trajectory and was NOT regenerated
+> this session** — read it as illustrating the *shape* of the gross-vs-net mechanism
+> only, not this session's actual numbers; the live `/evidence` money chart (built from
+> the regenerated `money_chart_data.json`) is current and should be trusted over this
+> image for anything numeric.
+
+![Money chart: gross recovery vs. net LTV by arm, over an 8-cycle horizon (STALE — pre-Platt, see note above)](artifacts/money_chart.svg)
 
 *(single seed 301, n=5,000 mandates, held out from both training and the eval harness's
 30 seeds — illustrates the mechanism's shape over time; the seed-bootstrapped headline is
@@ -413,71 +479,66 @@ declared `sensitivity_range` [0.05, 0.15] — read from `artifacts/sensitivity.j
 "obvious agent" never catches up across the full stated uncertainty in this parameter.
 This is the comparison `docs/07-EVAL-SPEC.md` asks for by name, and it holds robustly.
 
-**Against `razorpay_default`: no break-even inside the declared range, but one exists
-outside it — and naming it is a stronger result than the range-bound version this README
-used to report.** `dobara` beats `razorpay_default` at every point in the declared
-`sensitivity_range` [0.05, 0.15] (margin widening from ₹62.5/mandate at 0.05 to
-₹364.0/mandate at 0.15). A sweep that never inverts inside a declared range only tells you
-the range wasn't wide enough to find the boundary — so `eval/sensitivity.py`'s
-`search_break_even_vs_razorpay_default` widens the search past that range, toward the
-outermost value the parameter can physically mean anything at (a hazard increment above
-1.0 is nonsensical, and the mechanism this thesis rests on disappears entirely below 0).
-Widening downward from the declared range's floor (0.05) toward that physical floor (0.0),
-the break-even is found by bisection at **hazard ≈ 0.0371**. The calibrated value,
-**0.098** (empirically recalibrated to hit the published 20M-revocations/808M-executions
-≈ 2.5% ratio from real NPCI figures — `revocation_per_execution_ratio`,
-`sim.engine.SimSummary`, `tests/test_calibration.py`'s own benchmark), sits **2.64×
-above** this break-even — a materially wider margin than an earlier revision of this
-README reported (hazard ≈ 0.074, ~33% margin, against an earlier regeneration of
-`artifacts/sensitivity.json` whose numbers no longer match the artifact checked in here;
-this is a live number, re-read from the artifact on every regeneration, never assumed).
-Judged against the external NPCI anchor rather than the calibrated point alone:
-`razorpay_default`'s `revocation_per_execution_ratio` at this break-even hazard is
-**≈1.23%**, against NPCI's published **≈2.5%** — for `dobara` to actually lose, real-world
-revocations would have to run at roughly **half** of what NPCI's own published data says
-they do. `artifacts/sensitivity.json`'s `extended_break_even_search_vs_razorpay_default`
-key carries this search's full detail, including the bisection bracket and the searched
-bound for every axis, kept structurally separate from `sim/params.yaml`'s declared
-`sensitivity_range` — the extended search widens the question, it does not redefine what
-"plausible" means for other code that reads that range.
+**Against `razorpay_default`: a break-even now exists INSIDE the declared range, and the
+calibrated value sits on the LOSING side of it — the reverse of every previous revision
+of this section.** `dobara` now loses to `razorpay_default` at the bottom of the declared
+`sensitivity_range` [0.05, 0.15] (by ₹169.48/mandate at hazard=0.05, narrowing to
+₹47.44/mandate at hazard=0.100) and only starts winning from **hazard ≈ 0.122** upward
+(₹6.53/mandate at 0.125, widening to ₹53.07/mandate at 0.15). Interpolating between the
+two swept points bracketing the crossing (0.100, 0.125): **break-even ≈ 0.1220**. The
+calibrated value, **0.098** (empirically recalibrated to hit the published
+20M-revocations/808M-executions ≈ 2.5% ratio from real NPCI figures —
+`revocation_per_execution_ratio`, `sim.engine.SimSummary`, `tests/test_calibration.py`'s
+own benchmark), now sits **below** this break-even, by about **20%** — on the LOSING
+side, not the winning side an earlier revision of this README reported (hazard ≈ 0.0371,
+found only by widening past the declared range; `dobara` won at every point *inside* the
+range back then). Judged against the external NPCI anchor rather than the calibrated
+point alone: `razorpay_default`'s own `revocation_per_execution_ratio` at this new
+break-even hazard is **≈2.79%** — close to, and just above, NPCI's published **≈2.5%**
+figure. Read plainly: at the real-world-anchored calibrated hazard value, `dobara`
+currently loses to the naive `razorpay_default` policy, and would need real-world
+revocation risk to run somewhat ABOVE NPCI's published rate before its current policy
+would win. **The extended search past the declared range** (`eval/sensitivity.py`'s
+`search_break_even_vs_razorpay_default`, toward the same physical bounds as before: 0.0
+for hazard, since the break-even and losing region are now inside the declared range
+rather than below it) **found no further inversion between 0.05 and 0.0** — `dobara`
+loses at every point in that extended, lower-hazard region too, consistent with the
+in-range finding above (dobara loses at hazard <= ~0.122, including all the way down to
+0). `artifacts/sensitivity.json`'s `extended_break_even_search_vs_razorpay_default` key
+carries this search's full detail.
 
 **The other three declared axes, swept the same way** (`python -m eval.sensitivity`,
-same seed and population, `artifacts/sensitivity.json`'s `other_axes`):
+same seed and population, `artifacts/sensitivity.json`'s `other_axes`) — **all three now
+show `razorpay_default` winning at every tested point, the reverse of every previous
+revision of this section**, consistent with the reversal on the hazard axis above:
 
 - **`date_change_offer.response_rate` [0.0, 0.15], including the required 0% run:**
-  `dobara` beats `razorpay_default` at every tested point, including exactly 0% — the
-  policy does not depend on the date-change mechanic working at all. The declared range's
-  own floor (0%) already is the physical floor (a response rate cannot go negative), so
-  there is no further direction to widen the search in — this axis is robust to the edge
-  of what the parameter can mean, not just to the edge of the declared guess.
+  `razorpay_default` now beats `dobara` at every tested point, including exactly 0% —
+  the ranking does not depend on the date-change mechanic working at all, in either
+  direction. The declared range's own floor (0%) already is the physical floor (a
+  response rate cannot go negative), so there is no further direction to widen the
+  search in.
 - **`notification.cost_inr.whatsapp` [0.2, 0.6]:** no measurable effect on the ranking at
   any tested point inside the declared range — WhatsApp notifications are too small a
-  share of total spend for this range to matter. The extended search (see below) widened
-  this down to **₹0 (free notifications)** and still found no inversion — the axis is
-  robust all the way to the edge of what the parameter can mean, not merely across the
-  declared guess.
+  share of total spend for this range to matter, as before. `razorpay_default` wins at
+  every point across the declared range. The extended search (see below) widened this
+  down to **₹0 (free notifications)** and still found no inversion — `razorpay_default`
+  keeps winning all the way to the edge of what the parameter can mean.
 - **`ltv.margin_factor` [0.4, 0.9]** (swept in place of `ltv.horizon_cycles`, which
   `sim/params.yaml` declares with a fixed source, not a `sensitivity_range` — this is the
   actual LTV-dollar-conversion assumption docs/05-ML-SPEC.md's own note flags for this
-  analysis): `dobara` wins on net LTV at every tested point in the declared range, 0.4
-  through 0.9. An earlier revision of this README, against an earlier regeneration of
-  `artifacts/sensitivity.json`, reported a break-even here at ≈0.48 with `razorpay_default`
-  winning below it — that finding does not hold against the artifact currently checked in.
+  analysis): `razorpay_default` now wins on net LTV at every tested point in the declared
+  range, 0.4 through 0.9 (a margin gap from ₹127.22/mandate at 0.4 narrowing to
+  ₹7.64/mandate at 0.9 — `dobara` gets closer to competitive as margin, and therefore
+  the value of avoiding a revocation, rises, but never crosses inside the declared
+  range).
 
-  **A range that never inverts has not found the boundary, only described the interior
-  — so the extended search widened this axis down toward the point past which "gross
+  **The extended search widened this axis down toward the point past which "gross
   margin" stops meaning anything** (a merchant with 0% or negative margin has no viable
   subscription business; the search floor is **0.02**, an extreme 2% margin, not exactly
-  0 to keep the LTV arithmetic well-defined). **Even at that floor, `dobara` still beats
-  `razorpay_default` — no inversion found anywhere down to 2% gross margin.** The
-  previously-stated scope claim ("requires roughly 48%+ gross margin") is retracted, not
-  softened: it was derived from a break-even that does not exist in the current artifact,
-  and the extended search found no replacement threshold to state one from. Unlike the
-  hazard axis, `margin_factor` has no external anchor — it's a bare, unsourced assumption
-  ("not observed anywhere in the simulator," per its own declared note) — so this
-  robustness carries less evidentiary weight than the hazard result above even though it
-  is, on its own terms, a stronger finding (searched to the edge of meaning, not just the
-  declared guess). Every number in this bullet is sensitive to the next `make eval`/
+  0 to keep the LTV arithmetic well-defined). `razorpay_default` keeps winning all the
+  way down to that floor too — no inversion found in either direction from the declared
+  range's own edge. Every number in this bullet is sensitive to the next `make eval`/
   `python -m eval.sensitivity` rerun and must be re-read against the live artifact before
   being restated.
 
@@ -492,10 +553,10 @@ that never inverts cannot: how far away is the boundary, really?
 
 | Axis | Declared range | Calibrated value | Searched to | Result |
 |---|---|---|---|---|
-| `revocation.hazard_per_failure_notification` | [0.05, 0.15] | 0.098 | 0.0 (physical floor) | **Break-even at hazard ≈ 0.0371** — calibrated value sits 2.64× above it. `razorpay_default`'s revocation ratio at this break-even is ≈1.23%, against NPCI's published ≈2.5% — real-world revocations would need to run at roughly half the published rate for `dobara` to lose. |
-| `ltv.margin_factor` | [0.4, 0.9] | 0.7 | 0.02 (2% gross margin, economic floor) | No inversion found down to the floor. |
-| `notification.cost_inr.whatsapp` | [0.2, 0.6] | 0.35 | 0.0 (free) | No inversion found down to the floor. |
-| `date_change_offer.response_rate` | [0.0, 0.15] | 0.06 | 0.0 (declared floor = physical floor) | Nothing to search — already at the only meaningful bound. |
+| `revocation.hazard_per_failure_notification` | [0.05, 0.15] | 0.098 | 0.0 (physical floor) | **Break-even at hazard ≈ 0.1220, INSIDE the declared range** (not found by widening past it, unlike every previous revision of this table). Calibrated value sits ~20% BELOW break-even — on the losing side. `razorpay_default`'s revocation ratio at this break-even is ≈2.79%, just above NPCI's published ≈2.5%. Extended search below the declared range (down to 0.0) found `dobara` losing throughout too — no further inversion. |
+| `ltv.margin_factor` | [0.4, 0.9] | 0.7 | 0.02 (2% gross margin, economic floor) | `razorpay_default` wins throughout the declared range and down to the floor — no inversion found. |
+| `notification.cost_inr.whatsapp` | [0.2, 0.6] | 0.35 | 0.0 (free) | `razorpay_default` wins throughout the declared range and down to the floor — no inversion found. |
+| `date_change_offer.response_rate` | [0.0, 0.15] | 0.06 | 0.0 (declared floor = physical floor) | `razorpay_default` wins throughout; nothing further to search — already at the only meaningful bound. |
 
 **Calibration is reported before AUC.** These probabilities get multiplied by rupees, so
 being right about the number matters more than ranking. Brier scores and reliability

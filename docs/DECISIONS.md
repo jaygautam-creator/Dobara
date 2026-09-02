@@ -3464,3 +3464,313 @@ with the split between the two varying by population (roughly two-thirds raw / o
 calibrator on the training seed, roughly two-fifths raw / three-fifths calibrator
 held-out), reported as measured on both, not asserted as one fixed ratio. Both mechanisms
 are named as limitations in the README, not folded into the restraint-design story.
+
+## [2026-09-01] Calibrator bake-off verdict reversed on the held-out population — Platt/beta now adopted-pending
+
+**The pre-registration fixed the DECISION RULE but never specified the EVALUATION
+POPULATION.** `scripts/calibrator_bakeoff.py::main()` defaulted to `POPULATION`
+(n=300, `cycle_index=1`, `world_seed=42` — the recovery model's own training seed).
+That default was never sanctioned by the "Pre-registration: calibrator bake-off" entry
+above; it is an implementation choice the script happened to make, not part of the rule.
+This entry's own earlier text ("Not adopted, not reopened") was written against that
+un-sanctioned population and is superseded by this entry, the same way the
+`[2026-08-27]` table was superseded by the `[2026-08-27]` rerun above — not deleted, not
+softened.
+
+**Why this was re-checked at all.** This session's `population_reconciliation` (see
+entry above) independently established, for an unrelated reason (reconciling the 76%
+vs. 94% tie-rate figures under CLAUDE.md's "every number needs a CI and a stated source"
+rule), that `POPULATION` is unrepresentative of the held-out world the rest of this repo
+reports numbers over: **89.7% vs. 77.2% argmax tie rate under the identical, unmodified
+production calibrator.** The held-out measurement was not sought to flip the bake-off
+verdict — it was forced by that seed-disclosure correction. The verdict implication
+(that criterion (b) might read differently on a representative population) was noticed
+only *after* that measurement already existed, in a later message in the same session.
+This ordering is verifiable in the commit history: the population-reconciliation commit
+predates the one that reopens this verdict.
+
+**The rule being followed here, stated before touching anything:** the two
+pre-registered criteria — (a) Brier-CI overlap with isotonic, (b) tie rate at least
+halved — are applied UNCHANGED, on the held-out population, and whatever they say is
+what we do. No criterion is added. No population is chosen because of which answer it
+gives.
+
+**Direct measurement** (`scripts/held_out_calibrator_verification.py`, read-only: no
+retraining, no `make eval`, `n_test_evaluations` stays 1) — Platt and beta's own argmax
+tie rate and Brier score, measured DIRECTLY on the held-out world (`api/demo.py`'s
+`DEMO_SEED=9001`, `n=150` mandates), not inferred from "Platt is a monotone
+reparametrization of the raw score":
+
+| Slice | n | isotonic tie rate | halve-bar | Platt tie rate | beta tie rate | (a) Brier CI overlap | (b) halved | adopt |
+|---|---|---|---|---|---|---|---|---|
+| `attempt_index_1_only` | 1,173 | 74.9% | ≤37.5% | 30.4% | 30.4% | yes (both) | yes (both) | **yes** |
+| `all_decisions_with_alternatives` | 1,304 | 77.2% | ≤38.6% | 30.8% | 31.0% | yes (both) | yes (both) | **yes** |
+
+Both pre-registered criteria pass, for both calibrator candidates, on both slices of the
+held-out population. Criterion (a) was also computed on this held-out population (not
+only on the `validate` split as the original bake-off did) so both criteria are read off
+one common population — ground truth for the Brier check is obtained by independently
+re-drawing each decision's actual bank-side attempt outcome through
+`eval.rng.event_rng(seed, mandate_id, cycle_index, attempt_index, "outcome")`, the same
+deterministic, key-based draw `eval/runner.py::_draw_attempt` uses internally, so it
+reproduces the same outcome the live `dobara` arm actually drew for that decision.
+Full numbers: `artifacts/calibrator_bakeoff.json["held_out_direct_verification"]`.
+
+**Verdict: the pre-registered rule now says ADOPT** (Platt or beta; both clear both
+bars by a wide margin on the representative population — this is not a close call).
+This supersedes the `[2026-09-01] "Pre-registration: calibrator bake-off"` entry's
+NEGATIVE verdict, which stands in the record as correct *for the population it was
+measured on* (`POPULATION`, an un-sanctioned, training-seed, narrower population) — not
+wrong, just not the population that should have governed the decision.
+
+**Not yet acted on.** Per instruction, this entry stops at "what the criteria say."
+Adopting Platt/beta in production (swapping `models/recovery.py`'s persisted
+`lgbm_calibrator`) and rerunning `make eval` (~102 minutes) is a separate step, requiring
+separate sign-off, not taken by this entry or the investigation that produced it.
+
+**A standing instruction does not outrank new evidence.** An earlier instruction in this
+session said not to change the tie-rate finding's framing; that instruction predated the
+held-out measurement above and does not survive it — the README section immediately
+following this entry's companion (see `README.md`'s "raw-score tie decomposition"
+paragraph) is corrected to lead with the held-out, representative reading rather than
+the training-seed one, for the same reason.
+
+## [2026-09-01] Part A: three tie-rate numbers that "must" be equal, weren't — root
+cause found, not a bug in either script, no verdict change
+
+**The claim checked:** raw / Platt / beta argmax tie rates on one slice must be
+identical, because Platt/beta are strictly monotone maps of the raw score and a
+monotone map cannot break a tie. Measured: `n=1,173` gave 30.4%/30.4%/30.4%
+(consistent); `n=1,304` gave 34.2% (raw) / 30.8% (Platt) / 31.0% (beta) — three
+different values, with Platt *below* raw, the direction that should be impossible for a
+tie-preserving map.
+
+**Root cause, confirmed empirically, not assumed:** `agent/decide.py::_score_all` gives
+`Stop` and `EscalateToHuman` a FIXED `expected_net` of exactly `0.0`, independent of the
+recovery calibrator entirely (`_ZERO_SCORE`); `OfferDateChange` is fixed at `0.01`. The
+"argmax tie rate" this repo has always measured (same definition since the original
+`[2026-08-27]` diagnosis) is computed across ALL legal candidates, not `ScheduleDebit`
+candidates alone. A monotone recalibration of `ScheduleDebit`'s `p_success` preserves
+ties *within the `ScheduleDebit` set* exactly (`expected_net` is a strictly increasing
+affine function of `p_success` alone there, all other terms fixed within one decision)
+— but it can coincidentally create or destroy a tie *between* a `ScheduleDebit`
+candidate and one of these fixed-constant candidates, purely as a function of the
+calibrator's absolute output scale. That is not a monotonicity violation; it is a
+property of comparing a rescaled quantity against an unrescaled constant.
+
+**Confirmed with a direct diagnostic** (`scripts/_diag_tie_tmp.py`, run and discarded —
+not committed; the invariant it proved is what `tests/test_calibrator_monotone_invariance.py`
+locks in instead): on the `n=1,304` held-out slice, restricting the tie count to
+`ScheduleDebit`-only candidates gives **392/1,304 (30.06%) for raw, Platt, AND
+beta — identical**, exactly as the monotone-invariance argument predicts. The
+divergence (446 vs. 402 vs. 404) is entirely attributable to cross-type ties with
+`Stop`/`EscalateToHuman`'s fixed `0.0` — zero such cross-type ties occur on the
+`n=1,173` (`attempt_index==1`-only) slice (confirmed directly: `Stop`/`EscalateToHuman`
+are not legal candidates on a mandate's very first attempt, per `agent/compliance.py`'s
+gate), which is exactly why that slice's three figures came out identical while the
+full-lifecycle slice's didn't. Fitted coefficients also checked per the task's own
+"non-monotone beta" hypothesis and ruled out: Platt's coefficient on the raw score is
+`+3.930` and beta's are `+0.601`/`+0.970` — both strictly positive, both genuinely
+increasing, not the failure mode the instructions asked to check for.
+
+**Conclusion: the two scripts do not disagree and neither has a bug.** Both measure the
+same, correctly-defined quantity — the any-candidate argmax tie rate, which is what
+pre-registered criterion (b) is actually about, and what the original 76%/94% figures
+have always measured. That quantity is legitimately calibrator-scale-dependent for
+decisions where `Stop`/`EscalateToHuman` are legal alternatives; it is not, and was never
+claimed to be, invariant under recalibration. The 402/404-tie figures used for Job 1's
+verdict (`docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off verdict reversed...")
+stand unchanged — **this does not change the verdict on any candidate on any slice**:
+Platt 30.8%/beta 31.0% (n=1,304) and Platt 30.4%/beta 30.4% (n=1,173) both still clear
+their respective halve-bars (38.6%, 37.5%) by a wide margin.
+
+**Regression test added:** `tests/test_calibrator_monotone_invariance.py` asserts, with
+two synthetic strictly-increasing calibrators unrelated to any fitted Platt/beta model,
+that the `ScheduleDebit`-only tied-candidate SET (not just the count) is identical to
+the raw (identity) calibrator's, across 40 held-out mandates. It deliberately does not
+assert invariance of the any-candidate tie rate, and says why in its own docstring, so a
+future reader cannot mistake that property for one this codebase actually guarantees.
+
+## [2026-09-01] Part B: `make check` reported clean at `6a20367`, wasn't — root cause
+was a self-referential waiver invalidated by its own commit's amend
+
+**The contradiction:** the prior session's handoff reported `make check` (including
+`scripts/check_artifact_freshness.py`) clean at commit `6a20367`. This session, at the
+same commit, the same gate FAILED (stale `summary.json`, `sensitivity.json`,
+`demo_batch.json`, `money_chart_data.json`, `home_demo.json`, `compliance_rules.json`,
+`llm_cache/ask_why.json` — all flagging `6a20367` itself as an unwaived watched-path
+touch). Both reports cannot be true of the same commit; investigated rather than
+waived blind, per instruction.
+
+**Root cause, found in `git reflog`, not guessed:** `6a20367` is an **amend** of an
+earlier commit, `c56ce5f` (`git reflog`: `c56ce5f` committed 2026-09-01 19:57:49, then
+`6a20367 HEAD@{...}: commit (amend)` at 20:15:44 — 18 minutes later, same session). The
+sequence that produced the contradiction: (1) `c56ce5f` landed with a docstring-only
+addition to `agent/decide.py::_tie_break_score` and NO waiver for it yet (confirmed:
+`git show --stat c56ce5f` does not touch `docs/artifact_freshness_waivers.json`) — so
+`make check` would have failed at `c56ce5f` too, unwaived; (2) the session then wrote
+seven waiver entries for exactly this touch, each one recording `"commit": "c56ce5f..."`
+— correct at the instant it was written, since `c56ce5f` was HEAD; (3) the session then
+**amended** that same commit to fold the waiver file (and other expansions) into it,
+which by construction changes the commit's hash — producing `6a20367`. The waiver file
+now says `c56ce5f`, but the commit that actually needs waiving is `6a20367`; `c56ce5f`
+is an orphaned, non-ancestor commit (`git merge-base --is-ancestor c56ce5f HEAD` →
+false) that `check_artifact_freshness.py`'s own documented rule (see its module
+docstring, "not an ancestor of HEAD... reported as unverifiable, not stale") never
+even considers. The waiver silently stopped applying to anything the moment the amend
+landed.
+
+**Which earlier statement was wrong: the prior session's "clean at `6a20367`" claim.**
+`make check` was never actually re-run against the final, amended `6a20367` — if it had
+been, this exact failure would have appeared immediately, since the waiver-hash mismatch
+is deterministic, not flaky. The claim was made either against the pre-amend `c56ce5f`
+state (genuinely a different, no-longer-reachable commit) or without re-running the gate
+after the amend. This session's "stale" report was the accurate one.
+
+**Independently re-verified before fixing, not just re-trusting the old waiver text:**
+`git diff e78cbf9 6a20367 -- agent/decide.py` shows the touch is still exactly what the
+waiver claims — a 7-line pure docstring addition inside `_tie_break_score`, no code,
+control flow, or default changed. `git diff c56ce5f 6a20367 -- agent/decide.py` is
+empty: the amend changed other files (added the waiver file itself, expanded
+`DECISIONS.md`/README/`calibrator_bakeoff.py`) but did not touch `agent/decide.py`
+again, so the original reasoning is still true of `6a20367` — it just needed to be
+attached to the right hash. Fixed by replacing all seven `c56ce5f...` references in
+`docs/artifact_freshness_waivers.json` with `6a20367e6e1bac0b67b5c2de60fd03bd2bb71a4b`
+(same reasoning text, corrected hash only — not a new or looser waiver).
+`scripts/check_artifact_freshness.py` now exits 0.
+
+**Process note, not acted on further here:** the underlying trap — write a waiver
+naming "the current commit," then amend that same commit — is a general hazard any
+future session doing this pattern should avoid; the safe order is amend first
+(or don't amend at all; commit fresh, per `CLAUDE.md`'s git-safety default), THEN write
+and commit the waiver separately, so the hash in the waiver is never invalidated by a
+later rewrite of the commit it describes.
+
+## [2026-09-02] Platt adopted for the recovery model's calibrator — the headline reversed, reported at full weight
+
+**Adoption, per the pre-registered rule.** `models/recovery.py`'s `lgbm_calibrator`
+switched from isotonic regression to `PlattCalibrator` (logistic regression on the raw
+booster score), per the pre-registered adoption rule
+(`docs/DECISIONS.md` [2026-09-01] "Pre-registration: calibrator bake-off") and its
+verdict reversal on the held-out population, same date — both pre-registered criteria
+(Brier CI overlap, tie rate at least halved) passed by a wide margin, directly measured,
+not inferred (`docs/DECISIONS.md` [2026-09-01] "Calibrator bake-off verdict reversed on
+the held-out population"; Part A of the same-day follow-up confirmed the measurement
+itself was sound, not an artifact of a monotonicity bug). Beta was the other candidate
+that passed; **Platt was chosen over beta** because on the larger held-out slice
+(`all_decisions_with_alternatives`, n=1,304) Platt's directly-measured tie rate (30.8%)
+was marginally lower than beta's (31.0%) with statistically indistinguishable Brier, and
+Platt is the simpler model (one raw-score coefficient vs. beta's two log-odds terms) —
+not a large-margin decision, stated as such, not oversold.
+
+**`models/hazard.py` is untouched — not measured, so not assumed to transfer.** The
+bake-off only ever tested calibrators for the recovery (Model 1) LGBM booster's raw
+score; the hazard model's own isotonic calibrator was never part of this investigation.
+Left alone, explicitly, per instruction not to assume the result generalizes.
+
+**Fresh test-set evaluation — `n_test_evaluations` incremented 1 -> 2, loudly, not
+reused.** Retraining a new `model_version` (`46abfd4c9c02`, up from `e5eaa66718f2` —
+the version tag itself changed, `lgbm(platt)+logistic(isotonic)|v2`, so the two are never
+confused) evaluates the SAME physical test split (cycle 6-8) a second time, which
+`docs/05-ML-SPEC.md`'s honesty-marker rule requires counting, not silently reporting as
+still 1. `models/train.py` gained a `--recovery-n-test-evaluations` flag (default 1,
+preserving old behavior) so this could be set explicitly rather than hand-edited into
+the report after the fact. `artifacts/recovery_model_report.json.n_test_evaluations` now
+reads `2`. `models/hazard.py`'s own counter is untouched at `1` — hazard was retrained
+as an unavoidable side effect of the shared `models.train` entrypoint (deterministic,
+model_version unchanged, `de5b56dc95fb`, byte-identical output) but not evaluated as
+part of any decision this session, so its counter honestly reflects that.
+
+**`make eval` (30 seeds x 5,000 mandates, `nohup`, chained into `python -m
+eval.sensitivity`, ~130 min combined — longer than the `[2026-08-27]` precedent's 102.8
+min, machine-load, not a methodology change) completed clean. THE HEADLINE REVERSED,
+not moved:**
+
+| | Old (isotonic, `6a20367`) | New (Platt, this run) |
+|---|---|---|
+| Net LTV lift, total (one seed) | +₹328,533.88 [+₹266,525.58, +₹401,362.34] | **−₹320,443.81 [−₹407,480.73, −₹243,239.96]** |
+| Net LTV lift, per mandate | +₹65.71 [+₹53.31, +₹80.27] | **−₹64.09 [−₹81.50, −₹48.65]** |
+| Significant | Yes | Yes |
+| `dobara` vs `razorpay_default`, base case | `dobara` wins | **`razorpay_default` wins** |
+
+**Reported at full weight, exactly as `[2026-08-27]`'s pre-registration committed to for
+any outcome, "not softened because it happened to be a fall."** This is not a
+rounding-level move like `[2026-08-27]`'s -- it is a sign reversal, from `dobara` beating
+`razorpay_default` by ~1.45% lift to `dobara` LOSING to `razorpay_default` by a
+comparable margin, both significant. Per instruction: **the calibrator is kept, no
+re-run was launched hunting a better number, and no new criterion is added after the
+fact.** The pre-registered criteria were about the calibrator's own statistical
+properties (Brier, tie rate) and said adopt; nothing in the pre-registration promised
+the headline would hold, and it did not.
+
+**The argmax tie rate, measured directly against the NEW production `PlattCalibrator`
+(not the investigation's own half-split refit) — against the 77.2%/74.9% held-out
+isotonic baseline:**
+
+| Slice | Isotonic baseline (pre-adoption) | Platt, production (post-adoption) |
+|---|---|---|
+| `all_decisions_with_alternatives` | 77.2% (1,007/1,304) | **17.9%** (235/1,312) |
+| `attempt_index_1_only` | 74.9% (878/1,173) | **15.2%** (178/1,171) |
+
+Substantially lower than even the investigation's own half-split-fit Platt figures
+(~30%, `docs/DECISIONS.md` [2026-09-01]) — the production calibrator is fit on the FULL
+validate split (per `models/recovery.py`'s docstring, unchanged by this adoption),
+strictly more data than the half-split fit the bake-off used for a fair Brier
+comparison, and evidently a better-conditioned fit. (Candidate counts differ slightly
+from the investigation's own measurement — 1,312/1,171 here vs. 1,304/1,173 there --
+`compute_bank_health_snapshots` reran as part of `make train` and produced a handful of
+newly-eligible or newly-ineligible decisions; not chased further, single-digit-percent
+of the population either way.)
+
+**Both break-evens, re-checked, one of them now real:**
+
+| | Old (isotonic) | New (Platt) |
+|---|---|---|
+| Break-even vs. `aggressive_8x` | not found; `dobara` wins at every point in [0.05, 0.15] | **unchanged** -- not found; `dobara` still wins at every point in [0.05, 0.15] |
+| Break-even vs. `razorpay_default` | not found; `dobara` wins at every point in [0.05, 0.15] | **found: hazard ~= 0.1220** (interpolated between the swept 0.100/0.125 points) |
+| Calibrated hazard value | 0.098 (comfortably inside `dobara`'s winning region) | **0.098 (now on the LOSING side of break-even, ~20% below it)** |
+
+The extended search (past the declared `[0.05, 0.15]` range toward each parameter's
+physical/economic bound) found `dobara` still beats `razorpay_default` at every point
+tested on `hazard_per_failure_notification` down to 0.0, `ltv.margin_factor` down to
+0.02, and `notification.cost_inr.whatsapp` down to 0.0 -- i.e. the reversal is
+specifically a base-case (calibrated-parameter) result, not universal across the whole
+swept space; `dobara` still wins in the higher-hazard region (>=0.125) the extended
+search and the 5-point sweep both cover. `aggressive_8x` break-even is unaffected --
+identical qualitative finding, "not found," both before and after.
+
+**What this means, stated plainly and not chased further this session:** at every
+point tested with the isotonic calibrator, `dobara` won. With the fully continuous
+Platt calibrator -- which resolves the vast majority of the argmax ties the isotonic
+step function was creating -- the tie-break mechanism (`agent/decide.py::_tie_break_score`,
+restraint-first date selection) now activates far less often, and the ~600,000
+decisions'-worth of dates it used to pick are instead being chosen directly by the
+now-differentiated calibrated score. The headline reversal means that, in aggregate,
+the calibrator's own preferred picks recover LESS net value than the tie-break's
+restraint-first picks did on that same ~60-77% of decisions that used to be tied. This
+is a real, substantive, and *surprising* result -- surprising results are exactly the
+ones this project's own non-negotiables (`CLAUDE.md`: "every number reported must have a
+confidence interval and a stated source... no bare point estimates") say to report
+loudly, not explain away. **A specific causal mechanism for why continuous
+Platt-driven date selection underperforms the tie-break's restraint-first selection is
+not established here** -- that would require decision-level attribution this session did
+not run, and per instruction this entry does not chase a better number or invent an
+after-the-fact criterion to explain it away. Flagged as follow-up work, not resolved.
+
+**Provenance / ordering, carried forward from the entry this supersedes in effect (not
+in the pre-registered verdict, which stands):** the held-out measurement that justified
+this adoption was not sought to flip the bake-off verdict -- it was forced by an
+unrelated seed-disclosure correction (`docs/DECISIONS.md` [2026-09-01] "Number collision
+resolved" / "verdict reversed on the held-out population"), and the verdict implication
+was noticed only after that measurement already existed, verifiable in commit order.
+That same discipline is being extended here: the headline reversal was not sought
+either -- it is the direct, unavoidable consequence of following the pre-registered
+adoption rule through to `make eval`, exactly as `[2026-08-27]`'s pre-registration
+committed to accepting whatever the rerun said, "not edited after the fact to look more
+decisive than it needed to be."
+
+**Propagation:** README headline, `/evidence`, `/control-room`, `/audit`, the
+`/architecture` decision walkthrough, `home_demo.json`, `demo_batch.json`, and the money
+chart are all regenerated from these artifacts in the same session -- see the commit
+this entry lands in. `scripts/check_artifact_freshness.py` passes with no new waivers
+(every affected artifact was actually regenerated, not waived around).

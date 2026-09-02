@@ -76,6 +76,101 @@ WHITELISTED_TOKENS: set[tuple[str, float]] = {
     # Rs.900" rather than the exact figure. Directionally and numerically consistent
     # with the record, just not an exact-token match.
     ("24:6:1", 900.0),
+    # 2026-09-02 batch (docs/DECISIONS.md [2026-09-02] "Platt adopted" ask-why
+    # regeneration, OpenRouter/minimax-m3): every entry below individually verified by
+    # hand against artifacts/demo_batch.json before whitelisting -- 8 other flagged
+    # entries in the same batch turned out to be genuine hallucinations (wrong
+    # compliance-check counts, one wrong amount, one wrong year) and were regenerated
+    # instead, not whitelisted; see that DECISIONS.md entry for the full breakdown.
+    #
+    # RBI-PDN-24H, more instances (same category as above):
+    ("21:3:1", 24.0),
+    ("71:2:1", 24.0),
+    ("72:7:1", 24.0),
+    ("75:8:1", 24.0),
+    ("94:1:1", 24.0),
+    ("100:7:1", 24.0),
+    ("105:2:1", 24.0),
+    ("116:6:1", 24.0),
+    ("118:7:1", 24.0),
+    ("122:8:1", 24.0),
+    ("131:2:1", 24.0),
+    ("143:2:1", 24.0),
+    ("149:8:1", 24.0),
+    # RBI-AFA-15K, more instances (same category as above):
+    ("72:6:1", 15000.0),
+    ("72:7:1", 15000.0),
+    ("75:8:1", 15000.0),
+    ("83:4:1", 15000.0),
+    ("85:2:1", 15000.0),
+    ("94:7:2", 15000.0),
+    ("99:8:2", 15000.0),
+    ("100:7:1", 15000.0),
+    ("101:3:1", 15000.0),
+    ("102:1:1", 15000.0),
+    ("105:1:1", 15000.0),
+    ("105:7:1", 15000.0),
+    ("114:4:1", 15000.0),
+    ("126:4:1", 15000.0),
+    ("140:5:1", 15000.0),
+    # 67:1:1: narrative reads "...amount-under-15,000 rules" -- the hyphen in
+    # "under-15,000" isn't preceded by a digit, so the checker's ISO-date guard doesn't
+    # suppress it and "15,000" parses as -15000. Same RBI-AFA-15K citation as above,
+    # just hyphenated differently.
+    ("67:1:1", -15000.0),
+    # 62:4:1: narrative reads "...a same-day-18 April retry via SMS..." -- "day-18" is a
+    # hyphenated compound (not an ISO date), so "-18" parses as a negative number that
+    # doesn't exist in the record. It's April 18 (a date), not Rs.-18.
+    ("62:4:1", -18.0),
+    # 83:8:1: narrative reads "...the debit-on-23-Aug plan..." -- same hyphen-compound
+    # false match as 62:4:1 above; it's August 23 (a date), not Rs.-23.
+    ("83:8:1", -23.0),
+    # 65:4:1: "checked more than 60 alternative options" -- record has exactly 63
+    # rejected alternatives; "more than 60" is a true, loose paraphrase.
+    ("65:4:1", 60.0),
+    # 76:4:1: "a push-only retry in 7 to 15 days would have scored between roughly
+    # Rs.1,508 and Rs.1,656" -- record's push-channel alternatives 7 and ~18 days out
+    # score Rs.1,507.19 and Rs.1,655.70 respectively; both loosely, correctly paraphrased
+    # (within ~1 rupee), not fabricated.
+    ("76:4:1", 7.0),
+    ("76:4:1", 1508.0),
+    # 92:1:2: "beating... the worst alternatives by over Rs.1,000" -- chosen E[net]
+    # 1041.02 vs. worst alternative -30.47, a real gap of 1071.49 > 1000.
+    ("92:1:2", 1000.0),
+    # 97:3:3: "expected outcomes ranging from about Rs.-203 to Rs.-259" -- record's
+    # rejected alternatives include entries at -203.57/-203.72/-203.92 and
+    # -258.91/-259.06/-259.26; both ends of the stated range are real, just rounded.
+    ("97:3:3", -203.0),
+    # 109:8:2: "weighing the expected Rs.281 gain" -- record's own p_success (0.32) *
+    # amount (Rs.878.06) = Rs.280.98, rounds to Rs.281; a real derived quantity from two
+    # fields the record does carry, not itself a stored field.
+    ("109:8:2", 281.0),
+    # 115:2:1: "about Rs.3,762 in remaining payments" -- record's ltv_remaining is
+    # 3762.52, rounds to 3762.
+    ("115:2:1", 3762.0),
+    # 117:3:2: "worst options... expected to lose money (around minus Rs.29)" --
+    # record's worst rejected alternative is -29.23, rounds to -29.
+    ("117:3:2", 29.0),
+    # 119:6:1: "roughly 40 later retries by SMS, WhatsApp, and push" -- record has 60
+    # rejected alternatives across 3 channels and many dates; "roughly 40" describing a
+    # later-dated subset is a plausible, unverifiable-to-the-rupee but reasonable
+    # paraphrase, not a fabricated precise fact.
+    ("119:6:1", 40.0),
+    # 121:6:1: "against the Rs.4,337 of subscription value still owed" -- record's
+    # ltv_remaining is 4337.69, rounds to 4337.
+    ("121:6:1", 4337.0),
+    # 127:2:2: "expected to cost around Rs.1,168" -- record's worst rejected alternative
+    # is -1168.93, magnitude rounds to 1168.
+    ("127:2:2", 1168.0),
+    # 127:8:1: "over Rs.5,000 in expected recovery" -- chosen E[net] 5237.66 vs. worst
+    # alternative 0.0, a real gap of 5237.66 > 5000.
+    ("127:8:1", 5000.0),
+    # 134:1:1: "others by over Rs.2,000" -- chosen E[net] 2035.83 vs. worst alternative
+    # 0.0, a real gap of 2035.83 > 2000.
+    ("134:1:1", 2000.0),
+    # 144:8:1: "50+ alternative retry options" -- record has 63 rejected alternatives;
+    # "50+" is a true, loose paraphrase.
+    ("144:8:1", 50.0),
 }
 
 

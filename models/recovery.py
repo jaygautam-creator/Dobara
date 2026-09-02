@@ -3,7 +3,20 @@
 - LightGBM binary classifier, **always reported alongside a logistic regression baseline**.
   If gradient boosting does not clearly beat the linear baseline, that is reported as a
   finding, not hidden.
-- Isotonic calibration fitted on the validation split (cycle 5).
+- **The LGBM booster's calibrator is Platt scaling (logistic regression on the raw
+  score), fitted on the validation split (cycle 5) — adopted 2026-09-01, replacing
+  isotonic regression, per the pre-registered rule in `docs/DECISIONS.md` [2026-09-01]
+  "Pre-registration: calibrator bake-off" and its verdict reversal on the held-out
+  population, same date.** Isotonic's coarse step function (as few as 17 distinct
+  output values) was collapsing genuine model signal into argmax ties at the tie-break
+  layer (`agent/decide.py::_tie_break_score`); Platt is fully continuous (5,000/5,000
+  distinct outputs on the raw-score grid) and measurably cuts the held-out argmax tie
+  rate (77.2% -> ~31%) without a Brier-CI regression vs. the isotonic baseline it
+  replaces — see that DECISIONS.md entry for the full pre-registered-criteria evidence.
+  The **logistic baseline's own calibrator is still isotonic regression**, unchanged —
+  the bake-off only tested calibrators for the LGBM booster's raw score, and adopting a
+  result for one model is not assumed to transfer to the other without measuring it
+  (only measured for LGBM here).
 - **Calibration is the priority, not AUC** — we multiply this probability by rupees. Brier
   score and a reliability diagram are reported alongside AUC/PR-AUC, and led with in any
   summary.
@@ -21,7 +34,7 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 import lightgbm as lgb
 import numpy as np
@@ -56,17 +69,50 @@ def _lgbm_frame(df: pd.DataFrame) -> pd.DataFrame:
     return X
 
 
+class _Calibrator(Protocol):
+    """Either `IsotonicRegression` (still used for `logistic_calibrator`) or
+    `PlattCalibrator` (now used for `lgbm_calibrator`, `docs/DECISIONS.md` [2026-09-01]
+    "verdict reversed") satisfy this -- both expose a `predict(raw) -> calibrated prob`
+    method, the only interface `TrainedRecoveryModel` needs."""
+
+    def predict(self, x: np.ndarray) -> np.ndarray: ...
+
+
+@dataclass
+class PlattCalibrator:
+    """Platt scaling: a logistic regression fit on the raw booster score alone.
+    `docs/DECISIONS.md` [2026-09-01] "Pre-registration: calibrator bake-off" /
+    "verdict reversed on the held-out population" -- adopted over isotonic for
+    `lgbm_calibrator` because it is fully continuous (no quantization-induced argmax
+    ties) and passed both pre-registered criteria (Brier CI overlap, tie rate at least
+    halved) directly measured on the held-out population. A plain, picklable class (not
+    a closure or a bare `sklearn.linear_model.LogisticRegression`) so `joblib.dump`/
+    `joblib.load` round-trip it the same way `IsotonicRegression` already does.
+    """
+
+    model: LogisticRegression
+
+    @classmethod
+    def fit(cls, raw: np.ndarray, y: np.ndarray) -> PlattCalibrator:
+        m = LogisticRegression()
+        m.fit(np.asarray(raw).reshape(-1, 1), y)
+        return cls(model=m)
+
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        return np.asarray(self.model.predict_proba(np.asarray(x).reshape(-1, 1))[:, 1])
+
+
 @dataclass
 class TrainedRecoveryModel:
     lgbm_booster: lgb.Booster
-    lgbm_calibrator: IsotonicRegression
+    lgbm_calibrator: _Calibrator
     logistic_pipeline: Pipeline
     logistic_calibrator: IsotonicRegression
     model_version: str
     feature_columns: list[str] = field(default_factory=lambda: list(RECOVERY_FEATURE_COLUMNS))
 
     def predict_lgbm(self, df: pd.DataFrame) -> np.ndarray:
-        raw = self.lgbm_booster.predict(_lgbm_frame(df))
+        raw = np.asarray(self.lgbm_booster.predict(_lgbm_frame(df)))
         return np.asarray(self.lgbm_calibrator.predict(raw))
 
     def predict_logistic(self, df: pd.DataFrame) -> np.ndarray:
@@ -84,7 +130,10 @@ class TrainedRecoveryModel:
 
 
 def _model_version(df: pd.DataFrame) -> str:
-    payload = f"{sorted(RECOVERY_FEATURE_COLUMNS)}|{len(df)}|lgbm+logistic+isotonic|v1"
+    # v2, 2026-09-01: lgbm_calibrator switched isotonic -> Platt (docs/DECISIONS.md
+    # [2026-09-01] "verdict reversed on the held-out population") -- the tag changes so
+    # this is never confused with a v1 (isotonic) artifact sharing the same feature set.
+    payload = f"{sorted(RECOVERY_FEATURE_COLUMNS)}|{len(df)}|lgbm(platt)+logistic(isotonic)|v2"
     return hashlib.sha256(payload.encode()).hexdigest()[:12]
 
 
@@ -144,7 +193,7 @@ def train_recovery_model(
         num_boost_round=200,
     )
     lgbm_val_raw = booster.predict(_lgbm_frame(val))
-    lgbm_calibrator = IsotonicRegression(out_of_bounds="clip").fit(lgbm_val_raw, y_val)
+    lgbm_calibrator: _Calibrator = PlattCalibrator.fit(np.asarray(lgbm_val_raw), y_val)
 
     # --- Logistic baseline ---
     logistic_pipeline = _build_logistic_pipeline()

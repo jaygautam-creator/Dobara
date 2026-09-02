@@ -238,8 +238,15 @@ export default function ArchitecturePage() {
           I diagnosed it before touching the fix, found the real cause (a too-coarse
           probability calibrator flattening a signal the model had genuinely learned), and
           committed to reporting the headline number honestly either way before rerunning
-          — it moved by ₹0.28/mandate, not a regression, but I didn&apos;t know that going in.
-          Full account, dated, in{" "}
+          — it moved by ₹0.28/mandate the first time, not a regression, but I didn&apos;t
+          know that going in. The second time was a bigger test of that same commitment:
+          a follow-up bake-off found a continuous calibrator (Platt scaling) that cut the
+          tie rate from ~77% to ~16-18%, measured directly against the pre-registered
+          bar, and adopting it was the pre-registered right call — but it reversed the
+          headline from a +₹65.71/mandate win to a −₹64.09/mandate loss. I kept the
+          calibrator and reported the loss at full weight rather than reverting or
+          hunting a better number; the current headline on this site reflects that loss,
+          not the earlier win. Full account, dated, in{" "}
           <a
             href={`${GITHUB_BLOB}/docs/DECISIONS.md`}
             target="_blank"

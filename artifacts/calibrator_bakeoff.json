@@ -226,5 +226,113 @@
     "generated_at": "2026-09-01T14:35:53.804698+00:00",
     "git_commit": "c56ce5f08220b59b9383dde180eada791b3b56c5"
   },
-  "content_hash": "d721a2ed4c074941575664f09b705006ae6eebadc3737405de8a987c4dc05fdf"
+  "content_hash": "d721a2ed4c074941575664f09b705006ae6eebadc3737405de8a987c4dc05fdf",
+  "held_out_direct_verification": {
+    "note": "Direct (not inferred) held-out measurement, seed=9001, n_mandates=150. Platt/beta calibrators are the SAME construction (raw_fit/y_fit, half of validate, random_state=RNG_SEED) calibrator_bakeoff.py::main() already fits -- reused here unmodified, no retraining. isotonic_baseline is the unmodified production calibrator.",
+    "seed": 9001,
+    "n_mandates": 150,
+    "slices": {
+      "all_decisions_with_alternatives": {
+        "n_decisions_with_alternatives": 1304,
+        "tie_rate": {
+          "isotonic_baseline": {
+            "n_tied_at_argmax": 1007,
+            "tie_rate": 0.772239263803681
+          },
+          "platt_logistic": {
+            "n_tied_at_argmax": 402,
+            "tie_rate": 0.30828220858895705
+          },
+          "beta_calibration": {
+            "n_tied_at_argmax": 404,
+            "tie_rate": 0.3098159509202454
+          }
+        },
+        "n_ground_truth_outcomes": 1217,
+        "brier_on_held_out_ground_truth": {
+          "isotonic_baseline": {
+            "point": 0.09713817605975517,
+            "ci_lo": 0.08179343357897108,
+            "ci_hi": 0.10938615016896813
+          },
+          "platt_logistic": {
+            "point": 0.09844013400509301,
+            "ci_lo": 0.08347242396733748,
+            "ci_hi": 0.11077901888404178
+          },
+          "beta_calibration": {
+            "point": 0.09807005885358644,
+            "ci_lo": 0.08275111742981538,
+            "ci_hi": 0.11089421986190613
+          }
+        }
+      },
+      "attempt_index_1_only": {
+        "n_decisions_with_alternatives": 1173,
+        "tie_rate": {
+          "isotonic_baseline": {
+            "n_tied_at_argmax": 878,
+            "tie_rate": 0.7485080988917306
+          },
+          "platt_logistic": {
+            "n_tied_at_argmax": 357,
+            "tie_rate": 0.30434782608695654
+          },
+          "beta_calibration": {
+            "n_tied_at_argmax": 357,
+            "tie_rate": 0.30434782608695654
+          }
+        },
+        "n_ground_truth_outcomes": 1154,
+        "brier_on_held_out_ground_truth": {
+          "isotonic_baseline": {
+            "point": 0.09089363826724592,
+            "ci_lo": 0.07868845803358927,
+            "ci_hi": 0.10327210652843516
+          },
+          "platt_logistic": {
+            "point": 0.09098503596703124,
+            "ci_lo": 0.07886214893151937,
+            "ci_hi": 0.10319585287267811
+          },
+          "beta_calibration": {
+            "point": 0.09086875461910571,
+            "ci_lo": 0.07848949594769818,
+            "ci_hi": 0.10339643691324966
+          }
+        }
+      }
+    },
+    "pre_registered_verdict_on_held_out_population": {
+      "all_decisions_with_alternatives": {
+        "platt_logistic": {
+          "criterion_b_tie_rate_at_least_halved": true,
+          "criterion_a_brier_ci_overlaps_isotonic": true,
+          "adopt": true
+        },
+        "beta_calibration": {
+          "criterion_b_tie_rate_at_least_halved": true,
+          "criterion_a_brier_ci_overlaps_isotonic": true,
+          "adopt": true
+        }
+      },
+      "attempt_index_1_only": {
+        "platt_logistic": {
+          "criterion_b_tie_rate_at_least_halved": true,
+          "criterion_a_brier_ci_overlaps_isotonic": true,
+          "adopt": true
+        },
+        "beta_calibration": {
+          "criterion_b_tie_rate_at_least_halved": true,
+          "criterion_a_brier_ci_overlaps_isotonic": true,
+          "adopt": true
+        }
+      }
+    },
+    "provenance": {
+      "generated_at": "2026-09-01T15:04:08.440004+00:00",
+      "git_commit": "6a20367e6e1bac0b67b5c2de60fd03bd2bb71a4b"
+    },
+    "content_hash": "c0bccf85b54f7a4ef2829834fde9b600239a0bf80d313acd5017942ac158e178"
+  }
 }

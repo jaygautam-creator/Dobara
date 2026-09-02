@@ -573,6 +573,19 @@ def search_break_even_vs_razorpay_default(
     y_bound = diff(search_lo if widening_downward else search_hi)
     if (y_start > 0) == (y_bound > 0):
         bound = search_lo if widening_downward else search_hi
+        # Bug fixed 2026-09-02 (docs/DECISIONS.md [2026-09-02] "Platt adopted"): this
+        # note used to hardcode "dobara beats razorpay_default" regardless of y_start's
+        # actual sign -- harmless while dobara always won (every call site's y_start was
+        # positive), but silently wrong the first time dobara lost at the declared
+        # range's own edge (the Platt-calibrated rerun): the extended search correctly
+        # found no inversion, but the prose claimed the wrong arm was winning throughout.
+        # Read the winner from y_start's sign instead of asserting it.
+        winner = "dobara" if y_start > 0 else "razorpay_default"
+        note = (
+            f"searched from the declared range's edge ({start_edge}) out to the "
+            f"physical/economic bound ({bound}) -- {winner} beats the other arm at "
+            f"every point tested in that search, no inversion found up to the bound"
+        )
         return ExtendedSearchResult(
             dotted_path=dotted_path,
             declared_range=(declared_lo, declared_hi),
@@ -583,11 +596,7 @@ def search_break_even_vs_razorpay_default(
             ratio_calibrated_to_break_even=None,
             bracket=None,
             razorpay_default_revocation_per_execution_ratio_at_break_even=None,
-            note=(
-                f"searched from the declared range's edge ({start_edge}) out to the "
-                f"physical/economic bound ({bound}) -- dobara beats razorpay_default at "
-                f"every point tested in that search, no inversion found up to the bound"
-            ),
+            note=note,
         )
 
     # Coarse geometric bracketing between start_edge and the bound where the sign

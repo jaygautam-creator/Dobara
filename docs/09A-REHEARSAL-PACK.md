@@ -61,17 +61,19 @@ skip control to move through it faster than a full real-time playback; this beat
 0:40, trimmed from 0:55 (2026-09-02, to pay for the new calibrator-experiment beat —
 see the timing table below), so do not let both lanes play out in full.
 
-**The live case (mandate 4838, seed 301), read from `artifacts/home_demo.json`, verified
-against the live page 2026-08-30:**
-- Selection: median case by Dobara's net-LTV advantage, among 745 candidates (of 5,000
+**The live case (mandate 3313, seed 301), read from `artifacts/home_demo.json`, verified
+against the live page 2026-09-03:**
+- Selection: median case by Dobara's net-LTV advantage, among 769 candidates (of 5,000
   mandates) that `aggressive_8x` revoked and `dobara` kept.
-- **`aggressive_8x` lane:** 5 notifications sent, 0 successful debits, mandate revoked
-  at cycle 1, ₹1,460.93 LTV lost.
-- **`dobara` lane:** 8 notifications sent, 6 successful debits, mandate never revoked,
+- **`aggressive_8x` lane:** 4 notifications sent, 1 successful debit (cycle 1), mandate
+  revoked at cycle 2, ₹1,142.80 LTV lost. The aggressive lane *succeeds* in cycle 1, then
+  destroys the mandate on its first bad cycle — the stronger version of this case; say
+  that explicitly.
+- **`dobara` lane:** 8 notifications sent, 7 successful debits, mandate never revoked,
   ₹0 LTV lost. (Dobara sends *more* notifications here, not fewer — say this explicitly;
   the point is "retry exactly as long as the bet is positive," not "always retry less.")
-- Net-LTV advantage on this mandate: **₹3,139.76**, the **median** of the 745-case set.
-  Across that set: p25 = **₹1,212.39**, p75 = **₹7,006.13**. **In this trimmed 0:40 cut,
+- Net-LTV advantage on this mandate: **₹2,727.54**, the **median** of the 769-case set.
+  Across that set: p25 = **₹992.38**, p75 = **₹6,048.39**. **In this trimmed 0:40 cut,
   say "median case, not the best one" but skip citing the p25–p75 spread aloud** — it's
   on screen for a viewer who pauses; if recording a longer cut, restore the full line
   from before 2026-09-02 (cite both figures, do not round past them).

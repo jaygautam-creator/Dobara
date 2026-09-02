@@ -113,6 +113,43 @@ def _revocation_delta_figure() -> tuple[str, ...]:
     return (f"+{delta:.1f}",)
 
 
+def _home_demo_mandate_figure() -> tuple[str, ...]:
+    d = _read_local("artifacts/home_demo.json")
+    return (f"mandate {d['mandate']['mandate_id']}",)
+
+
+def _home_demo_aggressive_figure() -> tuple[str, ...]:
+    d = _read_local("artifacts/home_demo.json")
+    t = d["lanes"]["aggressive_8x"]["totals"]
+    return (
+        f"{t['n_notifications']} notifications",
+        f"{t['n_successes']} successful debit",
+        f"cycle {t['revoked_at_cycle']}",
+        f"₹{t['ltv_lost_inr']:,.2f}",
+    )
+
+
+def _home_demo_dobara_figure() -> tuple[str, ...]:
+    d = _read_local("artifacts/home_demo.json")
+    t = d["lanes"]["dobara"]["totals"]
+    return (
+        f"{t['n_notifications']} notifications",
+        f"{t['n_successes']} successful debit",
+    )
+
+
+def _home_demo_selection_figure() -> tuple[str, ...]:
+    d = _read_local("artifacts/home_demo.json")
+    sel = d["selection"]
+    adv = sel["net_ltv_advantage_inr"]
+    return (
+        f"{sel['n_candidates']} candidates",
+        f"₹{adv['median']:,.2f}",
+        f"₹{adv['p25']:,.2f}",
+        f"₹{adv['p75']:,.2f}",
+    )
+
+
 FIGURES: tuple[SpokenFigure, ...] = (
     SpokenFigure(
         name="argmax tie rate, isotonic -> Platt (all-decisions slice)",
@@ -149,6 +186,30 @@ FIGURES: tuple[SpokenFigure, ...] = (
         ),
         compute=_revocation_delta_figure,
         doc_files=("README.md", "docs/DECISIONS.md"),
+    ),
+    SpokenFigure(
+        name="home demo: selected mandate id",
+        sources=(("", "artifacts/home_demo.json"),),
+        compute=_home_demo_mandate_figure,
+        doc_files=("docs/09-DEMO-SCRIPT.md", "docs/09A-REHEARSAL-PACK.md"),
+    ),
+    SpokenFigure(
+        name="home demo: aggressive_8x lane totals",
+        sources=(("", "artifacts/home_demo.json"),),
+        compute=_home_demo_aggressive_figure,
+        doc_files=("docs/09-DEMO-SCRIPT.md", "docs/09A-REHEARSAL-PACK.md"),
+    ),
+    SpokenFigure(
+        name="home demo: dobara lane totals",
+        sources=(("", "artifacts/home_demo.json"),),
+        compute=_home_demo_dobara_figure,
+        doc_files=("docs/09-DEMO-SCRIPT.md", "docs/09A-REHEARSAL-PACK.md"),
+    ),
+    SpokenFigure(
+        name="home demo: candidate-set selection stats",
+        sources=(("", "artifacts/home_demo.json"),),
+        compute=_home_demo_selection_figure,
+        doc_files=("docs/09A-REHEARSAL-PACK.md",),
     ),
 )
 

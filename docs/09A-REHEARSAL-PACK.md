@@ -51,13 +51,14 @@ say the source aloud for at least one (the 20M figure), per the demo script's ru
 
 Say the motto verbatim off the page: *"Recover the payment. Keep the mandate."*
 
-### Beat 3 — The demonstration (1:05–2:00)
+### Beat 3 — The demonstration (1:05–1:45)
 
 **URL:** same page, scroll to the two-lane demonstration.
 
 **Click:** the demonstration is scroll-triggered and click-to-skip/replay — use the
-skip control once to show it's not a forced wait, then let it play once normally, or
-replay from the start if you skipped too early.
+skip control to move through it faster than a full real-time playback; this beat is
+0:40, trimmed from 0:55 (2026-09-02, to pay for the new calibrator-experiment beat —
+see the timing table below), so do not let both lanes play out in full.
 
 **The live case (mandate 4838, seed 301), read from `artifacts/home_demo.json`, verified
 against the live page 2026-08-30:**
@@ -69,10 +70,12 @@ against the live page 2026-08-30:**
   ₹0 LTV lost. (Dobara sends *more* notifications here, not fewer — say this explicitly;
   the point is "retry exactly as long as the bet is positive," not "always retry less.")
 - Net-LTV advantage on this mandate: **₹3,139.76**, the **median** of the 745-case set.
-  Across that set: p25 = **₹1,212.39**, p75 = **₹7,006.13**. Say "median case, not the
-  best one" and cite the p25–p75 spread — do not round past these figures.
+  Across that set: p25 = **₹1,212.39**, p75 = **₹7,006.13**. **In this trimmed 0:40 cut,
+  say "median case, not the best one" but skip citing the p25–p75 spread aloud** — it's
+  on screen for a viewer who pauses; if recording a longer cut, restore the full line
+  from before 2026-09-02 (cite both figures, do not round past them).
 
-### Beat 4 — Live case, opened (2:00–2:35)
+### Beat 4 — Live case, opened (1:45–2:20)
 
 **URL 1:** `https://dobara-one.vercel.app/control-room`
 
@@ -97,7 +100,7 @@ ordinary `schedule_debit`) — land on the second card within cycle 6.
   saw, the calibrated probabilities with CIs, this rejected alternative, the compliance
   clauses lighting green, the worked rupee equation, the `stop` action taken.
 
-### Beat 5 — Graceful failure (2:35–3:05)
+### Beat 5 — Graceful failure (2:20–2:50)
 
 **URL:** `https://dobara-one.vercel.app/audit/144` — scroll to **cycle 7** (the first of
 two consecutive abstains; cycle 8 also abstains, but land on 7).
@@ -112,7 +115,7 @@ Say: "When the bank-health monitor flags a real shift in this bank's behaviour a
 model can't yet trust its own calibration there, the agent doesn't guess and it doesn't
 fall back to an attempt. It stops and says why."
 
-### Beat 6 — The evidence (3:05–3:50)
+### Beat 6 — The evidence (2:50–3:35)
 
 **URL:** `https://dobara-one.vercel.app/evidence`
 
@@ -148,7 +151,49 @@ break-even exists" framing — say it this way, not as a retraction):**
 **Do not state a required minimum gross-margin threshold** — an earlier ≈48% claim was
 retracted after a later artifact regeneration and the live page no longer states one.
 
-### Beat 7 — The architecture, and watching it decide (3:50–4:50)
+### Beat 7 — The calibrator experiment (3:35–4:20) — NEW, 2026-09-02
+
+**URL: none new — hold on `https://dobara-one.vercel.app/evidence`, already on screen
+from Beat 6.** **This result is not shown anywhere on the deployed site as of this
+writing.** There is no dedicated section, chart, or callout for it on `/evidence`,
+`/architecture`, or anywhere else in `web/`. This beat is narrated over a held, static
+frame — a deliberate placement decision, not an oversight, flagged to the owner rather
+than silently worked around. If a section is added to `/evidence` before recording,
+update this pack with the real click target; until then, do not invent one.
+
+**Click:** none. Optionally scroll back to the `/evidence` hero as a visual reset before
+speaking, but no new content appears.
+
+Say (tightened for delivery, pre-registration clause kept — do not drop it):
+
+> "We pre-registered the rule before measuring. A better-scoring calibrator passed it —
+> cut argmax ties from 76% to 18%. We adopted it, reran the full evaluation, and the
+> agent got worse on both channels at once: recovered less money, revoked more
+> mandates. Both results are published in the repo, in full. We shipped the one that
+> wins on net lifetime value, not on the proxy metric."
+
+Optional line if the take is running under 0:45: "Later dates, not fewer attempts, is
+where it went wrong — exactly what our own stopping rule was written to prevent."
+
+**Every figure in this beat, with its committed source (verify all before recording —
+this experiment lives on `experiment/platt-calibrator`, not `main`; `artifacts/`
+references below are on that branch unless noted):**
+
+| Figure spoken | Value | Source (file, on `experiment/platt-calibrator` unless noted) |
+|---|---|---|
+| "cut argmax ties from 76% to 18%" | 75.7% → 17.9% (all-decisions slice; paired, single measurement) | `artifacts/production_tie_rate.json`, `slices.all_decisions_with_alternatives` |
+| "pre-registered the rule before measuring" | adoption rule fixed before the bake-off ran | `docs/DECISIONS.md` [2026-09-01] "Pre-registration: calibrator bake-off" (this entry is on `main` too — written before the bake-off script was ever run) |
+| "recovered less money" | −₹376,733 gross, one seed | `docs/DECISIONS.md` [2026-09-02] "Platt adopted" side-by-side table (both branches; figure is identical on `main`'s copy of the same entry) |
+| "revoked more mandates" | +78.7/seed (637.7 → 716.4) | same table |
+| "we shipped the one that wins on net lifetime value" | +₹65.71/mandate (shipped, `main`) vs. −₹64.09/mandate (Platt, `experiment/platt-calibrator`) | `artifacts/summary.json` on each respective branch; also `README.md`'s "The calibrator experiment" section on `main` |
+
+**If asked in Q&A "why isn't this on the site":** say exactly that — it was a deliberate
+scope decision this session, not a technical limitation; the full result is in the
+repo's README and `docs/DECISIONS.md`, and the losing branch (`experiment/platt-
+calibrator`) stays pushed, permanently, as the record. Do not imply it's shown on
+`/evidence` if a judge asks to see it live.
+
+### Beat 8 — The architecture, and watching it decide (4:20–4:50)
 
 **URL:** `https://dobara-one.vercel.app/architecture`
 
@@ -162,45 +207,33 @@ wall a test enforces; the LLM only narrates, on the other side." Name what was
 deliberately not built: no individual cash-flow inference, no probing debits, no LLM
 anywhere near the money path.
 
-**Scroll to "Watch it decide"** (added this session — `docs/DECISIONS.md` [2026-08-30]
-"Decision walkthrough component"). This is the first place on the site a viewer watches
+**Scroll to "Watch it decide."** This is the first place on the site a viewer watches
 the agent actually decide, rather than reading about the mechanism in prose.
 
-**Click 2:** let it play once (it self-advances; click anywhere on the card to skip to
-the end if you're short on time), on the default **"Stop wins at ₹0"** case.
+**Click 2:** let it play once, or click anywhere on the card to skip to the end, on the
+default **"Stop wins at ₹0"** case. **This beat is 0:30, trimmed from 1:00
+(2026-09-02) — run this ONE case only.** The "Abstain, not guess" case (previously
+Click 3, mandate 47) is cut entirely from this cut, not merely marked optional; the
+Stop case alone carries the thesis.
 
 **What's on screen (verified 2026-08-30 against `artifacts/demo_batch.json` — mandate
-13, cycle 4, attempt 3):** the agent priced 76 candidates this cycle (every retry
-channel and date, summed from the fixture's own tied-group counts) and every one of
+13, cycle 4, attempt 3):** the agent priced 76 candidates this cycle and every one of
 them scored negative — the three shown individually are retries at −₹103.16, −₹103.31,
-−₹103.51. `Stop` wins at exactly **₹0.00**, the highest score on the table, because zero
-genuinely beats every priced alternative. Say: "This is the thesis on one screen — not
-an aggressive agent retrying less, an agent that priced every option and found none of
-them worth taking."
-
-**Click 3 (optional, if time allows):** click the **"Abstain, not guess"** tab — mandate
-47, cycle 6, attempt 3. Point estimate **+₹28.90**, but its 95% confidence band
-(**[−₹10.03, ₹66.83]**) straddles zero, so the agent declines to act on a number it
-doesn't trust rather than gamble. Say: "Not every abstention is a bank it's already
-learned to distrust — sometimes it's just not confident enough in its own arithmetic to
-bet, even when the point estimate is positive."
+−₹103.51. `Stop` wins at exactly **₹0.00**, the highest score on the table. Say: "This
+is the thesis on one screen — an agent that priced every option and found none of them
+worth taking."
 
 **Do not state a candidate-generation or gate-filtering count** — the fixture doesn't
-record how many candidates the compliance gate struck out before scoring, and the
-component correctly doesn't claim one; don't improvise one on camera either.
+record how many candidates the compliance gate struck out before scoring; don't
+improvise one on camera.
 
 **Not narrated — for a judge exploring after the video:** further down `/architecture`,
-after the compliance-gate sequence, three new sections (`#how-this-is-used`,
-`#what-it-refuses`, `#not-built-yet`, added `docs/DECISIONS.md` [2026-08-31] "Adoption
-and boundary section on /architecture") answer who touches the system (merchant,
-Razorpay, customer), what it structurally refuses to look at, and what is honestly not
-built yet (the webhook→decision queue). This does not add screen time to Beat 7 and is
-not part of the walkthrough click sequence. If a take runs short and you want one extra
-sentence to fill it, an optional line for the compliance-gate moment: "Dobara never
-touches the payment rail itself — it proposes, a licensed PA executes, and the customer
-never sees Dobara at all."
+after the compliance-gate sequence, three sections (`#how-this-is-used`,
+`#what-it-refuses`, `#not-built-yet`) answer who touches the system, what it
+structurally refuses to look at, and what is honestly not built yet. Does not add
+screen time to Beat 8 and is not part of the walkthrough click sequence.
 
-### Beat 8 — Close (4:50–5:00)
+### Beat 9 — Close (4:50–5:00)
 
 **URL:** `https://dobara-one.vercel.app/` or `/architecture`, hold on the motto.
 
@@ -213,27 +246,38 @@ the payment. Keep the mandate."
 |---|---|---|
 | 1. Hook + mechanism | 0:00–0:45 | 0:45 |
 | 2. Thesis | 0:45–1:05 | 0:20 |
-| 3. Demonstration | 1:05–2:00 | 0:55 |
-| 4. Live case (Control Room + `/audit/89`) | 2:00–2:35 | 0:35 |
-| 5. Graceful failure (`/audit/144`) | 2:35–3:05 | 0:30 |
-| 6. Evidence | 3:05–3:50 | 0:45 |
-| 7. Architecture + decision walkthrough | 3:50–4:50 | 1:00 |
-| 8. Close | 4:50–5:00 | 0:10 |
+| 3. Demonstration | 1:05–1:45 | 0:40 |
+| 4. Live case (Control Room + `/audit/89`) | 1:45–2:20 | 0:35 |
+| 5. Graceful failure (`/audit/144`) | 2:20–2:50 | 0:30 |
+| 6. Evidence | 2:50–3:35 | 0:45 |
+| 7. Calibrator experiment | 3:35–4:20 | 0:45 |
+| 8. Architecture + decision walkthrough (one case) | 4:20–4:50 | 0:30 |
+| 9. Close | 4:50–5:00 | 0:10 |
+
+Sum check: 45+20+40+35+30+45+45+30+10 = 300 seconds = 5:00. Every window above is
+contiguous with the next (no gaps, no overlaps) — verified by construction, each row's
+end time equals the next row's start time.
 
 Thesis lands inside the first 45 seconds (end of Beat 1 / start of Beat 2), per the
-requirement.
+requirement — unchanged by this session's edits, since only beats 3 and 7–8 moved.
 
-**This session's timing change, and what it cost.** Adding the decision walkthrough to
-Beat 7 doubled it (0:30 → 1:00) — walking situation → candidates → clauses →
-arithmetic on camera, even at a skip-ahead pace, doesn't fit in 30 seconds alongside the
-existing node-click and "what we didn't build" beats. Rather than let the video run
-long, **Beat 4 lost 0:15** (drop the `aggressive_8x` comparison-toggle aside — say the
-counter, skip triggering the animated delta) and **Beat 6 lost 0:15** (state the
-headline lift and the `aggressive_8x`/`razorpay_default` break-even results; skip
-narrating the money chart's cycle-by-cycle crossover detail, since the break-even framing
-already carries the same point). Total still sums to 5:00. If Beat 7 still runs long in
-a real take, the second click (the abstain case) is marked optional above and is the
-first thing to cut — the Stop case alone carries the thesis.
+**2026-09-02 timing change, and what it cost.** A new Beat 7 (the calibrator
+experiment, `docs/DECISIONS.md` [2026-09-02] "Platt adopted") needed 0:45 and was
+placed immediately after Beat 6 (Evidence) — its "strictly dominated, less gross AND
+more revocations" punchline only lands once revocations are already established as the
+currency Dobara optimizes, which Beat 6 does. Paid for from two places: **Beat 8 (the
+architecture + decision-walkthrough beat, formerly Beat 7) lost 0:30** by running the
+"Stop wins at ₹0" case only — the "Abstain, not guess" case (previously optional, the
+first thing marked for cutting under time pressure even before this change) is now cut
+entirely from this timing, not merely marked optional. That covers 0:30 of the new
+beat's 0:45; the remaining **0:15 came from Beat 3 (the demonstration), 0:55 → 0:40** —
+skip citing the p25/p75 advantage spread aloud in this cut (still on screen). Total
+still sums to 5:00, verified above. This supersedes the prior (2026-08-30) timing
+change note, which had cut Beats 4 and 6 by 0:15 each (to 0:35/0:45) to make room for
+a 1:00 decision-walkthrough window at what was then Beat 7. That trade is undone here:
+Beats 4 and 6 keep their 0:35/0:45 durations (they are not cut again), but the
+walkthrough itself shrinks to 0:30 (one case, not two) rather than staying at 1:00 —
+freeing the 0:30 this change spends on the new Beat 7 instead.
 
 ## Fallbacks
 
@@ -285,6 +329,16 @@ s = json.load(open('artifacts/summary.json'))
 print(s['paired_dobara_vs_razorpay_default'])
 sens = json.load(open('artifacts/sensitivity.json'))
 print(list(sens.keys()))
+"
+
+# Confirm Beat 7's tie-rate figure. NOTE: this artifact lives on
+# experiment/platt-calibrator, not main -- checkout that branch (or fetch the file
+# from it) before running this snippet, then return to main before recording.
+python3 -c "
+import json
+d = json.load(open('artifacts/production_tie_rate.json'))
+s = d['slices']['all_decisions_with_alternatives']
+print('isotonic', s['isotonic']['tie_rate'], 'platt', s['platt']['tie_rate'])
 "
 ```
 

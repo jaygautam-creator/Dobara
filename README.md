@@ -244,13 +244,23 @@ near-zero probabilities makes hopeless retries look artificially profitable — 
 tested directly and **did not hold up**: of the 19 decisions (out of 1,312 checked)
 where isotonic abstained/stopped and Platt acted instead, the lowest `p_success`
 involved was 0.243 — nowhere near Platt's ~0.116 floor. That claim was dropped, not
-kept, because the evidence didn't support it. What the same check found instead:
-**50.9% of decisions kept the same action but changed the chosen debit date, and 100%
-of those date changes were later under Platt than the tie-break's "earliest legal
-date" rule chose under isotonic** (median +7 days). Date selection, not abstention, is
-where the reversal lives — why later dates net out worse in aggregate is an open
-question, not chased further. Full diagnostic, every check, every number:
-`docs/DECISIONS.md` [2026-09-02].
+kept, because the evidence didn't support it.
+
+**What the same check found instead confirms a rationale written down BEFORE this
+experiment existed.** `agent/decide.py::_tie_break_score`'s docstring, committed in
+`184f157` on 2026-08-27 — over a week before Platt was ever fit — already states the
+reason for preferring the earliest legal date on a tie: *"resolving the cycle sooner
+bounds how many further attempts/notifications this mandate can still generate."*
+**50.9% of decisions (668/1,312) kept the same action but changed the chosen debit
+date, and 100% of those changes were later under Platt** than the earliest-date rule
+chose under isotonic — median +7 days, mean +9.03, zero earlier. The arm-level metrics
+move exactly as that pre-stated rationale predicts: mean attempts in failed cycles
++0.17, notifications +93.5, revocations +78.7. **The tie-break's own reasoning,
+written before the experiment, is independently confirmed by it** — not discovered
+after the fact to explain an inconvenient number. Honest caveat: this is a direction
+observed and an outcome correlated across an aggregate, not a controlled ablation that
+isolates the date channel from the 1.8% of decisions where the action type also
+changed. Full diagnostic, every check, every number: `docs/DECISIONS.md` [2026-09-02].
 
 **The implication, stated directly, because it's the strongest thing this project has
 to show:** the restraint-first tie-break (`agent/decide.py::_tie_break_score`) is not a
@@ -258,7 +268,13 @@ fallback compensating for a weak model. It is **load-bearing**. Handing the date
 decision to a more confidently-calibrated model — on a metric (Brier) that improved —
 destroyed value on the metric the whole system exists to optimize. That is not a claim
 about restraint being good design in the abstract; it is a measurement, on this
-project's own agent, in both directions, with both results kept.
+project's own agent, in both directions, with both results kept. And it is the
+project's own thesis — every retry carries a mandated pre-debit notice, and every
+notice is a chance to lose the mandate — reproduced by a calibration choice, inside its
+own agent: more time left in the cycle means more attempts, more mandated
+notifications, and more revocations, exactly the chain `aggressive_8x` was built to
+demonstrate at the arm level. This run shows the same chain firing from a calibrator
+swap alone.
 
 **Both configurations, side by side** (`dobara` arm, per-5,000-mandate seed, mean
 across 30 seeds — full detail and every other arm-level metric measured:

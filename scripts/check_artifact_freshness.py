@@ -78,6 +78,11 @@ ARTIFACTS: list[tuple[Path, list[str]]] = [
     # artifact, and so a reader of ARTIFACTS sees every committed evidence file
     # accounted for, not just the ones that happen to be ancestor-verifiable today.
     (Path("artifacts/production_tie_rate.json"), []),
+    # Same cross-branch situation as production_tie_rate.json immediately above.
+    (Path("artifacts/date_shift_decomposition.json"), []),
+    # Built fresh on `main` (scripts/build_calibrator_experiment_summary.py) --
+    # normal ancestry watching applies, unlike the two cross-branch artifacts above.
+    (Path("artifacts/calibrator_experiment_summary.json"), []),
 ]
 
 # (cached artifact, source artifact, hash field in the cached artifact's provenance,

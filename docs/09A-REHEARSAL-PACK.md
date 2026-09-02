@@ -153,16 +153,17 @@ retracted after a later artifact regeneration and the live page no longer states
 
 ### Beat 7 — The calibrator experiment (3:35–4:20) — NEW, 2026-09-02
 
-**URL: none new — hold on `https://dobara-one.vercel.app/evidence`, already on screen
-from Beat 6.** **This result is not shown anywhere on the deployed site as of this
-writing.** There is no dedicated section, chart, or callout for it on `/evidence`,
-`/architecture`, or anywhere else in `web/`. This beat is narrated over a held, static
-frame — a deliberate placement decision, not an oversight, flagged to the owner rather
-than silently worked around. If a section is added to `/evidence` before recording,
-update this pack with the real click target; until then, do not invent one.
+**URL:** `https://dobara-one.vercel.app/evidence#calibrator-experiment` — **added
+2026-09-02** (`web/app/evidence/page.tsx`, `scripts/build_calibrator_experiment_summary.py`
+→ `artifacts/calibrator_experiment_summary.json`). This section did not exist when
+Beat 7 was first drafted (it was narrated over a held static frame, flagged as a gap
+to the owner); it is now a real section on the live page, between "Break-even" and
+"Robustness slices."
 
-**Click:** none. Optionally scroll back to the `/evidence` hero as a visual reset before
-speaking, but no new content appears.
+**Click:** scroll from Beat 6's break-even section down one section — the sticky left
+rail's "The calibrator experiment" entry jumps there directly if you scrolled past it.
+No further clicks; the section is scroll-only (two stat-tile rows, three callouts, one
+closing paragraph with the `experiment/platt-calibrator` link).
 
 Say (tightened for delivery, pre-registration clause kept — do not drop it):
 
@@ -175,23 +176,32 @@ Say (tightened for delivery, pre-registration clause kept — do not drop it):
 Optional line if the take is running under 0:45: "Later dates, not fewer attempts, is
 where it went wrong — exactly what our own stopping rule was written to prevent."
 
-**Every figure in this beat, with its committed source (verify all before recording —
-this experiment lives on `experiment/platt-calibrator`, not `main`; `artifacts/`
-references below are on that branch unless noted):**
+**Every figure in this beat is now on-screen on `/evidence#calibrator-experiment`
+itself** (all read from `artifacts/calibrator_experiment_summary.json`, committed on
+`main` — no cross-branch lookup needed to verify what a judge sees live):
 
-| Figure spoken | Value | Source (file, on `experiment/platt-calibrator` unless noted) |
+| Figure spoken | Value | On-screen as |
 |---|---|---|
-| "cut argmax ties from 76% to 18%" | 75.7% → 17.9% (all-decisions slice; paired, single measurement) | `artifacts/production_tie_rate.json`, `slices.all_decisions_with_alternatives` |
-| "pre-registered the rule before measuring" | adoption rule fixed before the bake-off ran | `docs/DECISIONS.md` [2026-09-01] "Pre-registration: calibrator bake-off" (this entry is on `main` too — written before the bake-off script was ever run) |
-| "recovered less money" | −₹376,733 gross, one seed | `docs/DECISIONS.md` [2026-09-02] "Platt adopted" side-by-side table (both branches; figure is identical on `main`'s copy of the same entry) |
-| "revoked more mandates" | +78.7/seed (637.7 → 716.4) | same table |
-| "we shipped the one that wins on net lifetime value" | +₹65.71/mandate (shipped, `main`) vs. −₹64.09/mandate (Platt, `experiment/platt-calibrator`) | `artifacts/summary.json` on each respective branch; also `README.md`'s "The calibrator experiment" section on `main` |
+| "cut argmax ties from 76% to 18%" | 75.7% → 17.9% (all-decisions slice; paired, single measurement) | "Argmax tie rate (proxy 2)" stat tile |
+| "pre-registered the rule before measuring" | adoption rule fixed before the bake-off ran | The section's opening line, with the pre-registration commit date and hash |
+| "recovered less money" | −₹376,733 gross, one seed | "Strictly dominated, not a trade-off" callout |
+| "revoked more mandates" | +78.7/seed (637.7 → 716.4) | same callout |
+| "we shipped the one that wins on net lifetime value" | +₹65.71/mandate (shipped) vs. −₹64.09/mandate (Platt) | The two headline stat tiles, each with its own 95% CI |
+| "later dates... our own stopping rule" (optional line) | 50.9% date-changed, 100% later, median 7 days; `_tie_break_score`'s pre-stated rationale, quoted | "The mechanism: dates moved later, not fewer attempts" callout |
 
-**If asked in Q&A "why isn't this on the site":** say exactly that — it was a deliberate
-scope decision this session, not a technical limitation; the full result is in the
-repo's README and `docs/DECISIONS.md`, and the losing branch (`experiment/platt-
-calibrator`) stays pushed, permanently, as the record. Do not imply it's shown on
-`/evidence` if a judge asks to see it live.
+Underlying artifact provenance (for anyone who asks how a figure not itself on `main`
+— the Platt-side numbers — is verified): `artifacts/calibrator_experiment_summary.json`
+was built by reading `main`'s own `artifacts/summary.json` alongside
+`experiment/platt-calibrator`'s (via `git show`, never checked out) plus the two
+cross-branch-cherry-picked artifacts (`production_tie_rate.json`,
+`date_shift_decomposition.json`) — see `docs/DECISIONS.md` [2026-09-02] "The
+/evidence calibrator-experiment section" for the full account.
+
+**If asked in Q&A "is this still on `main`?":** the section and every number it shows
+are on `main`, committed and deployed. What is *not* on `main` is the Platt
+calibrator itself (`models/recovery.py`) — that configuration was reverted and lives
+permanently on `experiment/platt-calibrator`. The section reports on it; it doesn't
+resurrect it.
 
 ### Beat 8 — The architecture, and watching it decide (4:20–4:50)
 
@@ -331,15 +341,33 @@ sens = json.load(open('artifacts/sensitivity.json'))
 print(list(sens.keys()))
 "
 
-# Confirm Beat 7's tie-rate figure. NOTE: this artifact lives on
-# experiment/platt-calibrator, not main -- checkout that branch (or fetch the file
-# from it) before running this snippet, then return to main before recording.
+# Confirm Beat 7's tie-rate figure. This artifact was cherry-picked onto main
+# 2026-09-02 -- no branch switch needed to run this on a normal main checkout.
 python3 -c "
 import json
 d = json.load(open('artifacts/production_tie_rate.json'))
 s = d['slices']['all_decisions_with_alternatives']
 print('isotonic', s['isotonic']['tie_rate'], 'platt', s['platt']['tie_rate'])
 "
+
+# Confirm every figure Beat 7's /evidence#calibrator-experiment section shows
+# (the exact artifact web/app/evidence/page.tsx reads at build time):
+python3 -c "
+import json
+d = json.load(open('artifacts/calibrator_experiment_summary.json'))
+print('tie rate:', d['proxies_passed']['tie_rate']['isotonic_pct'], '->', d['proxies_passed']['tie_rate']['platt_pct'])
+print('isotonic headline:', d['primary_metric']['isotonic']['per_mandate_point'])
+print('platt headline:', d['primary_metric']['platt']['per_mandate_point'])
+print('gross delta:', d['strict_domination']['gross_recovered_inr']['delta'])
+print('revocation delta:', d['strict_domination']['revocations_total']['delta'])
+print('date-changed pct, pct later, median days:',
+      d['date_shift_mechanism']['date_changed_pct_of_total'],
+      d['date_shift_mechanism']['day_delta_stats']['pct_later'],
+      d['date_shift_mechanism']['day_delta_stats']['median_days'])
+"
+
+# make check's scripts/check_spoken_figures.py runs this same cross-check
+# automatically -- prefer that over hand-running these snippets when in doubt.
 ```
 
 If any of these disagree with this pack, update the specific figure here (and, if it

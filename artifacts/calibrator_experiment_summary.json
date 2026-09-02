@@ -1,0 +1,88 @@
+{
+  "note": "Consolidated, committed comparison between the shipped (isotonic, main) and reverted (Platt, experiment/platt-calibrator) recovery-model calibrator configurations. Every field here is read directly from a committed artifact -- see 'sources' below -- never hand-typed.",
+  "pre_registration": {
+    "commit": {
+      "commit": "4dd11835615fff96fc08a4f76de1e58821464b9d",
+      "date": "2026-09-01"
+    },
+    "entry": "docs/DECISIONS.md [2026-09-01] \"Pre-registration: calibrator bake-off\"",
+    "rule": "Adopt a candidate calibrator only if BOTH hold on the held-out population: (a) Brier-score CI overlaps the isotonic baseline's, (b) argmax tie rate is at least halved."
+  },
+  "tie_break_rationale": {
+    "commit": {
+      "commit": "184f1579bdaa4200b547dcbc9b37fe6210721a83",
+      "date": "2026-08-27"
+    },
+    "quote": "resolving the cycle sooner bounds how many further attempts/notifications this mandate can still generate",
+    "source": "agent/decide.py::_tie_break_score docstring"
+  },
+  "proxies_passed": {
+    "brier_ci_overlap": true,
+    "tie_rate": {
+      "isotonic_pct": 75.6859756097561,
+      "platt_pct": 17.911585365853657,
+      "population": "held-out world, seed 9001, n=150, all decisions with alternatives",
+      "source": "artifacts/production_tie_rate.json"
+    }
+  },
+  "primary_metric": {
+    "isotonic": {
+      "label": "shipped (main)",
+      "per_mandate_point": 65.70677618348643,
+      "per_mandate_ci_lo": 53.30511615963974,
+      "per_mandate_ci_hi": 80.27246789835561,
+      "significant": true,
+      "n_paired_seeds": 30
+    },
+    "platt": {
+      "label": "reverted (experiment/platt-calibrator)",
+      "per_mandate_point": -64.08876260259414,
+      "per_mandate_ci_lo": -81.49614595804643,
+      "per_mandate_ci_hi": -48.647991558453974,
+      "significant": true,
+      "n_paired_seeds": 30
+    },
+    "source": "artifacts/summary.json (main) and experiment/platt-calibrator:artifacts/summary.json"
+  },
+  "strict_domination": {
+    "gross_recovered_inr": {
+      "isotonic": 24328993.30670595,
+      "platt": 23952260.759752974,
+      "delta": -376732.5469529778
+    },
+    "revocations_total": {
+      "isotonic": 637.7,
+      "platt": 716.4333333333333,
+      "delta": 78.73333333333323
+    },
+    "source": "artifacts/summary.json (main) and experiment/platt-calibrator:artifacts/summary.json"
+  },
+  "date_shift_mechanism": {
+    "n_decisions_with_alternatives": 1312,
+    "n_action_type_changed": 23,
+    "action_type_changed_pct_of_total": 0.01753048780487805,
+    "n_date_changed": 668,
+    "date_changed_pct_of_total": 0.5091463414634146,
+    "day_delta_stats": {
+      "n": 668,
+      "n_later": 668,
+      "n_earlier": 0,
+      "pct_later": 1.0,
+      "median_days": 7.0,
+      "mean_days": 9.034431137724551,
+      "min_days": 1.0,
+      "max_days": 28.0
+    },
+    "source": "artifacts/date_shift_decomposition.json"
+  },
+  "decision": {
+    "shipped": "isotonic",
+    "reverted": "platt",
+    "framing": "A correction to what ships, not a retraction of the finding. Both results are published in full; the pre-registered proxies were genuinely beaten by Platt (they did their job); the pre-registration was under-specified (it never named net LTV, the actual thesis metric, as a criterion)."
+  },
+  "provenance": {
+    "generated_at": "2026-09-02T14:33:07.962636+00:00",
+    "git_commit": "efd564527b44e765c684dca78652ecc6e0a874c6"
+  },
+  "content_hash": "b81eb394a8ebc98ea4f4975bc42f0a67957607fce3eeb144906d1a91a0eb485b"
+}

@@ -9,6 +9,7 @@ import path from "node:path";
 import type {
   AskWhyCache,
   AskWhyEntry,
+  CalibratorExperimentSummary,
   ComplianceRulesJson,
   DecisionOut,
   DemoBatchJson,
@@ -54,6 +55,10 @@ export function getMoneyChartData(): MoneyChartData {
 
 export function getHomeDemo(): HomeDemoJson {
   return readJson<HomeDemoJson>("home_demo.json");
+}
+
+export function getCalibratorExperimentSummary(): CalibratorExperimentSummary {
+  return readJson<CalibratorExperimentSummary>("calibrator_experiment_summary.json");
 }
 
 export function getComplianceRules(): ComplianceRulesJson {

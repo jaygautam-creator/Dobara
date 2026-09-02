@@ -1,4 +1,5 @@
 import {
+  getCalibratorExperimentSummary,
   getHazardModelReport,
   getMoneyChartData,
   getRecoveryModelReport,
@@ -25,6 +26,7 @@ const SECTIONS: EvidenceSection[] = [
   { id: "money-chart", label: "The money chart" },
   { id: "calibration", label: "Calibration" },
   { id: "break-even", label: "Break-even" },
+  { id: "calibrator-experiment", label: "The calibrator experiment" },
   { id: "robustness", label: "Robustness slices" },
   { id: "holdout", label: "Permanent holdout" },
   { id: "honesty", label: "Honesty panel" },
@@ -36,6 +38,7 @@ export default function EvidencePage() {
   const recovery = getRecoveryModelReport();
   const hazard = getHazardModelReport();
   const moneyChart = getMoneyChartData();
+  const calibExp = getCalibratorExperimentSummary();
 
   const headline = summary.paired_dobara_vs_razorpay_default;
   const aggLoss = summary.paired_aggressive_8x_vs_razorpay_default;
@@ -480,6 +483,137 @@ export default function EvidencePage() {
                 date-change mechanic working at all, down to and including 0% response.
               </Callout>
             </div>
+          </section>
+
+          <section id="calibrator-experiment" className="scroll-mt-20">
+            <div className="max-w-[68ch]">
+              <SectionHeading
+                eyebrow="A shipped decision, published in full"
+                title="The calibrator experiment"
+                description="A calibrator that scored better on the pre-registered proxy made the agent significantly worse on the metric that matters. We reverted, and published both results."
+              />
+            </div>
+
+            <Card>
+              <div className="mb-3 text-sm leading-relaxed text-text-secondary break-words">
+                Pre-registered{" "}
+                <span className="whitespace-nowrap">
+                  {calibExp.pre_registration.commit.date}
+                </span>{" "}
+                (commit{" "}
+                <code className="break-all">
+                  {calibExp.pre_registration.commit.commit.slice(0, 12)}
+                </code>
+                ) — the adoption rule was fixed <em>before</em> the bake-off ran:{" "}
+                {calibExp.pre_registration.rule}
+              </div>
+
+              <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <StatTile
+                  label="Argmax tie rate (proxy 2)"
+                  value={`${calibExp.proxies_passed.tie_rate.isotonic_pct.toFixed(1)}% → ${calibExp.proxies_passed.tie_rate.platt_pct.toFixed(1)}%`}
+                  tone="good"
+                  source={`${calibExp.proxies_passed.tie_rate.population} — ${calibExp.proxies_passed.tie_rate.source}`}
+                  noCi="a single paired measurement, both calibrators, one run — not a bootstrapped estimate"
+                />
+                <StatTile
+                  label="Brier CI overlap (proxy 1)"
+                  value={calibExp.proxies_passed.brier_ci_overlap ? "Passed" : "Failed"}
+                  tone={calibExp.proxies_passed.brier_ci_overlap ? "good" : "critical"}
+                  source={`docs/DECISIONS.md [2026-09-01] "Calibrator bake-off verdict reversed on the held-out population"`}
+                  noCi="pass/fail against the pre-registered rule, not itself a point estimate"
+                />
+              </div>
+
+              <p className="mb-3 text-sm leading-relaxed text-text-secondary">
+                Both pre-registered proxies passed — Platt scaling was adopted. Then the
+                full evaluation was rerun. The primary metric — the one the proxies were
+                never asked about — moved the other way:
+              </p>
+
+              <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <StatTile
+                  label={calibExp.primary_metric.isotonic.label}
+                  value={signedInr(calibExp.primary_metric.isotonic.per_mandate_point)}
+                  tone="good"
+                  source="artifacts/summary.json — net LTV vs. razorpay_default, per mandate"
+                  ciText={`[${signedInr(calibExp.primary_metric.isotonic.per_mandate_ci_lo)}, ${signedInr(calibExp.primary_metric.isotonic.per_mandate_ci_hi)}]`}
+                />
+                <StatTile
+                  label={calibExp.primary_metric.platt.label}
+                  value={signedInr(calibExp.primary_metric.platt.per_mandate_point)}
+                  tone="critical"
+                  source={`${calibExp.primary_metric.source} — 30 paired seeds`}
+                  ciText={`[${signedInr(calibExp.primary_metric.platt.per_mandate_ci_lo)}, ${signedInr(calibExp.primary_metric.platt.per_mandate_ci_hi)}]`}
+                />
+              </div>
+
+              <Callout tone="critical" title="Strictly dominated, not a trade-off">
+                Platt didn&apos;t win on one channel and lose on another — it lost on
+                both at once. Gross recovered fell by{" "}
+                <strong>
+                  {signedInr(calibExp.strict_domination.gross_recovered_inr.delta)}
+                </strong>{" "}
+                AND revocations rose by{" "}
+                <strong>
+                  +{calibExp.strict_domination.revocations_total.delta.toFixed(1)}
+                </strong>{" "}
+                — {formatInr(calibExp.strict_domination.gross_recovered_inr.isotonic, { compact: true })} →{" "}
+                {formatInr(calibExp.strict_domination.gross_recovered_inr.platt, { compact: true })} gross,{" "}
+                {calibExp.strict_domination.revocations_total.isotonic.toFixed(0)} →{" "}
+                {calibExp.strict_domination.revocations_total.platt.toFixed(0)} revocations.
+                Source: {calibExp.strict_domination.source}.
+              </Callout>
+
+              <Callout title="The mechanism: dates moved later, not fewer attempts">
+                Of{" "}
+                {formatNumber(calibExp.date_shift_mechanism.n_decisions_with_alternatives)}{" "}
+                decisions checked,{" "}
+                <strong>
+                  {formatPct(calibExp.date_shift_mechanism.action_type_changed_pct_of_total, 1)}
+                </strong>{" "}
+                changed whether to act at all — a rounding error next to{" "}
+                <strong>
+                  {formatPct(calibExp.date_shift_mechanism.date_changed_pct_of_total, 1)}
+                </strong>{" "}
+                that kept the same action but chose a different debit date.{" "}
+                <strong>
+                  {formatPct(calibExp.date_shift_mechanism.day_delta_stats.pct_later, 0)}
+                </strong>{" "}
+                of those date changes were <em>later</em> under Platt (median{" "}
+                {calibExp.date_shift_mechanism.day_delta_stats.median_days.toFixed(0)} days,
+                mean {calibExp.date_shift_mechanism.day_delta_stats.mean_days.toFixed(2)}{" "}
+                days, n={calibExp.date_shift_mechanism.day_delta_stats.n}) — zero earlier.
+                That confirms, not invents, a rationale written down before this
+                experiment existed: <code>agent/decide.py::_tie_break_score</code>&apos;s
+                docstring (commit{" "}
+                <code className="break-all">
+                  {calibExp.tie_break_rationale.commit.commit.slice(0, 12)}
+                </code>
+                , {calibExp.tie_break_rationale.commit.date}) already said{" "}
+                <em>&ldquo;{calibExp.tie_break_rationale.quote}.&rdquo;</em> Honest
+                caveat: this is a direction observed and an outcome correlated across an
+                aggregate, not a controlled ablation isolating the date channel from the
+                smaller action-type channel. Source:{" "}
+                {calibExp.date_shift_mechanism.source}.
+              </Callout>
+
+              <p className="mt-4 text-sm leading-relaxed text-text-secondary">
+                <strong>We shipped {calibExp.decision.shipped}.</strong>{" "}
+                {calibExp.decision.framing} The full reverted configuration — every
+                artifact, every commit — stays permanently on{" "}
+                <a
+                  href="https://github.com/jaygautam-creator/Dobara/tree/experiment/platt-calibrator"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="break-all underline decoration-dotted underline-offset-2"
+                >
+                  experiment/platt-calibrator
+                </a>
+                . Nothing about it is deleted, softened, or moved out of view — full
+                write-up in <code>docs/DECISIONS.md</code> [2026-09-02].
+              </p>
+            </Card>
           </section>
 
           <section id="robustness" className="scroll-mt-20">

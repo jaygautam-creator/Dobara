@@ -3720,3 +3720,62 @@ that doesn't. Covers, today: the tie rate; both configurations' headline net-LTV
 figures (point + CI); the gross and revocation deltas. Adding a new spoken figure to
 the video means adding a row to `FIGURES` in the same commit — the discipline this gate
 exists to enforce, now structurally required rather than merely asked for next time.
+
+## [2026-09-02] The /evidence calibrator-experiment section
+
+**What this closes.** The calibrator-experiment beat (`docs/09-DEMO-SCRIPT.md`,
+`docs/09A-REHEARSAL-PACK.md` Beat 7) had nothing on screen — it was narrated over a
+held, static `/evidence` frame, flagged explicitly as a gap rather than silently
+worked around. This adds a real section: `/evidence#calibrator-experiment`, between
+"Break-even" and "Robustness slices" in both the page and the sticky nav rail.
+Strictly additive — no new route, no nav item beyond the one section entry, no new
+dependency, and `agent/`, `models/`, `eval/`, `sim/` are all untouched.
+
+**Every number in the section is read from a JSON field, none hand-typed.** The
+section's data doesn't live in a single pre-existing artifact -- the Platt-side
+figures (headline, gross, revocations) only ever existed on
+`experiment/platt-calibrator`'s own `artifacts/summary.json`, deliberately never
+merged to `main`. `scripts/build_calibrator_experiment_summary.py` (read-only, no
+`make eval`) builds one consolidated artifact,
+`artifacts/calibrator_experiment_summary.json`, by reading `main`'s own
+`artifacts/summary.json` alongside `experiment/platt-calibrator`'s copy (via
+`git show <ref>:<path>`, never checked out) plus the two artifacts already
+cherry-picked onto `main` this session (`production_tie_rate.json`,
+`date_shift_decomposition.json`). `web/app/evidence/page.tsx` reads only this one
+consolidated file — `web/lib/types.ts`'s `CalibratorExperimentSummary`,
+`web/lib/server-data.ts::getCalibratorExperimentSummary()`.
+
+**Content, each backed by a field, not prose:** the pre-registration commit and date
+(`4dd1183`, 2026-09-01) with the rule stated verbatim; both proxies (Brier-CI overlap,
+tie rate 75.7% → 17.9%); the primary metric for both configurations with full CIs
+(+₹65.71/mandate vs. −₹64.09/mandate); strict domination on both raw channels (gross
+−₹376,733, revocations +78.7); the date-shift mechanism (50.9% date-changed, 100%
+later, median 7 days) tied to `_tie_break_score`'s pre-existing docstring quote
+(`184f157`, 2026-08-27, quoted verbatim via the artifact's own field, not retyped);
+and the shipped-vs-reverted framing from the honest-revert disclosure.
+
+**The headline is unchanged everywhere outside this section.** `+₹65.71/mandate`
+still reads as the shipped number in "Honest metrics" and everywhere else on the
+page; the reverted `−₹64.09` only ever appears inside the clearly-labeled comparison
+stat tiles in this one section, each tile carrying its own label (`shipped (main)` /
+`reverted (experiment/platt-calibrator)`).
+
+**Mobile / long-identifier check.** Every commit hash is truncated to 12 characters
+and rendered inside `<code className="break-all">`; the `experiment/platt-calibrator`
+GitHub link carries `break-all` on the anchor itself; `StatTile`'s `source` prop
+already wraps (`break-words`, an existing, unmodified component contract) so the
+long `docs/DECISIONS.md` citation strings used as sources don't need special-casing.
+`npx tsc --noEmit`, `npm run lint`, `npm run build` all pass against this section.
+**Visual verification (1440px light/dark, 390px light) was not completed this
+session** — the Chrome extension driving this repo's browser-automation tool did not
+respond after three attempts (a known, documented failure mode: stop retrying past
+2-3 attempts and flag it, not loop on it). Flagged plainly rather than silently
+skipped or claimed as done; a follow-up visual pass with a working browser tool (or a
+manual check by the owner) is recommended before recording, though nothing in the
+code review found a construction likely to overflow at 390px.
+
+**Rehearsal pack updated to match.** Beat 7's click sequence now names the real
+target (`/evidence#calibrator-experiment`, scroll from Beat 6) instead of "hold on a
+static frame," and its figure-source table points at
+`artifacts/calibrator_experiment_summary.json` (on `main`) instead of requiring a
+branch switch to verify. Timing unaffected — same 0:45 window, same 5:00 total.

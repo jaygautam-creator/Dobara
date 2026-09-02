@@ -422,3 +422,79 @@ export interface ComplianceRulesJson {
   n_soft: number;
   provenance: Provenance;
 }
+
+// scripts/build_calibrator_experiment_summary.py's output -- a consolidated,
+// committed comparison between the shipped (isotonic, this repo) and reverted
+// (Platt, experiment/platt-calibrator, never merged) recovery-model calibrator
+// configurations. See docs/DECISIONS.md [2026-09-02] "The /evidence
+// calibrator-experiment section" for the full write-up this powers.
+export interface CalibratorExperimentSummary {
+  note: string;
+  pre_registration: {
+    commit: { commit: string; date: string };
+    entry: string;
+    rule: string;
+  };
+  tie_break_rationale: {
+    commit: { commit: string; date: string };
+    quote: string;
+    source: string;
+  };
+  proxies_passed: {
+    brier_ci_overlap: boolean;
+    tie_rate: {
+      isotonic_pct: number;
+      platt_pct: number;
+      population: string;
+      source: string;
+    };
+  };
+  primary_metric: {
+    isotonic: {
+      label: string;
+      per_mandate_point: number;
+      per_mandate_ci_lo: number;
+      per_mandate_ci_hi: number;
+      significant: boolean;
+      n_paired_seeds: number;
+    };
+    platt: {
+      label: string;
+      per_mandate_point: number;
+      per_mandate_ci_lo: number;
+      per_mandate_ci_hi: number;
+      significant: boolean;
+      n_paired_seeds: number;
+    };
+    source: string;
+  };
+  strict_domination: {
+    gross_recovered_inr: { isotonic: number; platt: number; delta: number };
+    revocations_total: { isotonic: number; platt: number; delta: number };
+    source: string;
+  };
+  date_shift_mechanism: {
+    n_decisions_with_alternatives: number;
+    n_action_type_changed: number;
+    action_type_changed_pct_of_total: number;
+    n_date_changed: number;
+    date_changed_pct_of_total: number;
+    day_delta_stats: {
+      n: number;
+      n_later: number;
+      n_earlier: number;
+      pct_later: number;
+      median_days: number;
+      mean_days: number;
+      min_days: number;
+      max_days: number;
+    };
+    source: string;
+  };
+  decision: {
+    shipped: string;
+    reverted: string;
+    framing: string;
+  };
+  provenance: Provenance;
+}

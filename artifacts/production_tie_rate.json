@@ -1,0 +1,38 @@
+{
+  "note": "Argmax tie rate under each PRODUCTION calibrator (full-validate-split fit, as actually persisted/loaded by agent/models.py -- not the half-split fit scripts/calibrator_bakeoff.py uses for a fair Brier comparison), measured on the held-out world api/demo.py uses (DEMO_SEED=9001, n=150).",
+  "seed": 9001,
+  "n_mandates": 150,
+  "isotonic_model_version": "e5eaa66718f2",
+  "platt_model_version": "46abfd4c9c02",
+  "slices": {
+    "all_decisions_with_alternatives": {
+      "isotonic": {
+        "n_decisions_with_alternatives": 1312,
+        "n_tied_at_argmax": 993,
+        "tie_rate": 0.756859756097561
+      },
+      "platt": {
+        "n_decisions_with_alternatives": 1312,
+        "n_tied_at_argmax": 235,
+        "tie_rate": 0.17911585365853658
+      }
+    },
+    "attempt_index_1_only": {
+      "isotonic": {
+        "n_decisions_with_alternatives": 1171,
+        "n_tied_at_argmax": 861,
+        "tie_rate": 0.735269000853971
+      },
+      "platt": {
+        "n_decisions_with_alternatives": 1171,
+        "n_tied_at_argmax": 178,
+        "tie_rate": 0.1520068317677199
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-02T11:07:19.291373+00:00",
+    "git_commit": "c40d8188e421adba8a2d099760111e0a4beaf1bb"
+  },
+  "content_hash": "66bd13879b3592dc0d910627373b82b182650ec3827a2951a717495f502371e7"
+}

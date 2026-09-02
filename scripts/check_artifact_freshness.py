@@ -69,6 +69,15 @@ ARTIFACTS: list[tuple[Path, list[str]]] = [
         Path("artifacts/llm_cache/ask_why.json"),
         ["llm/", "scripts/generate_ask_why.py"],
     ),
+    # Cross-branch by design (docs/DECISIONS.md [2026-09-02] "Third number collision"):
+    # this artifact's own provenance.git_commit is on experiment/platt-calibrator, not
+    # an ancestor of main's HEAD -- check_one()'s existing non-ancestor handling
+    # ("unverifiable, not stale") is exactly the right outcome here, not a gap being
+    # papered over. Listed so a FUTURE regeneration of this file (were it ever run
+    # again on a branch where it's reproducible) is still watched like every other
+    # artifact, and so a reader of ARTIFACTS sees every committed evidence file
+    # accounted for, not just the ones that happen to be ancestor-verifiable today.
+    (Path("artifacts/production_tie_rate.json"), []),
 ]
 
 # (cached artifact, source artifact, hash field in the cached artifact's provenance,

@@ -3597,3 +3597,31 @@ regeneration — only a one-time, deterministic backfill of the new
 caching logic recognizes the existing entries as valid.
 `scripts/check_ask_why_grounding.py` passes against the shipped configuration: 1,296
 narratives, 0 flagged.
+
+**Correction, same day: the `money_chart_data.json`/`home_demo.json` drift flagged
+above was a stale committed file, not unexplained non-determinism — the waivers for it
+have been removed, not kept.** The report above waived these two artifacts rather than
+explain a small (~0.03-0.3%) numeric drift observed in a regeneration attempt, across
+every arm including `razorpay_default`/`aggressive_8x` (which never call `decide()`).
+Investigated properly rather than left as a shrug: regenerated `money_chart_data.json`
+TWICE on clean `main` (confirmed byte-identical to `6a20367` beforehand) and diffed the
+two regenerations against each other — **identical**, ignoring only the provenance
+timestamp/commit fields. The script is deterministic. What it produces simply differs
+from what was committed. The committed file's own provenance
+(`git_commit: f199e87bb74a`, 2026-08-28) predates several later commits that touch its
+dependency chain (`ad1e671`, `afe326f`, `bfa52dc`, all already covered by this file's
+own pre-existing, older waiver entries for this artifact) — this artifact has been
+stale since before this session started, for reasons unrelated to the calibrator
+experiment or any of this session's three cherry-picked fixes. Likely mechanism, not
+fully isolated further (time-boxed): `scripts/build_money_chart.py` and
+`scripts/build_home_demo.py` both call `load_model_bundle`/`build_life_table` against
+`data/dobara.sqlite3` — a gitignored, untracked file whose content is not pinned by git
+history and can legitimately differ across sessions even under a fixed generating seed,
+which would explain drift in every arm uniformly (all arms share one `life_table`),
+not just `dobara`'s.
+
+**Resolution:** both artifacts regenerated for real and committed with their current,
+reproducible content; both waiver entries for `684caf2` removed from
+`docs/artifact_freshness_waivers.json` (not carried forward) — regeneration, not a
+waiver, is the correct fix for a genuinely stale file. `check_artifact_freshness.py`
+passes clean for both with no waiver needed.

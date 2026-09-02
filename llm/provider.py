@@ -193,11 +193,76 @@ class GroqProvider:
         return text
 
 
+class OpenRouterProvider:
+    """OpenRouter's OpenAI-compatible `/chat/completions` endpoint -- added 2026-09-02
+    (docs/DECISIONS.md [2026-09-02] "Platt adopted") as a THIRD fallback after both
+    Groq's and Gemini's free-tier daily quotas were separately exhausted mid-batch on
+    the same day (Groq: tokens-per-day; Gemini: 500 requests/day on
+    `gemini-3.5-flash-lite`). Same OpenAI-compatible request/response shape as
+    `GroqProvider`, reused verbatim -- only the base URL, auth header extras, and
+    default model differ. `OPENROUTER_MODEL` picks a specific free-tier model; the
+    default below is a best-effort choice, not verified against every possible account
+    tier -- override via env if it 404s or is deprecated by the time this runs again."""
+
+    provider_id = "openrouter"
+
+    def __init__(self, api_key: str, model: str) -> None:
+        self._api_key = api_key
+        self.model = model
+        self._client = httpx.Client(timeout=60.0)
+
+    def _post(self, prompt: str) -> httpx.Response:
+        return self._client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            },
+            json={"model": self.model, "messages": [{"role": "user", "content": prompt}]},
+        )
+
+    def generate(self, prompt: str) -> str:
+        resp: httpx.Response | None = None
+        for attempt in range(MAX_RATE_LIMIT_RETRIES):
+            resp = self._post(prompt)
+            if resp.status_code != 429:
+                break
+            body_lower = resp.text.lower()
+            if any(marker in body_lower for marker in _NON_RETRYABLE_MARKERS):
+                raise QuotaExhausted(
+                    f"Non-retryable quota/billing limit for this session: {resp.text}"
+                )
+            retry_after = resp.headers.get("retry-after")
+            delay = float(retry_after) + 2.0 if retry_after else 20.0 * (attempt + 1)
+            time.sleep(delay)
+        assert resp is not None
+        resp.raise_for_status()
+        data = resp.json()
+        choices = data.get("choices") or []
+        if not choices:
+            raise RuntimeError(f"OpenRouter returned no choices: {data}")
+        text = (choices[0].get("message", {}).get("content") or "").strip()
+        if not text:
+            raise RuntimeError(f"OpenRouter returned an empty choice: {data}")
+        return text
+
+
+DEFAULT_OPENROUTER_MODEL = "minimax/minimax-m3:free"
+# Verified against OpenRouter's own /api/v1/models list on 2026-09-02 (18 ":free"
+# models available that day) AND with a live test call (google/gemma-4-26b-a4b-it:free
+# and z-ai/glm-5.2:free both 429'd, "temporarily rate-limited upstream" on the shared
+# free pool -- this one and nvidia/nemotron-3-super-120b-a12b:free both returned clean
+# 200s). OpenRouter's free-tier catalog and per-model availability both rotate, so a
+# slug that fails later is expected, not a bug; re-check that endpoint and override via
+# OPENROUTER_MODEL rather than guessing.
+
+
 def default_provider() -> LLMProvider:
     """`GROQ_API_KEY` wins if set -- Groq's single larger daily quota is the better fit
-    for a batch this size (see GroqProvider's docstring). Falls back to `GEMINI_API_KEY`.
-    Neither is ever hardcoded or committed; raises loudly if both are unset rather than
-    silently writing empty narratives."""
+    for a batch this size (see GroqProvider's docstring). Falls back to `GEMINI_API_KEY`,
+    then `OPENROUTER_API_KEY` (added as a third fallback the same day both of the first
+    two were exhausted mid-batch). None is ever hardcoded or committed; raises loudly if
+    all three are unset rather than silently writing empty narratives."""
     groq_key = os.environ.get("GROQ_API_KEY")
     if groq_key:
         model = os.environ.get("GROQ_MODEL", DEFAULT_GROQ_MODEL)
@@ -206,8 +271,13 @@ def default_provider() -> LLMProvider:
     if gemini_key:
         model = os.environ.get("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
         return GeminiProvider(api_key=gemini_key, model=model)
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+    if openrouter_key:
+        model = os.environ.get("OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL)
+        return OpenRouterProvider(api_key=openrouter_key, model=model)
     raise RuntimeError(
-        "Neither GROQ_API_KEY nor GEMINI_API_KEY is set. Export one before running "
-        "scripts/generate_ask_why.py -- narratives are generated offline and committed, "
-        "never called from the deployed (static-export) frontend."
+        "Neither GROQ_API_KEY, GEMINI_API_KEY, nor OPENROUTER_API_KEY is set. Export "
+        "one before running scripts/generate_ask_why.py -- narratives are generated "
+        "offline and committed, never called from the deployed (static-export) "
+        "frontend."
     )

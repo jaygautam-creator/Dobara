@@ -3464,3 +3464,136 @@ with the split between the two varying by population (roughly two-thirds raw / o
 calibrator on the training seed, roughly two-fifths raw / three-fifths calibrator
 held-out), reported as measured on both, not asserted as one fixed ratio. Both mechanisms
 are named as limitations in the README, not folded into the restraint-design story.
+
+## [2026-09-02] The calibrator experiment: Platt adopted, measured, diagnosed, reverted — isotonic ships
+
+**What happened, in order, on a same-day continuation of this session.** The pre-
+registered bake-off above (adoption rule: Brier-CI overlap + argmax tie rate at least
+halved, both measured on the held-out population) passed for Platt scaling by a wide
+margin. Platt was adopted as the recovery model's calibrator, `make eval` was rerun
+(30 seeds x 5,000 mandates, ~118 min), and the headline **reversed**: `dobara` vs.
+`razorpay_default` net LTV moved from **+₹65.71/mandate** [+₹53.31, +₹80.27] to
+**−₹64.09/mandate** [−₹81.50, −₹48.65], both significant. The new configuration was
+**strictly dominated**, not a trade-off: gross recovered fell (₹24,328,993 → ₹23,952,261,
+−₹376,733) AND revocations rose (637.7 → 716.4, +78.7, +12.3%).
+
+**Before accepting a strictly-dominated result as a real finding, it was diagnosed as a
+possible bug, not assumed real.** Checked, in order: (a) operating-band reliability
+(isotonic vs. Platt, p≈0.85–0.92, the band most decisions live in) — real local
+deviations up to 2.6 percentage points, but no one-directional bias, aggregate gap ≈0;
+(b) fitting scale — `PlattCalibrator` is fit on the LightGBM booster's own
+already-sigmoided probability output (`raw_score=False`, the default, never overridden),
+not a raw margin/logit, a non-standard but not incorrect construction of Platt scaling;
+(c) sanity — Platt is strictly monotone, in-range, but has a real, measured ceiling:
+**cannot emit above ~0.914** on the validate population (isotonic reaches 1.0), a direct
+mechanical consequence of (b) — **stated here as a verified mathematical PROPERTY of a
+2-parameter sigmoid, with no causal claim attached about why the headline reversed**, a
+distinction that matters because an earlier draft of this investigation attached exactly
+such a causal claim (the sigmoid's ~0.116 floor at the opposite end "makes every hopeless
+retry look profitable") and it did not survive the empirical check below — dropped, not
+softened; (d) confounds — the recovery model's LightGBM booster is bit-identical between
+the isotonic and Platt model versions (max abs diff `0.0`, confirmed directly); no other
+change this session (the fixes below) reaches the money path; (e) abstentions fell
+11.9% under Platt (1,952.6 → 1,720.6/seed), not rose.
+
+**The floor-causal-claim falsification, run before writing anything.** Hypothesis: Platt's
+inability to emit near-zero probabilities (`predict(0.0) = 0.1157`, confirmed —
+coefficient 4.579, intercept −2.034 on the production fit) makes hopeless retries look
+profitable, causing the agent to stop abstaining. Tested directly: replayed the full
+multi-cycle `dobara` simulation (seed 9001, 150 mandates, 1,312 decisions), rescored every
+decision under both calibrators, and found every case where isotonic chose
+`Stop`/`Abstain`/`EscalateToHuman` and Platt chose to act instead. **19 such flips found
+(4 the other direction). Among the 19, the minimum `p_success` involved ranged 0.243–0.532
+(mean 0.354) — zero were below 0.2, let alone near the 0.116 floor.** The floor is real and
+verified; it is not where these flips happen. Claim dropped, per instruction, exactly
+because the evidence did not support it.
+
+**The decomposition that replaced it — time-boxed to 30 minutes, reported exactly as
+measured, no causal story attached beyond what the numbers show.** Action-type changes
+(the abstention channel above) are 1.8% of decisions (23/1,312) — a rounding error next to
+what actually moved: **50.9% of decisions (668/1,312) kept the same action type but chose
+a different debit date.** Among those date changes, the direction is completely
+one-sided: **100% of the 668 are LATER under Platt than the tie-break's "earliest legal
+date" rule chose under isotonic** — median +7 days, mean +9.03 days, range 1–28 days,
+zero earlier. **This is where the reversal lives.** Why later dates net out worse in
+aggregate is not diagnosed further here — an open question, stated as one, not chased
+into a Wilson-interval/band-width investigation that was explicitly out of scope for this
+decision.
+
+**The finding, mechanism-agnostic, exactly as it should be stated:** we replaced the
+calibrator with one that scored *better* on Brier and cut the argmax tie rate from
+77.2% to 17.9%. Net LTV moved +₹65.71 → −₹64.09/mandate [−₹81.50, −₹48.65], CI excluding
+zero, 30 paired seeds. The new configuration is strictly dominated: it recovers *less*
+gross (−₹376,732) AND revokes *more* mandates (+78). ~59% of decisions changed something
+about their outcome (1.8% whether to act, 50.9% + a small remainder the chosen date) —
+date selection is the dominant channel. **We ship isotonic.**
+
+**Decision: revert to isotonic on `main`. Ship isotonic. Publish the Platt experiment in
+full as a headline finding, not a footnote.** `experiment/platt-calibrator`
+(https://github.com/jaygautam-creator/Dobara/tree/experiment/platt-calibrator) stays
+pushed, permanently, as the full record — every artifact, every commit, the complete
+diagnostic. Nothing about it is deleted, softened, or moved out of view.
+
+**The honest-revert disclosure, executed verbatim, all four points, as approved:**
+
+1. *Both results are published in full, in README and this file, exactly as they stand
+   now — nothing about the Platt run is deleted, softened, or moved out of view.* Done:
+   see the README's "The calibrator experiment" section and this entry. The
+   `experiment/platt-calibrator` branch is the primary source; this file and the README
+   summarize it, they do not replace it.
+2. *The pre-registration bound adoption to two calibration proxies (Brier-CI overlap,
+   tie-rate-halved) and both proxies were genuinely beaten by Platt — the proxies did
+   their job.* True, and restated here rather than hedged: Platt passed both
+   pre-registered bars by a wide margin, directly measured on the held-out population
+   (`[2026-09-01]` above). The proxies are not wrong to have existed; they simply did not
+   cover the metric that mattered.
+3. *The pre-registration was under-specified: it never named net LTV, the actual thesis
+   metric, as a criterion — this revert is "the rule was incomplete," not "the rule said
+   no."* Stated exactly that way, not disguised as rule-following: the
+   `[2026-09-01]` "Pre-registration: calibrator bake-off" entry's adoption rule bound
+   itself to Brier and tie-rate alone. A rule that lets a calibration proxy override the
+   metric it exists to serve is a gap in the rule, not a result to hide behind.
+4. *This section stays, unedited in substance, as the record of what was tried and why
+   it wasn't kept — a revert here is a correction to what ships, not a retraction of the
+   finding.* This entry and the README section it summarizes are that record.
+
+**`n_test_evaluations`: the second test-set look happened, and the counter is not
+laundered back to 1.** `artifacts/recovery_model_report.json` on `main` — the SHIPPED
+isotonic model's own report, `model_version` `e5eaa66718f2` — correctly reads
+`n_test_evaluations: 1`, because that specific model's test split really has been
+evaluated exactly once, ever; this is not new and nothing here changes it. But a SECOND,
+real test-set evaluation did happen this session, for the Platt-calibrated model
+(`model_version` `46abfd4c9c02`) — that model's own `recovery_model_report.json`
+correctly reads `n_test_evaluations: 2`, and that artifact is preserved, unedited, on
+`experiment/platt-calibrator` — see `docs/DECISIONS.md` [2026-09-02] "Platt adopted" on
+that branch. Both facts are true and both are on the record: the project's test split
+has now been legitimately looked at twice in its history, once for each of two different
+trained model versions, and the model actually shipped on `main` is the one whose own
+count is honestly 1. There is no single project-wide counter to launder — each model
+version's report accurately reflects that version's own history.
+
+**Calibrator-independent work kept from the experiment branch, cherry-picked as separate
+commits, each individually verified not to touch the money path:**
+`llm/provider.py`'s `OpenRouterProvider` (a third ask-why narration fallback after Groq
+and Gemini free tiers both hit daily quotas mid-batch), `scripts/generate_ask_why.py`'s
+per-entry `audit_content_hash` staleness fix (a real caching bug: cache keys were
+identity-only, so a decision whose numbers changed under a calibrator swap could
+silently keep stale narration — found this session, fixed regardless of which
+calibrator ships), and `eval/sensitivity.py`'s extended-search note-text fix (hardcoded
+the wrong winner when the losing arm wasn't `dobara` — a real bug, unrelated to which
+calibrator is active). `docs/artifact_freshness_waivers.json`'s hash-reference fix (the
+Part B consistency check from earlier this session) was also kept — it corrects a
+waiver silently orphaned by an amend, unrelated to the calibrator question entirely.
+Every one of the four commits states its own verification of why it cannot affect
+`agent/decide.py` or any evaluated number.
+
+**`artifacts/llm_cache/ask_why.json` matches the shipped (isotonic) decisions.** The
+narratives regenerated under Platt were never carried onto `main` — `main`'s
+`demo_batch.json` was never touched (this branch's own tree was byte-identical to
+`6a20367` before any of this session's cherry-picks landed, confirmed via empty
+`git diff 6a20367 HEAD`), so its existing, isotonic-era `ask_why.json` needed no LLM
+regeneration — only a one-time, deterministic backfill of the new
+`audit_content_hash` field (no LLM call, no narrative text changed) so the fixed
+caching logic recognizes the existing entries as valid.
+`scripts/check_ask_why_grounding.py` passes against the shipped configuration: 1,296
+narratives, 0 flagged.

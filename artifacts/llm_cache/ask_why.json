@@ -9076,8 +9076,8 @@
   },
   "provenance": {
     "demo_batch_content_hash": "ee97da0d9f6f0fb4217e9dfb7deafb99a502e288c745edb3aff854292d7d4adc",
-    "generated_at": "2026-08-28T10:24:39.620291+00:00",
-    "git_commit": "da1bd2280d8b7e55cb7352de0a2b61d417e5b833"
+    "generated_at": "2026-09-02T09:42:21.134259+00:00",
+    "git_commit": "684caf2c7ad321b3cebd9118830a54e610e9fe6a"
   },
   "schema_note": "Each entry carries its own {provider, model, generated_at} -- the cache is genuinely heterogeneous across free-tier quota switches, see docs/DECISIONS.md [2026-08-28]."
 }

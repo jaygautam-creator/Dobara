@@ -113,5 +113,25 @@
     "artifact": "artifacts/llm_cache/ask_why.json",
     "commit": "6a20367e6e1bac0b67b5c2de60fd03bd2bb71a4b",
     "reason": "6a20367's only watched-path change is a pure docstring addition to agent/decide.py::_tie_break_score; llm/ and scripts/generate_ask_why.py are untouched, and the cache narrates artifacts/demo_batch.json's decisions, which this commit does not affect (see that artifact's own waiver above)."
+  },
+  {
+    "artifact": "artifacts/summary.json",
+    "commit": "684caf2c7ad321b3cebd9118830a54e610e9fe6a",
+    "reason": "684caf2's only change is a prose (note-text) fix inside eval/sensitivity.py::search_break_even_vs_razorpay_default. eval/run.py (artifacts/summary.json's generator) does not import eval.sensitivity at all -- verified directly, no import statement referencing it anywhere in eval/run.py. Unlike the other artifacts this session touched, this one is NOT regenerated to clear this waiver: the owner's explicit instruction for the isotonic revert was 'do NOT rerun make eval', so a waiver -- not a real rerun -- is the correct mechanism here, same as the original 6a20367 commit's own docstring-only waivers above."
+  },
+  {
+    "artifact": "artifacts/sensitivity.json",
+    "commit": "684caf2c7ad321b3cebd9118830a54e610e9fe6a",
+    "reason": "684caf2 touches sensitivity.json's own generator, but only the prose branch inside search_break_even_vs_razorpay_default that fires when the losing arm changes -- re-verified against this repo's current (isotonic, dobara-always-wins) state: unaffected, still produces the same 'dobara beats the other arm' text and the same found/break_even_value/bracket numbers as before the fix. Not regenerated to clear this waiver: the owner's explicit instruction for the isotonic revert was 'do NOT rerun make eval' (python -m eval.sensitivity is part of that same rerun), so a waiver is the correct mechanism, not a live rerun."
+  },
+  {
+    "artifact": "artifacts/money_chart_data.json",
+    "commit": "684caf2c7ad321b3cebd9118830a54e610e9fe6a",
+    "reason": "684caf2's only change is a prose (note-text) fix inside eval/sensitivity.py::search_break_even_vs_razorpay_default, which scripts/build_money_chart.py does not import. A regeneration was attempted and discarded, not committed: it produced small (~0.03-0.3%) numeric drift in EVERY arm, including razorpay_default/aggressive_8x, which never call decide() or touch this fix at all -- almost certainly floating-point summation-order non-determinism from the script's own parallel execution, not a real content change, but not chased to ground given the 'do not chase a better number, do not rerun eval' instruction governing this same revert. Waived on code-path grounds (the fix cannot affect this generator), not on a verified-identical regeneration, unlike artifacts/demo_batch.json above."
+  },
+  {
+    "artifact": "artifacts/home_demo.json",
+    "commit": "684caf2c7ad321b3cebd9118830a54e610e9fe6a",
+    "reason": "Same situation as artifacts/money_chart_data.json immediately above: 684caf2's fix is outside scripts/build_home_demo.py's import graph, but a regeneration attempt was interrupted after observing the same class of small numeric drift in the money-chart regeneration (both scripts share the same parallel run_arm/build_world machinery) and was not completed or committed. Waived on code-path grounds only."
   }
 ]

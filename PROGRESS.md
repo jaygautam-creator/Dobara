@@ -7,6 +7,25 @@
 
 ## CURRENT STATE
 
+**Last updated:** 2026-09-03, submission-links session — the pitch video is recorded and
+now reachable from the product, not just the form.** One commit (`929dd4f`), frontend +
+README only; no number, artifact, model, caveat or CI rule moved. `make check` green
+(107 tests), `npm run build` clean (307 static pages).
+
+- The 5-minute pitch (`https://youtu.be/e3LlVMtq5LI`) and the repo are now in the
+  persistent header and the mobile menu, so both are one click from every route — a
+  reviewer landing on `/evidence` from a deep link previously had no path to either
+  (source was footer-only, video absent entirely).
+- `/` hero carries a primary "Watch the 5-minute pitch" button under the motto, with a
+  secondary source link beside it.
+- Both URLs are defined once in `web/lib/links.ts`, because they now appear in four
+  places (header, mobile menu, footer, hero) that must not disagree.
+- `MobileNav` gained an `external` item flag: off-site URLs render as
+  `<a target="_blank">`, not `next/link`, which would have client-routed them.
+- README carries a video/demo/source line directly under the title.
+
+**Next:** submit the buildathon form. No repo change is pending or planned.
+
 **Last updated:** 2026-09-03, README/demo-doc accuracy pass — the repo is record-ready
 and the only remaining deliverable is the pitch video.** Four commits, all docs, no
 number, CI, caveat, model, or artifact moved; `make check` green throughout (107 tests,

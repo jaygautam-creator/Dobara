@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "@/components/MobileNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PITCH_VIDEO_URL, REPO_URL } from "@/lib/links";
 import "./globals.css";
 
 // Runs before paint so a returning viewer's chosen theme never flashes to the light
@@ -55,6 +56,8 @@ const NAV = [
   { href: "/architecture", label: "Architecture" },
   { href: "/control-room", label: "Control Room" },
   { href: "/evidence", label: "Evidence" },
+  { href: PITCH_VIDEO_URL, label: "Pitch video", external: true },
+  { href: REPO_URL, label: "GitHub", external: true },
 ];
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -77,15 +80,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 </span>
               </Link>
               <nav className="hidden items-center gap-1 text-sm lg:flex">
-                {NAV.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="rounded-md px-3 py-1.5 text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {NAV.map((item) =>
+                  item.external ? (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-md px-3 py-1.5 text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
+                    >
+                      {item.label} <span aria-hidden="true">↗</span>
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-md px-3 py-1.5 text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  ),
+                )}
                 <ThemeToggle />
               </nav>
               <div className="flex items-center gap-1 lg:hidden">
@@ -109,7 +124,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               for the Razorpay AI Buildathon — Track 03: AI Revenue Recovery. Test mode
               only. Not affiliated with or endorsed by Razorpay. Source on{" "}
               <a
-                href="https://github.com/jaygautam-creator/Dobara"
+                href={REPO_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline hover:text-text-secondary"

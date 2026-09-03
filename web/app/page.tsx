@@ -4,6 +4,7 @@ import { Equation } from "@/components/home/Equation";
 import { getHomeDemo, getComplianceRules } from "@/lib/server-data";
 import { formatInr } from "@/lib/format";
 import { GITHUB_BLOB, NODES } from "@/components/architecture/nodes";
+import { PITCH_VIDEO_URL, REPO_URL } from "@/lib/links";
 
 // docs/10-REDESIGN.md §4 `/` -- an editorial argument in five beats: the claim, the
 // mechanism (added 2026-08-30, docs/DECISIONS.md -- a stranger reading only `/` learns
@@ -45,6 +46,26 @@ export default function ThesisPage() {
         <p className="mt-8 font-serif text-step-3 italic text-text-primary">
           “Recover the payment. Keep the mandate.”
         </p>
+        {/* The five-minute walkthrough, put where a reviewer lands rather than left
+            for them to find -- the header carries the same two links on every route. */}
+        <div className="mt-10 flex flex-wrap items-center gap-3">
+          <a
+            href={PITCH_VIDEO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md bg-arm-dobara px-4 py-2.5 text-sm font-semibold text-surface-0 transition-opacity hover:opacity-90"
+          >
+            <span aria-hidden="true">▶</span> Watch the 5-minute pitch
+          </a>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
+          >
+            Source on GitHub <span aria-hidden="true">↗</span>
+          </a>
+        </div>
       </section>
 
       {/* 1b — the mechanism, in one screen: problem -> what Dobara does -> how it

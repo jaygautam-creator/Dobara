@@ -5,6 +5,10 @@
 An AI revenue-recovery agent for Indian recurring payments.
 Submission for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
 
+**▶ [Watch the 5-minute pitch](https://youtu.be/e3LlVMtq5LI)** &nbsp;·&nbsp;
+**[Live demo](https://dobara-one.vercel.app)** &nbsp;·&nbsp;
+**[Source](https://github.com/jaygautam-creator/Dobara)**
+
 ## In plain English
 
 A **mandate** is the standing permission you give a company to charge your account
@@ -31,7 +35,8 @@ seed (Honest metrics, below). It's a working system: a simulator, three
 trained/calibrated ML models, a structurally-enforced compliance gate, a full audit
 trail, and a batch evaluation harness — not a slide deck.
 
-**Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** — if you're short on
+**Live: [dobara-one.vercel.app](https://dobara-one.vercel.app)** (the 5-minute pitch is
+linked from its header too) — if you're short on
 time, start with [`/evidence#calibrator-experiment`](https://dobara-one.vercel.app/evidence#calibrator-experiment):
 I wrote down a rule in advance, it told me to ship a change that made the system worse,
 and both results are published. Then [`/`](https://dobara-one.vercel.app) (the thesis and

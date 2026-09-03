@@ -8,7 +8,11 @@ import Link from "next/link";
  * because `nav` has no wrap and no mobile fallback. This is a mobile-only affordance
  * (a collapsed menu) sitting next to the same, unchanged desktop nav -- it renders
  * nothing at `lg` and up. */
-export function MobileNav({ items }: { items: { href: string; label: string }[] }) {
+export function MobileNav({
+  items,
+}: {
+  items: { href: string; label: string; external?: boolean }[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -24,16 +28,29 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
       </button>
       {open && (
         <nav className="absolute inset-x-0 top-full border-b border-border bg-surface-0 px-6 py-2 shadow-sm">
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="block rounded-md px-3 py-2.5 text-sm text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {items.map((item) =>
+            item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="block rounded-md px-3 py-2.5 text-sm text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
+              >
+                {item.label} <span aria-hidden="true">↗</span>
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="block rounded-md px-3 py-2.5 text-sm text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
       )}
     </div>
